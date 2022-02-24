@@ -58,6 +58,7 @@ namespace coll::detail
     std::destroy(unext(data,first), unext(data,last));
     }
     
+  ///\brief used for unwinding already moved/copied range after exeption is throw in used move/copy operator
   template<bool use_nothrow, typename InputIt>
   struct range_unwinder
     {
@@ -68,7 +69,10 @@ namespace coll::detail
     constexpr range_unwinder( InputIt first_res) noexcept : first_res_{first_res}, last_{first_res}{}
 
     constexpr void release()
-      { first_res_=last_; }
+      {
+      if constexpr( use_nothrow || std::is_trivially_destructible_v<value_type>)
+        first_res_=last_;
+      }
 
     constexpr ~range_unwinder()
     {
@@ -114,14 +118,13 @@ namespace coll::detail
   uninitialized_copy_n(InputIterator first, Size count, ForwardIterator result)
     noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>)
     {
-    if (std::is_constant_evaluated() )
-      {
-      ForwardIterator cur = result;
-      for (; count > 0; --count, (void) ++first, ++cur)
-        std::construct_at(std::addressof(*cur), deref_iter(first));
-      }
-    else
-      std::uninitialized_copy_n(first,count,result);
+    constexpr bool use_nothrow  = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
+    using unwind = range_unwinder<use_nothrow,ForwardIterator>;
+    unwind cur{ result };
+    auto src{ first };
+    for (; count > 0; --count, (void) ++src, ++cur.last_)
+      std::construct_at(std::addressof(*cur.last_), *src );
+    cur.release();
     }
     
   template <concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
@@ -130,11 +133,11 @@ namespace coll::detail
       noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
     {
     constexpr bool use_nothrow  = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
-    using unwind = range_unwinder<use_nothrow,InputIterator>;
+    using unwind = range_unwinder<use_nothrow,ForwardIterator>;
     unwind cur{ result };
     auto src{ std::make_move_iterator(first) };
     for (; count > 0; --count, (void) ++src, ++cur.last_)
-      std::construct_at(std::addressof(*cur.last_), *src);
+      std::construct_at(std::addressof(*cur.last_), std::move(*src));
     cur.release();
     }
 
