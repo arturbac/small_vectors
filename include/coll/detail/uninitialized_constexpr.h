@@ -70,13 +70,13 @@ namespace coll::detail
 
     constexpr void release()
       {
-      if constexpr( use_nothrow || std::is_trivially_destructible_v<value_type>)
+      if constexpr( use_nothrow || !std::is_trivially_destructible_v<value_type>)
         first_res_=last_;
       }
 
     constexpr ~range_unwinder()
     {
-      if constexpr( use_nothrow || std::is_trivially_destructible_v<value_type>)
+      if constexpr( use_nothrow || !std::is_trivially_destructible_v<value_type>)
         if(first_res_!=last_)
           std::destroy(first_res_, last_);
       }
@@ -192,7 +192,7 @@ namespace coll::detail
     for (; count > 0; --count, (void) ++src, ++cur)
       {
       //construct and destroy in the same loop for better cache utilization
-      std::construct_at(std::addressof(*cur), *src);
+      std::construct_at(std::addressof(*cur), std::move(*src));
       if constexpr(!std::is_trivially_destructible_v<value_type>)
         std::destroy_at(std::addressof(*src));
       }
