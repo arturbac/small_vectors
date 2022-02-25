@@ -20,3 +20,6 @@ add_dependencies(unit_tests composed_pointer_with_data_ut )
 
 add_boost_test(unaligned_ut.cc ut_core)
 add_dependencies(unit_tests unaligned_ut )
+
+add_boost_test(meta_packed_struct_ut.cc ut_core)
+add_dependencies(unit_tests meta_packed_struct_ut )
