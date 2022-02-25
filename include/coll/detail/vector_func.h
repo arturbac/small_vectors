@@ -1,6 +1,7 @@
 #pragma once
 #include "coll_concepts.h"
 #include "uninitialized_constexpr.h"
+#include "vector_storage.h"
 #include <utils/enum_support.h>
 
 namespace coll::detail
@@ -733,6 +734,7 @@ namespace coll::detail
       return vector_outcome_e::no_error;
       }
     else
+      {
       if constexpr (vector_type::support_reallocation())
         {
         size_type const new_capacity{ growth(my.size(), size_type(1u) ) };
@@ -782,7 +784,8 @@ namespace coll::detail
             }
           }
         }
-      return vector_outcome_e::out_of_storage;
+      }
+    return vector_outcome_e::out_of_storage;
     }
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
