@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rm -R build
+cmake -G "Kate - Ninja" \
+  -DCMAKE_CXX_COMPILER=clang \
+  -DCMAKE_CXX_FLAGS="-stdlib=libstdc++ -lstdc++" \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -S=./ -B=./build

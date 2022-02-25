@@ -2,6 +2,7 @@
 #include <utility>
 #include <array>
 #include "coll_concepts.h"
+#include <utils/utility_cxx20.h>
 
 namespace coll::detail
 {
@@ -519,9 +520,9 @@ namespace coll::detail
       
       if(rh.active_ == buffered)
         if constexpr (use_nothrow)
-          detail::uninitialized_relocate_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
+          uninitialized_relocate_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
         else
-          detail::uninitialized_relocate_with_copy_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
+          uninitialized_relocate_with_copy_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
       else
         {
         data_ = rh.data_.dynamic;
@@ -540,7 +541,7 @@ namespace coll::detail
       if constexpr (not std::is_trivially_destructible_v<value_type>)
         {
         size_type const old_size = size_;
-        detail::destroy_range(data(), size_type{0}, old_size );
+        destroy_range(data(), size_type{0}, old_size );
         } 
       //design decision if right is buffered then free space and left become buffered
       //on the other hand left may stay dynamic but elements will be copied too so there is no reason to hold memory
@@ -556,9 +557,9 @@ namespace coll::detail
           active_ = buffered;
           }
         if constexpr(use_nothrow)
-          detail::uninitialized_relocate_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
+          uninitialized_relocate_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
         else
-          detail::uninitialized_relocate_with_copy_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
+          uninitialized_relocate_with_copy_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
         }
       else
         {
@@ -585,7 +586,7 @@ namespace coll::detail
           new_space{ detail::sv_allocate<value_type>(new_capacity) };
         if( new_space.data() )
           {
-          detail::uninitialized_copy_n( rh.data(), my_size, new_space.data() );
+          uninitialized_copy_n( rh.data(), my_size, new_space.data() );
           data_ = new_space.release();
           active_ = dynamic;
           size_ = my_size;
@@ -596,7 +597,7 @@ namespace coll::detail
       else
         {
         active_ = buffered;
-        detail::uninitialized_copy_n( rh.data(), my_size, data_.buffered.data() );
+        uninitialized_copy_n( rh.data(), my_size, data_.buffered.data() );
         size_ = my_size;
         }
       }
@@ -626,7 +627,7 @@ namespace coll::detail
            new_space{ detail::sv_allocate<value_type>(new_capacity) };
         if( new_space )
           {
-          detail::uninitialized_copy_n( rh.data(), my_size, new_space.data() );
+          uninitialized_copy_n( rh.data(), my_size, new_space.data() );
           data_ = new_space.release();
           size_ = my_size;
           active_ = dynamic;
@@ -645,7 +646,7 @@ namespace coll::detail
           active_ = buffered;
           }
           
-        detail::uninitialized_copy_n( rh.data(), my_size, data() );
+        uninitialized_copy_n( rh.data(), my_size, data() );
         size_ = my_size;
         }
       }
@@ -653,7 +654,7 @@ namespace coll::detail
     constexpr void destroy() noexcept
       {
       if constexpr (!std::is_trivially_destructible_v<value_type> )
-        detail::destroy_range(data(), size_type{0}, size_ );
+        destroy_range(data(), size_type{0}, size_ );
       if( active_ == dynamic )
         detail::sv_deallocate( dynamic_storage());
       }
@@ -755,7 +756,7 @@ namespace coll::detail
       if(old_size != 0u )
         {
         if constexpr (not std::is_trivially_destructible_v<value_type>)
-            detail::destroy_range(data(), size_type{0}, old_size );
+            destroy_range(data(), size_type{0}, old_size );
 
         //design decision if right is buffered then free space and left become buffered
         //on the other hand left may stay dynamic but elements will be copied too so there is no reason to hold memory
@@ -778,7 +779,7 @@ namespace coll::detail
          new_space{ detail::sv_allocate<value_type>(new_capacity) };
       if( new_space )
         {
-        detail::uninitialized_copy_n( rh.data(), my_size, new_space.data() );
+        uninitialized_copy_n( rh.data(), my_size, new_space.data() );
         dynamic = new_space.release();
         size_ = my_size;
         }
@@ -811,7 +812,7 @@ namespace coll::detail
            new_space{ detail::sv_allocate<value_type>(new_capacity) };
         if( new_space )
           {
-          detail::uninitialized_copy_n( rh.data(), my_size, new_space.data() );
+          uninitialized_copy_n( rh.data(), my_size, new_space.data() );
           dynamic = new_space.release();
           size_ = my_size;
           }
@@ -819,7 +820,7 @@ namespace coll::detail
           throw std::bad_alloc{};
         }
       else
-        detail::uninitialized_copy_n( rh.data(), my_size, data() );
+        uninitialized_copy_n( rh.data(), my_size, data() );
       size_ = my_size;
       }
       
@@ -828,7 +829,7 @@ namespace coll::detail
       if( data() != nullptr )
         {
         if constexpr (!std::is_trivially_destructible_v<value_type> )
-          detail::destroy_range(data(), size_type{0}, size_ );
+          destroy_range(data(), size_type{0}, size_ );
         detail::sv_deallocate( dynamic );
         }
       }
