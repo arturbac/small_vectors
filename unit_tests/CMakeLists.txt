@@ -18,3 +18,5 @@ add_dependencies(unit_tests small_vector_ut )
 add_boost_test(composed_pointer_with_data_ut.cc ut_core)
 add_dependencies(unit_tests composed_pointer_with_data_ut )
 
+add_boost_test(unaligned_ut.cc ut_core)
+add_dependencies(unit_tests unaligned_ut )
