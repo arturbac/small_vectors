@@ -21,7 +21,7 @@ option(ENABLE_UNIT_TESTS "unit tests available from CTest" ON )
 add_feature_info("ENABLE_UNIT_TESTS" ENABLE_UNIT_TESTS "unit test available from CTest")
 
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20 )
-  message(STATUS "Assuming by default c++17 standard")
+  message(STATUS "Assuming by default c++20 standard")
   set( CMAKE_CXX_STANDARD 20 )
 endif()
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
