@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19 FATAL_ERROR )
 project(small_vectors
         VERSION 1.0.1
         LANGUAGES CXX
-        HOMEPAGE_URL "https://github.com/bernedom/SI"
+        HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         )
 
 set(CMAKE_MODULE_PATH
@@ -19,9 +19,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #-----------------------------------------------------------------------------
 # options
 #-----------------------------------------------------------------------------
-option(ENABLE_UNIT_TESTS "unit tests available from CTest" ON )
+option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest" OFF )
 
-add_feature_info("ENABLE_UNIT_TESTS" ENABLE_UNIT_TESTS "unit test available from CTest")
+add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
 
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20 )
   message(STATUS "Assuming by default c++20 standard")
@@ -30,7 +30,10 @@ endif()
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF)
 
+message(STATUS "CMake inatall directory: " ${CMAKE_INSTALL_INCLUDEDIR})
+
 add_library(small_vectors INTERFACE)
+#target_include_directories(small_vectors INTERFACE include )
 
 target_include_directories(small_vectors 
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -67,7 +70,7 @@ install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION include/small_vectors)
 
-if(ENABLE_UNIT_TESTS)
+if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
   find_package( Boost 1.78 REQUIRED COMPONENTS unit_test_framework system )
   if(Boost_FOUND)
     message(" -- Found boost " ${Boost_VERSION})
@@ -77,7 +80,7 @@ if(ENABLE_UNIT_TESTS)
   add_custom_target( unit_tests )
 endif()
 
-if( ENABLE_UNIT_TESTS )
+if( SMALL_VECTORS_ENABLE_UNIT_TESTS )
   enable_testing( TRUE )
   add_subdirectory(unit_tests)
 endif()
