@@ -96,7 +96,7 @@ namespace cxx20
     concept countx_constraint =
       requires (T)
         {
-        std::unsigned_integral<T>;
+        requires std::unsigned_integral<T>;
         sizeof(T) <= 8;
         };
     }
