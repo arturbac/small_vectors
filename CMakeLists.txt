@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR )
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 
 project(small_vectors
-        VERSION 1.0.1
+        VERSION 1.0.4
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         )
@@ -13,13 +13,22 @@ set(CMAKE_MODULE_PATH
 include(FeatureSummary)
 include(GNUInstallDirs)
 include(BoostTestIntegration)
+include(cmake/CPM.cmake)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# ---- Add dependencies via CPM ----
+# see https://github.com/cpm-cmake/CPM.cmake for more info
+# PackageProject.cmake will be used to make our target installable
+CPMAddPackage(
+  NAME PackageProject.cmake
+  GITHUB_REPOSITORY TheLartians/PackageProject.cmake
+  VERSION 1.9.0
+)
 
 #-----------------------------------------------------------------------------
 # options
 #-----------------------------------------------------------------------------
-option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest" OFF )
+
+option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest" ${PROJECT_IS_TOP_LEVEL} )
 
 add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
 
@@ -33,42 +42,28 @@ set( CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "CMake inatall directory: " ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(small_vectors INTERFACE)
-#target_include_directories(small_vectors INTERFACE include )
+if(NOT DEFINED INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR include/${PROJECT_NAME})
+endif()
 
 target_include_directories(small_vectors 
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  INTERFACE   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+              $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+)
 
 target_compile_features(small_vectors INTERFACE cxx_std_20)
 
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file("small_vectorsConfigVersion.cmake"
-                                 VERSION ${PROJECT_VERSION}
-                                 COMPATIBILITY SameMajorVersion)
-
-configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION
-  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+packageProject(
+  NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  NAMESPACE small_vectors
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+  INCLUDE_DESTINATION ${INCLUDE_INSTALL_DIR}
+  COMPATIBILITY SameMajorVersion
 )
-install(TARGETS small_vectors
-        EXPORT ${PROJECT_NAME}_Targets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install(EXPORT ${PROJECT_NAME}_Targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
-
-install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-              "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
-
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION include/small_vectors)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${INCLUDE_INSTALL_DIR} )
 
 if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
   find_package( Boost 1.78 REQUIRED COMPONENTS unit_test_framework system )
