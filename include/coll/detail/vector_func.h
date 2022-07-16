@@ -32,7 +32,7 @@ namespace coll::detail
         return;
       [[unlikely]] case out_of_storage:
         throw std::bad_alloc{};
-      [[unlikely]] default:
+      [[unlikely]] case invalid_source_range:
         throw std::runtime_error{enum_name(error).data()};
       }
     }
@@ -85,8 +85,8 @@ namespace coll::detail
   template<concepts::unsigned_arithmetic_integral size_type>
   using growth_size_type_select_t = 
     typename size_type_selector_t<std::min<unsigned>(8,sizeof(size_type)*2)>::size_type;
-  ///\breif small_vector size growth factor function 
-  ///\detail f(size) = floor(size * 1.5) + 1
+  ///\brief small_vector size growth factor function
+  ///\details f(size) = floor(size * 1.5) + 1
   template<typename size_type>
   constexpr size_type growth(size_type old_size, size_type new_elements ) noexcept
     {
@@ -241,7 +241,7 @@ namespace coll::detail
     }
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief erases all elements starting at \param pos till end of vector
-  ///       The iterator \param pos must be valid and dereferenceable.
+  ///       The iterator \ref pos must be valid and dereferenceable.
   ///\return Iterator following the last removed element equal end of vector
   template<typename vector_type>
     requires requires
@@ -290,7 +290,7 @@ namespace coll::detail
     erase_at_end_impl(vec, size_type(0u) );
     }
   //-------------------------------------------------------------------------------------------------------------------
-  ///\brief erases element at pos \param pos
+  ///\brief erases element at pos \ref pos
   ///\returns Iterator following the removed element.
   ///         If pos refers to the last element, then the end() iterator is returned
   template<typename vector_type>
@@ -328,7 +328,7 @@ namespace coll::detail
     return my.end();
     }
   //-------------------------------------------------------------------------------------------------------------------
-  ///\brief erases elements from range [\param first \param last)
+  ///\brief erases elements from range [\ref first \ref last)
   ///\returns Iterator following the last removed element.
   ///         If last==end() prior to removal, then the updated end() iterator is returned.
   ///         If [first, last) is an empty range, then last is returned. 

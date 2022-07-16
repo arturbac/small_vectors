@@ -357,8 +357,8 @@ namespace coll
     return detail::emplace( vec, itpos, std::forward<Args>(args)...);
     }
     
-  ///\brief split \param vec1 in half moving half of elements to the end of \param vec2
-  ///\warning this is unchecked version, insertion into full \param vec2 container is undefined behavior
+  ///\brief split \ref vec1 in half moving half of elements to the end of \ref vec2
+  ///\warning this is unchecked version, insertion into full \ref vec2 container is undefined behavior
   template<vector_tune_e tune = vector_tune_e::checked, typename V, uint64_t N1, uint64_t N2>
     requires(N2 >= N1 && concepts::even_size<N1> && tune == vector_tune_e::unchecked )
   inline constexpr void
@@ -378,8 +378,8 @@ namespace coll
     vec2.size_ += move_count;
     }
 
-  ///\brief split \param vec1 in half moving half of elements to the end of \param vec2
-  ///\returns if there is no space left it in \param vec2 returns \ref static_vector_outcome_e::out_of_storage
+  ///\brief split \ref vec1 in half moving half of elements to the end of \ref vec2
+  ///\returns if there is no space left it in \ref vec2 returns \ref static_vector_outcome_e::out_of_storage
   ///         else it returns \ref static_vector_outcome_e::no_error
   template<vector_tune_e tune = vector_tune_e::checked, typename V, uint64_t N1, uint64_t N2>
     requires(N2 >= N1 && concepts::even_size<N1> && tune == vector_tune_e::checked)

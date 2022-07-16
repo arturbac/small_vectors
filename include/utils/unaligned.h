@@ -4,6 +4,7 @@
 #include <iterator>
 #include <cstring>
 #include <concepts>
+#include <algorithm>
 #include <bit>
 #include <utils/utility_cxx20.h>
 
@@ -93,8 +94,8 @@
       return detail::unaligned_load<output_type>(it);
       }
     //---------------------------------------------------------------------------------------------------
-    ///\brief loads value from any forward iterator or unaligned int8_t/uint8_t memory location and forwards iterator by the size of output_type and forwards the \param it by the size was read
-    ///\warning be aware that this function is prone to bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors because \param it is modified when evaluated
+    ///\brief loads value from any forward iterator or unaligned int8_t/uint8_t memory location and forwards iterator by the size of output_type and forwards the \ref it by the size was read
+    ///\warning be aware that this function is prone to bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors because \ref it is modified when evaluated
     template<detail::arithmetic_or_bool output_type, typename iterator>
     [[nodiscard,gnu::always_inline]]
     inline constexpr output_type unaligned_load_fwd( iterator & it ) noexcept
@@ -140,7 +141,7 @@
        
      //---------------------------------------------------------------------------------------------------
      ///\brief cast from void * for working with deprecated software like wxwidgets storing user data as void *
-     ///\returns \param data casted by value to output_type
+     ///\returns \ref data casted by value to output_type
      template<detail::trivially_copyable output_type, typename pointer>
        requires ( sizeof(output_type) <= sizeof(uintptr_t) && std::same_as<void, pointer>)
      [[nodiscard,gnu::always_inline]]

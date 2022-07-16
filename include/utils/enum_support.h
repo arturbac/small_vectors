@@ -95,7 +95,7 @@ namespace detail
   template<typename type>
   concept enum_concept = std::is_enum<type>::value;
 }
-///\brief tests if \param value has set flag \param test_flag
+///\brief tests if \ref value has set flag \ref test_flag
 template<detail::enum_concept enum_type>
 [[nodiscard]]
 inline constexpr bool enum_test_flag( enum_type value, enum_type test_flag ) noexcept

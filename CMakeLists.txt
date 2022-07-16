@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 
 project(small_vectors
-        VERSION 1.0.5
+        VERSION 1.0.6
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         )
@@ -11,13 +11,12 @@ set(CMAKE_MODULE_PATH
   )
   
 include(FeatureSummary)
-include(GNUInstallDirs)
 include(BoostTestIntegration)
 include(cmake/CPM.cmake)
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/cpm-cmake/CPM.cmake for more info
-# PackageProject.cmake will be used to make our target installable
+
 CPMAddPackage(
   NAME PackageProject.cmake
   GITHUB_REPOSITORY TheLartians/PackageProject.cmake
