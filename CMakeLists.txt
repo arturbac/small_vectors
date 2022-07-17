@@ -11,7 +11,6 @@ set(CMAKE_MODULE_PATH
   )
   
 include(FeatureSummary)
-include(BoostTestIntegration)
 include(cmake/CPM.cmake)
 
 # ---- Add dependencies via CPM ----
