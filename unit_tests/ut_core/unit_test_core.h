@@ -3,44 +3,292 @@
 #include <span>
 #include <numeric>
 #include <stdexcept>
-
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
-#include <boost/mpl/list.hpp>
+#include <utility>
+#include <cassert>
+#include <source_location>
+// #define BOOST_TEST_DYN_LINK
+// #include <boost/test/unit_test.hpp>
+// #include <boost/mpl/list.hpp>
 #include <iostream>
+#include <boost/ut.hpp>
 
-// #define CONSTEXPR_TEST( a ) 
-//   if( !(a) ) throw
-
-//BOOST_TEST_STRINGIZE( P )
-    
-constexpr bool constexpr_or_runtime_test( bool expression, std::string_view str_expr, std::string_view file, int line  )
-  {
-  if( std::is_constant_evaluated())
+namespace metatests
+{
+  using boost::ut::reflection::source_location;
+  struct test_result
     {
-     if( !(expression) )
-       throw;
-    return expression;
-    }
-  else
-    {
-    report_assertion(
-        ::boost::test_tools::assertion_result(expression),
-        BOOST_TEST_LAZY_MSG( str_expr ),
-        ::boost::unit_test::basic_cstring<char const>(file.data(), file.size()),
-        //BOOST_TEST_L(__FILE__),//
-        static_cast<std::size_t>(line),
-        ::boost::test_tools::tt_detail::CHECK,
-        ::boost::test_tools::tt_detail::CHECK_MSG,
-        0 );
-    return expression;
-    }
-  }
+    enum struct value_type : uint8_t { succeed, failed };
+    using enum value_type;
+    value_type value_ {};
 
-#define CONSTEXPR_TEST( a ) \
-  constexpr_or_runtime_test(a, BOOST_STRINGIZE( a ), __FILE__, __LINE__ )
-    
-// ::boost::unit_test::basic_cstring<char const> s;
+    explicit constexpr operator bool() const noexcept { return value_ == succeed; }
+
+    constexpr test_result() noexcept = default;
+    explicit constexpr test_result( bool value ) noexcept
+        : value_{ value ? succeed : failed }
+      {}
+
+    explicit constexpr test_result( value_type value ) noexcept
+        : value_{ value }
+      {}
+
+    constexpr test_result & operator |=( test_result rh ) noexcept
+      {
+      value_ = value_ == failed || rh.value_ == failed ? failed : succeed;
+      return *this;
+      }
+    constexpr test_result operator | ( test_result rh ) noexcept
+      {
+      return test_result{ value_ == failed || rh.value_ == failed ? failed : succeed };
+      }
+    };
+
+  template<typename T, typename ... U>
+  concept is_any_of = (std::same_as<T, U> || ...);
+
+  template<typename test_result_type>
+  concept compatibile_test_result = is_any_of<test_result_type,bool,test_result>;
+
+  template<compatibile_test_result test_result_type>
+  constexpr test_result constexpr_test( test_result_type expression, source_location const location = source_location::current() )
+    {
+    if( std::is_constant_evaluated())
+      {
+      if( !expression )
+        throw;
+      return test_result{expression};
+      }
+    else
+      {
+        boost::ut::expect( static_cast<bool>(expression), location );
+  //     report_assertion(
+  //         ::boost::test_tools::assertion_result(expression),
+  //         BOOST_TEST_LAZY_MSG( str_expr ),
+  //         ::boost::unit_test::basic_cstring<char const>(file.data(), file.size()),
+  //         //BOOST_TEST_L(__FILE__),//
+  //         static_cast<std::size_t>(line),
+  //         ::boost::test_tools::tt_detail::CHECK,
+  //         ::boost::test_tools::tt_detail::CHECK_MSG,
+  //         0 );
+      return test_result{expression};
+      }
+    }
+
+  template<typename except, typename test_type>
+  test_result require_throw( test_type const & test ) noexcept
+    {
+    try
+      {
+      test();
+      }
+    catch( except const & )
+      {
+      return test_result{};
+      }
+    catch(...)
+      {
+      return test_result{false};
+      }
+    return test_result{false};
+    }
+
+  template<typename test_type>
+  test_result require_throw( test_type const & test ) noexcept
+    {
+    try
+      {
+      test();
+      }
+    catch(...)
+      {
+      return test_result{};
+      }
+    return test_result{false};
+    }
+
+  template<typename unit_test>
+  [[maybe_unused]]
+  constexpr test_result run_constexpr_test( unit_test const & test,
+                                 source_location const location = source_location::current())
+    {
+    return constexpr_test(test(), location);
+    }
+
+  template<typename unit_test>
+  [[maybe_unused]]
+  consteval test_result run_consteval_test( unit_test const & test,
+                                 source_location const location = source_location::current())
+    {
+    return constexpr_test(test(), location);
+    }
+
+  namespace detail
+    {
+    template<typename T, typename ... Args>
+    struct infer_type
+      {
+      using type = T;
+      using next_elem = infer_type<Args...>;
+      };
+
+    template<typename T>
+    struct infer_type<T>
+      {
+      using type = T;
+      using next_elem = void;
+      };
+    }
+  template<typename ... Args>
+  struct type_list
+    {
+    using type_iterator = detail::infer_type<Args...>;
+    };
+
+  namespace detail
+    {
+    template<typename templ_list>
+    struct test_invoke
+      {
+
+      template<typename unit_test>
+      constexpr static test_result constexpr_run(unit_test const & test )
+        {
+        return test_invoke<typename templ_list::type_iterator>::do_run(test);
+        }
+
+      template<typename unit_test>
+      consteval static test_result consteval_run(unit_test const & test )
+        {
+        return test_invoke<typename templ_list::type_iterator>::do_run(test);
+        }
+
+      template<typename unit_test>
+      constexpr static test_result do_run(unit_test const & test )
+        {
+        using test_type = typename templ_list::type;
+        using next_test = typename templ_list::next_elem;
+        using ptr_type = test_type const *;
+        test_result res = test( ptr_type{} );
+        if constexpr( !std::is_same_v<void,next_test> )
+          res |= test_invoke<next_test>::do_run(test);
+        return res;
+        }
+      };
+
+    }
+
+  template<typename templ_list, typename unit_test>
+  [[maybe_unused]]
+  constexpr test_result run_constexpr_test( unit_test const & test,
+                                 source_location const location = source_location::current())
+    {
+    return constexpr_test(detail::test_invoke<templ_list>::constexpr_run(test), location);
+    }
+
+  template<typename templ_list, typename unit_test>
+  [[maybe_unused]]
+  consteval test_result run_consteval_test( unit_test const & test,
+                                 source_location const location = source_location::current() )
+    {
+    return constexpr_test(detail::test_invoke<templ_list>::consteval_run(test), location);
+    }
+
+  consteval test_result test()
+    {
+    using traits_test_list = metatests::type_list<uint16_t, int32_t, int64_t, double>;
+    int counter{};
+    auto test_fn = [&counter]<typename value_type>( value_type const * ) -> test_result
+      {
+      counter++;
+      return test_result{};
+      };
+
+    auto res = run_constexpr_test<traits_test_list>(test_fn);
+    return res | test_result{counter == 4};
+    }
+  static_assert( test() );
+
+  namespace detail
+    {
+    template<typename templ_list, typename templ_list2>
+    struct test_invoke_dual
+      {
+      template<typename unit_test>
+      constexpr static test_result constexpr_run(unit_test const & test )
+        {
+        return test_invoke_dual<typename templ_list::type_iterator,
+                                typename templ_list2::type_iterator>::do_run(test);
+        }
+
+      template<typename unit_test>
+      consteval static test_result consteval_run(unit_test const & test )
+        {
+        return test_invoke_dual<typename templ_list::type_iterator,
+                                typename templ_list2::type_iterator>::do_run(test);
+        }
+
+      template<typename unit_test>
+      constexpr static test_result do_run(unit_test const & test )
+        {
+        using test_type = typename templ_list::type;
+        using next_test = typename templ_list::next_elem;
+
+        test_result res = do_run_sec<test_type>(test);
+        if constexpr( !std::is_same_v<void,next_test> )
+          res |= test_invoke_dual<next_test,templ_list2>::do_run(test);
+        return res;
+        }
+
+      template<typename test_type1, typename unit_test>
+      constexpr static test_result do_run_sec(unit_test const & test )
+        {
+        using test_type2 = typename templ_list2::type;
+        using next_test = typename templ_list2::next_elem;
+
+        using ptr_type1 = test_type1 const *;
+        using ptr_type2 = test_type2 const *;
+        test_result res = test( ptr_type1{},ptr_type2{} );
+        if constexpr( !std::is_same_v<void,next_test> )
+          res |= test_invoke_dual<templ_list,next_test>::template do_run_sec<test_type1>(test);
+        return res;
+        }
+      };
+    }
+
+  template<typename templ_list, typename templ_list2, typename unit_test>
+  [[maybe_unused]]
+  constexpr test_result run_constexpr_test_dual( unit_test const & test,
+                                 source_location const location = source_location::current())
+    {
+    return constexpr_test(detail::test_invoke_dual<templ_list,templ_list2>::constexpr_run(test), location);
+    }
+
+  template<typename templ_list, typename templ_list2, typename unit_test>
+  [[maybe_unused]]
+  consteval test_result run_consteval_test_dual( unit_test const & test,
+                                 source_location const location = source_location::current() )
+    {
+    return constexpr_test(detail::test_invoke_dual<templ_list,templ_list2>::consteval_run(test), location);
+    }
+
+  consteval test_result test_dual()
+    {
+    using traits_test_list = metatests::type_list<uint16_t, int32_t, int64_t, double>;
+    using traits_test_list2 = metatests::type_list<uint16_t, uint32_t, uint64_t>;
+    int counter{};
+    auto test_fn = [&counter]<typename value_type, typename value_type2>
+                             ( value_type const *, value_type2 const * ) -> test_result
+      {
+      counter++;
+      return test_result{};
+      };
+
+    auto res = run_constexpr_test_dual<traits_test_list,traits_test_list2>(test_fn);
+    return res | test_result{counter == 12};
+    }
+  static_assert( test_dual() );
+}
+
 void dump( auto const & result )
   {
   for( auto el : result )

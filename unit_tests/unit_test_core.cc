@@ -1,4 +1,4 @@
-#define BOOST_TEST_MAIN
+// #define BOOST_TEST_MAIN
 #include <unit_test_core.h>
 
 std::ostream & operator <<( std::ostream & stream, non_trivial_ptr const & v )

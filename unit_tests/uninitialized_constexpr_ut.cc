@@ -3,10 +3,11 @@
 
 #include <atomic>
 #include <iostream>
+#include <algorithm>
+#include <functional>
 
-using traits_list_move = boost::mpl::list<uint16_t, int32_t, int64_t, double,
+using traits_list_move = metatests::type_list<uint16_t, int32_t, int64_t, double,
                                      non_trivial, non_trivial_ptr, non_trivial_ptr_except>;
-
 namespace coll::detail
 {
 template<typename value_type,unsigned size>
@@ -23,8 +24,7 @@ constexpr auto destroy_vec(std::array<value_type *,size> & sz)
   std::for_each(begin(sz), end(sz), [](auto & el){ if(el) delete el; });
   }
 
-template<typename value_type>
-bool constexpr constexpr_uninitialized_move_n()
+auto constexpr_uninitialized_move_n = []<typename value_type>( value_type const * ) -> metatests::test_result
   {
     {
     auto arr1{ construct_vec<value_type,10>()};
@@ -32,17 +32,19 @@ bool constexpr constexpr_uninitialized_move_n()
     uninitialized_move_n(begin(arr1),10,begin(out));
     destroy_vec(out);
     }
-  return true;
+  return {};
+  };
+
+}
+
+int main()
+  {
+  using namespace metatests;
+
+  test_result
+  res = run_constexpr_test<traits_list_move>(coll::detail::constexpr_uninitialized_move_n);
+  res |= run_consteval_test<traits_list_move>(coll::detail::constexpr_uninitialized_move_n);
+
+  return res ? EXIT_SUCCESS : EXIT_FAILURE;
   }
 
-template<typename value_type>
-bool consteval consteval_uninitialized_move_n()
-  {
-  return constexpr_uninitialized_move_n<value_type>();
-  }
-BOOST_AUTO_TEST_CASE_TEMPLATE( static_vector_copy, value_type, traits_list_move )
-  {
-  BOOST_TEST((consteval_uninitialized_move_n<value_type>()));
-  BOOST_TEST((constexpr_uninitialized_move_n<value_type>()));
-  }
-}

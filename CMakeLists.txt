@@ -28,8 +28,14 @@ CPMAddPackage(
 #-----------------------------------------------------------------------------
 
 option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest" ${PROJECT_IS_TOP_LEVEL} )
-
 add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
+if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
+  FetchContent_Declare(
+    ut
+    GIT_REPOSITORY https://github.com/boost-ext/ut.git
+    GIT_TAG        master
+  )
+endif()
 
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20 )
   message(STATUS "Assuming by default c++20 standard")
@@ -51,7 +57,33 @@ target_include_directories(small_vectors
 )
 
 target_compile_features(small_vectors INTERFACE cxx_std_20)
-
+if( PROJECT_IS_TOP_LEVEL )
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      set(SMALL_VECTORS_COMPILE_OPTIONS
+        -Weverything
+        -Werror
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-pre-c++14-compat
+        -Wno-pre-c++17-compat
+        -Wno-pre-c++20-compat-pedantic
+        -Wno-c++20-compat
+        -Wno-unused-parameter
+        -Wno-padded
+        -Wno-unused-command-line-argument
+        -fuse-ld=lld
+        #-stdlib=libc++
+        )
+      add_link_options( -fuse-ld=lld )
+  endif()
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set(SMALL_VECTORS_COMPILE_OPTIONS
+        -Wall
+        -Wextra
+        -Werror
+      )
+  endif()
+endif()
 packageProject(
   NAME ${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
@@ -65,19 +97,15 @@ packageProject(
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${INCLUDE_INSTALL_DIR} )
 
 if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
-  find_package( Boost 1.78 REQUIRED COMPONENTS unit_test_framework system )
-  if(Boost_FOUND)
-    message(" -- Found boost " ${Boost_VERSION})
-    message("    : Includes " ${Boost_INCLUDE_DIRS})
-    message("    : Libs     " ${Boost_LIBRARIES})
-  endif()
   add_custom_target( unit_tests )
 endif()
 
 if( SMALL_VECTORS_ENABLE_UNIT_TESTS )
   enable_testing( TRUE )
+  FetchContent_MakeAvailable(ut)
   add_subdirectory(unit_tests)
 endif()
 
-
-feature_summary(WHAT ALL)
+if( PROJECT_IS_TOP_LEVEL )
+  feature_summary(WHAT ALL)
+endif()
