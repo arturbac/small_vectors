@@ -251,7 +251,7 @@ int main()
       vector_type vec;
       emplace_back(vec, 1);
       emplace_back(vec, 2);
-      emplace_back(vec, 3);
+      vec.emplace_back(3);
       auto res = emplace_back(vec, 4);
       test_result tr;
       tr = constexpr_test( (res == vector_outcome_e::no_error) )
@@ -282,7 +282,7 @@ int main()
       vector_type vec;
       emplace_back(vec, 1);
       emplace_back(vec, 2);
-      emplace_back(vec, 3);
+      vec.emplace_back(3);
       auto res = emplace_back(vec, 4);
 
       test_result tr =
@@ -339,7 +339,7 @@ int main()
         {
         std::array<value_type,3> expected{2,3,1};
         value_type v = 3;
-        auto res = emplace(vec, begin(vec)+1, std::move(v) );
+        auto res = vec.emplace(begin(vec)+1, std::move(v) );
         tr |= constexpr_test( (res == no_error) )
           | constexpr_test(size(vec) == 3)
           | constexpr_test(equal(vec,expected));
@@ -403,7 +403,7 @@ int main()
         {
         std::array<value_type,4> tst{31,32,33,34};
         std::array<value_type,14> exp{11,12,21,22,13,1,31,32,33,34,2,3,4,5};
-        auto res = insert(vec, begin(vec)+6, begin(tst), end(tst) );
+        auto res = vec.insert(begin(vec)+6, begin(tst), end(tst) );
         tr |= constexpr_test( (res == vector_outcome_e::no_error) )
           | constexpr_test(size(vec) == 14)
           | constexpr_test(equal(vec,exp));
@@ -466,7 +466,7 @@ int main()
         {
         std::array<value_type,3> tst{11,12,13};
         std::array<value_type,8> exp{11,12,13,1,2,3,4,5};
-        auto res = insert(vec, begin(vec), make_move_iterator(begin(tst)), make_move_iterator(end(tst)) );
+        auto res = vec.insert(begin(vec), make_move_iterator(begin(tst)), make_move_iterator(end(tst)) );
         tr |= constexpr_test(res == vector_outcome_e::no_error)
           | constexpr_test(size(vec) == 8)
           | constexpr_test(equal(vec,exp));
@@ -498,7 +498,7 @@ int main()
         | constexpr_test(end(vec) == res);
 
       insert(vec, end(vec), begin(tst), end(tst));
-      res = erase_at_end(vec, begin(vec)+5);
+      res = vec.erase_at_end(begin(vec)+5);
       tr |= constexpr_test(size(vec) == 5)
         | constexpr_test(begin(vec)+5 == res)
         | constexpr_test(equal(vec, std::span(begin(tst), 5)));
@@ -529,7 +529,7 @@ int main()
         | constexpr_test( at(vec, 4u) == 31 )
         | constexpr_test( at(vec, 17u) == 52 );
 
-      res = erase(vec, begin(vec)+3, begin(vec)+3 );
+      res = vec.erase(begin(vec)+3, begin(vec)+3 );
       tr |= constexpr_test(size(vec) == 18)
         | constexpr_test( res == begin(vec)+3 )
         | constexpr_test( at(vec, 2u) == 13 )
@@ -568,7 +568,7 @@ int main()
         | constexpr_test(size(vec) == 18)
         | constexpr_test( at(vec, 17u) == 51 );
 
-      res = erase(vec, begin(vec) );
+      res = vec.erase(begin(vec) );
       tr |= constexpr_test( res == begin(vec) )
         | constexpr_test(size(vec) == 17)
         | constexpr_test( at(vec, 0u) == 12 )
@@ -664,7 +664,7 @@ int main()
           | constexpr_test(equal(vec,expected));
         }
         {
-        resize(vec,5);
+        vec.resize(5);
         std::array<value_type,5> expected{};
         std::iota( begin(expected), end(expected), value_type(1) );
         tr |= constexpr_test(size(vec) == 5)

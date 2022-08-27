@@ -194,7 +194,8 @@ namespace coll
     template<vector_tune_e tune = vector_tune_e::checked, typename ...Args>
     inline constexpr auto
     emplace_back( Args &&... args )
-      noexcept( tune == vector_tune_e::unchecked || noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)))
+      noexcept( tune == vector_tune_e::unchecked ||
+                noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)))
        {
        if constexpr(tune == vector_tune_e::checked)
          return detail::emplace_back(*this, std::forward<Args>(args)...);
@@ -250,13 +251,23 @@ namespace coll
     template<vector_tune_e tune = vector_tune_e::checked, typename ...Args>
     inline constexpr auto
     emplace(iterator itpos, Args &&... args)
-        noexcept(noexcept(detail::emplace(*this, itpos, std::forward<Args>(args)...)));
-//       { return coll::emplace<tune>(*this, itpos, std::forward<Args>(args)...); }
+        noexcept(tune == vector_tune_e::unchecked || 
+                 noexcept(detail::emplace(*this, itpos, std::forward<Args>(args)...)))
+      {
+      if constexpr( tune == vector_tune_e::checked)
+        return detail::emplace(*this, itpos, std::forward<Args>(args)...);
+      else
+        return detail::emplace_unchecked(*this, itpos, std::forward<Args>(args)...);
+      }
       
     inline constexpr auto
     resize( size_type new_size )
         noexcept(noexcept(detail::resize(*this, new_size)))
       { return detail::resize(*this, new_size); }
+      
+    inline constexpr auto
+    erase_at_end(const_iterator pos ) noexcept
+      { return detail::erase_at_end(*this, pos); }
       
     inline constexpr void set_size_priv_(size_type pos_ix) noexcept
       { size_ = pos_ix; }
