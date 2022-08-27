@@ -24,7 +24,7 @@
 #include <typeindex> 
 #include <type_traits>
 #include <iostream>
-#include <strutil/strconv_numeric.h>
+// #include <strutil/strconv_numeric.h>
 #include <compare>
 
   struct strong_type_default_traits
@@ -362,7 +362,7 @@
   // strong_type compose support
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename char_type, typename value_type, typename tag>
-  constexpr auto compose_preconv( strong_type<value_type,tag> const & value ) noexcept
-     { return strconv::detail::compose_preconv<char_type>(*value); }
-
+//   template<typename char_type, typename value_type, typename tag>
+//   constexpr auto compose_preconv( strong_type<value_type,tag> const & value ) noexcept
+//      { return strconv::detail::compose_preconv<char_type>(*value); }
+// 
