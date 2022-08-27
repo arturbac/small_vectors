@@ -194,14 +194,12 @@ namespace coll
     template<vector_tune_e tune = vector_tune_e::checked, typename ...Args>
     inline constexpr auto
     emplace_back( Args &&... args )
-      noexcept(detail::emplace_back(*this, std::forward<Args>(args)...));
-//       { return detail::emplace_back<tune>(*this, std::forward<Args>(args)...); }
+      noexcept(noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)));
       
     template<vector_tune_e tune = vector_tune_e::checked, typename T>
     inline constexpr void
     push_back(T && value )
         noexcept(noexcept(detail::push_back(*this, std::forward<T>(value))));
-//       { return push_back<tune>(*this, std::forward<T>(value)); }
       
     inline constexpr auto const &
     front() const noexcept
