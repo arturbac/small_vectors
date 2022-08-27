@@ -227,7 +227,7 @@ int main()
           | constexpr_test( vec[1u] == 2)
           | constexpr_test( vec[2u] == 3);
 
-      res = emplace_back(vec, 4);
+      res = vec.emplace_back(4);
       tr |= constexpr_test( (res == no_error) )
           | constexpr_test(size(vec) == 4)
           | constexpr_test(free_space(vec) == elements-4 )

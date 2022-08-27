@@ -194,12 +194,19 @@ namespace coll
     template<vector_tune_e tune = vector_tune_e::checked, typename ...Args>
     inline constexpr auto
     emplace_back( Args &&... args )
-      noexcept(noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)));
+      noexcept( tune == vector_tune_e::unchecked || noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)))
+       {
+       if constexpr(tune == vector_tune_e::checked)
+         return detail::emplace_back(*this, std::forward<Args>(args)...);
+       else
+         return detail::emplace_back_unchecked(*this,std::forward<Args>(args)...);
+       }
       
     template<vector_tune_e tune = vector_tune_e::checked, typename T>
     inline constexpr void
     push_back(T && value )
-        noexcept(noexcept(detail::push_back(*this, std::forward<T>(value))));
+        noexcept(noexcept(emplace_back<tune>(*this, std::forward<T>(value))))
+       { return emplace_back<tune>(*this, std::forward<T>(value)); }
       
     inline constexpr auto const &
     front() const noexcept
@@ -312,7 +319,7 @@ namespace coll
     requires (tune == vector_tune_e::unchecked)
   inline constexpr void
   emplace_back(static_vector<V,N> & vec, Args &&... args)
-      noexcept(std::is_nothrow_constructible_v<V,Args...>)
+      noexcept(noexcept(detail::emplace_back_unchecked(vec,std::forward<Args>(args)...)))
     {
     detail::emplace_back_unchecked(vec,std::forward<Args>(args)...);
     }
@@ -324,7 +331,7 @@ namespace coll
     requires (tune == vector_tune_e::checked)
   inline constexpr vector_outcome_e
   emplace_back(static_vector<V,N> & vec, Args &&... args)
-      noexcept(std::is_nothrow_constructible_v<V,Args...>)
+      noexcept(noexcept(detail::emplace_back(vec,std::forward<Args>(args)...)))
     {
     return detail::emplace_back(vec,std::forward<Args>(args)...);
     }
@@ -332,7 +339,7 @@ namespace coll
   template<vector_tune_e tune = vector_tune_e::checked, typename V, uint64_t N, typename T>
   inline constexpr void
   push_back( static_vector<V,N> & vec, T && value )
-      noexcept(std::is_nothrow_convertible_v<T,V>)
+      noexcept(noexcept(emplace_back<tune>(vec,std::forward<T>(value))))
     {
     return emplace_back<tune>(vec,std::forward<T>(value));
     }
@@ -341,7 +348,7 @@ namespace coll
     requires (tune == vector_tune_e::unchecked)
   inline constexpr void
   emplace(static_vector<V,N> & vec, typename static_vector<V,N>::iterator itpos, Args &&... args)
-      noexcept(std::is_nothrow_constructible_v<V,Args...>)
+      noexcept(noexcept(detail::emplace_unchecked(vec, itpos, std::forward<Args>(args)...)))
     {
     detail::emplace_unchecked(vec, itpos, std::forward<Args>(args)...);
     }
@@ -350,7 +357,7 @@ namespace coll
     requires (tune == vector_tune_e::checked)
   inline constexpr vector_outcome_e
   emplace(static_vector<V,N> & vec, typename static_vector<V,N>::iterator itpos, Args &&... args)
-      noexcept(std::is_nothrow_constructible_v<V,Args...>)
+      noexcept(noexcept(detail::emplace( vec, itpos, std::forward<Args>(args)...)))
     {
     return detail::emplace( vec, itpos, std::forward<Args>(args)...);
     }
