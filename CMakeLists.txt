@@ -43,7 +43,7 @@ endif()
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF)
 
-message(STATUS "CMake inatall directory: " ${CMAKE_INSTALL_INCLUDEDIR})
+message(STATUS "CMake install directory: " ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(small_vectors INTERFACE)
 if(NOT DEFINED INCLUDE_INSTALL_DIR)
@@ -58,6 +58,9 @@ target_include_directories(small_vectors
 target_compile_features(small_vectors INTERFACE cxx_std_20)
 if( PROJECT_IS_TOP_LEVEL )
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      option(SMALL_VECTORS_ENABLE_LLD_LINKER "enable lld linker for linking unit tests" ON )
+      add_feature_info("SMALL_VECTORS_ENABLE_LLD_LINKER" SMALL_VECTORS_ENABLE_LLD_LINKER "enable lld linker for linking unit tests")
+      
       set(SMALL_VECTORS_COMPILE_OPTIONS
         -Weverything
         -Werror
@@ -70,10 +73,11 @@ if( PROJECT_IS_TOP_LEVEL )
         -Wno-unused-parameter
         -Wno-padded
         -Wno-unused-command-line-argument
-        -fuse-ld=lld
-        #-stdlib=libc++
         )
-      add_link_options( -fuse-ld=lld )
+      if(SMALL_VECTORS_ENABLE_LLD_LINKER)
+        list(APPEND SMALL_VECTORS_COMPILE_OPTIONS -fuse-ld=lld )
+        add_link_options( -fuse-ld=lld )
+      endif()
   endif()
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       set(SMALL_VECTORS_COMPILE_OPTIONS
