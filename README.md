@@ -1,4 +1,6 @@
-# small_vectors
+# small_vectors 
+![MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![CMake](https://github.com/arturbac/fixed_math/workflows/CMake/badge.svg)
+![language](https://img.shields.io/badge/language-C%2B%2B20-blue.svg) 
 
 C++20 small and static vectors
 
