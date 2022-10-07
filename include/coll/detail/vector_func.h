@@ -51,16 +51,14 @@ namespace coll::detail
       { vec.size() } noexcept -> std::same_as<typename vector_type::size_type>;
       };
   //-------------------------------------------------------------------------------------------------------------------
-  template<has_size_member_function vector_type>
   [[nodiscard]]
   inline constexpr auto
-  size( vector_type const & vec ) noexcept
+  size( has_size_member_function auto const & vec ) noexcept
     { return vec.size(); }
   //-------------------------------------------------------------------------------------------------------------------
-  template<has_size_member_function vector_type>
   [[nodiscard]]
   inline constexpr bool
-  empty( vector_type const & vec ) noexcept
+  empty( has_size_member_function auto const & vec ) noexcept
     { return vec.size() == 0; }
   //-------------------------------------------------------------------------------------------------------------------
   template<typename T,typename Expected>
@@ -113,34 +111,37 @@ namespace coll::detail
     }
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
-    requires requires( vector_type const & vec )
+  concept has_capacity_member_fn = 
+    requires( vector_type const & vec )
       {
       typename vector_type::size_type;
       { vec.capacity() } -> std::same_as<typename vector_type::size_type>;
-      }
+      };
+  
   [[nodiscard]]
   inline constexpr auto
-  capacity(vector_type const & vec ) noexcept
+  capacity(has_capacity_member_fn auto const & vec ) noexcept
     { return vec.capacity(); }
     
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
-    requires requires( vector_type const & vec )
+  concept has_max_size_member_fn =
+     requires( vector_type const & vec )
       {
       typename vector_type::size_type;
       { vec.max_size() } -> std::same_as<typename vector_type::size_type>;
-      }
+      };
+
   [[nodiscard]]
   constexpr auto
-  max_size( vector_type const & vec ) noexcept
+  max_size( has_max_size_member_fn auto const & vec ) noexcept
     { return vec.max_size(); }
     
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief returns number of elements that can be inserted without reallocation (if possible)
-  template<typename vector_type>
   [[nodiscard]]
   inline constexpr auto
-  free_space( vector_type const & vec ) noexcept
+  free_space( auto const & vec ) noexcept
     { return nic_sub(capacity(vec),size(vec)); }
     
   //-------------------------------------------------------------------------------------------------------------------
@@ -152,10 +153,9 @@ namespace coll::detail
       { vec.data() } noexcept -> const_or_nonconst_pointer<typename vector_type::value_type>;
       };
   //-------------------------------------------------------------------------------------------------------------------
-  template<has_data_member_function vector_type>
   [[nodiscard]]
   inline constexpr auto
-  data( vector_type & vec ) noexcept
+  data( has_data_member_function auto & vec ) noexcept
     { return vec.data(); }
     
   //-------------------------------------------------------------------------------------------------------------------
@@ -184,39 +184,46 @@ namespace coll::detail
   template<typename vector_type>
   internal_data_context_t( vector_type & vec ) -> internal_data_context_t<vector_type>;
   //-------------------------------------------------------------------------------------------------------------------
-  template<typename vector_type>
   [[nodiscard]]
   inline constexpr auto
-  begin( vector_type & vec ) noexcept
-    { return data(vec); }
+  begin( auto & vec ) noexcept
+    { return detail::data(vec); }
   //-------------------------------------------------------------------------------------------------------------------
-  template<typename vector_type>
   [[nodiscard]]
   inline constexpr auto
-  cbegin( vector_type const & vec ) noexcept
-    { return begin(vec); }
+  cbegin( auto const & vec ) noexcept
+    { return detail::begin(vec); }
   //-------------------------------------------------------------------------------------------------------------------
-  template<typename vector_type>
   [[nodiscard]]
   inline constexpr auto
-  end( vector_type & vec ) noexcept
-    { return unext(begin(vec), size(vec)); }
+  end( auto & vec ) noexcept
+    { return unext(detail::begin(vec), detail::size(vec)); }
   //-------------------------------------------------------------------------------------------------------------------
-  template<typename vector_type>
   inline constexpr auto &
-  front(vector_type & vec) noexcept
-    { return *data(vec); }
+  front(auto & vec) noexcept
+    { return *detail::data(vec); }
     
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief Returns a reference to the last element in the container.
   ///\warning Calling back on an empty container causes undefined behavior.
-  template<typename vector_type>
   inline constexpr auto &
-  back(vector_type & vec) noexcept
+  back(auto & vec) noexcept
     { return at(vec, nic_sub(size(vec),1u)); }
     
   //-------------------------------------------------------------------------------------------------------------------
+    
   template<typename vector_type, typename size_type>
+  concept set_size_constraints = 
+    requires( vector_type & vec, size_type pos_ix )
+      {
+      typename vector_type::value_type;
+      typename vector_type::size_type;
+      requires std::same_as<typename vector_type::size_type, size_type>;
+      vec.set_size_priv_(pos_ix);
+      };
+      
+  template<typename vector_type, typename size_type>
+    requires set_size_constraints<vector_type,size_type>
   inline constexpr void
   erase_at_end_impl( vector_type & vec, internal_data_context_t<vector_type> const & my, size_type pos_ix ) noexcept
     {
@@ -225,15 +232,9 @@ namespace coll::detail
       destroy_range( my.data(), pos_ix, my.size() );
     vec.set_size_priv_(pos_ix);
     }
-    
+
   template<typename vector_type, typename size_type>
-    requires requires( vector_type & vec, size_type pos_ix )
-      {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
-      requires std::same_as<typename vector_type::size_type, size_type>;
-      vec.set_size_priv_(pos_ix);
-      }
+    requires set_size_constraints<vector_type,size_type>
   inline constexpr void
   erase_at_end_impl( vector_type & vec, size_type pos_ix ) noexcept
     {
@@ -256,7 +257,7 @@ namespace coll::detail
     using size_type = typename vector_type::size_type;
     
     size_type pos_ix = udistance<size_type>( my.cdata(), pos );
-    //unsinged cast prevent negative from invalid pos to buffer overflow
+    //unsigned cast prevent negative from invalid pos to buffer overflow
     if( pos_ix < my.size() )
       {
       detail::erase_at_end_impl(vec, my, pos_ix );
@@ -283,6 +284,10 @@ namespace coll::detail
   ///       Any past-the-end iterators are also invalidated.  
   ///       Leaves the capacity() of the vector unchanged
   template<typename vector_type>
+    requires requires
+      {
+      typename vector_type::size_type;
+      }
   inline constexpr void
   clear( vector_type & vec ) noexcept
     {
@@ -290,19 +295,29 @@ namespace coll::detail
     erase_at_end_impl(vec, size_type(0u) );
     }
   //-------------------------------------------------------------------------------------------------------------------
-  ///\brief erases element at pos \ref pos
-  ///\returns Iterator following the removed element.
-  ///         If pos refers to the last element, then the end() iterator is returned
   template<typename vector_type>
-    requires requires( vector_type & vec)
+  concept vector_with_size_and_value = 
+    requires( vector_type & vec)
+      {
+      typename vector_type::size_type;
+      typename vector_type::value_type;
+      };
+      
+  template<typename vector_type>
+  concept vector_value_move_assignable = 
+    requires( vector_type & vec)
       {
       typename vector_type::const_iterator;
       typename vector_type::iterator;
-      typename vector_type::size_type;
-      typename vector_type::value_type;
+      requires vector_with_size_and_value<vector_type>;
       requires ( true == std::is_move_assignable_v<typename vector_type::value_type> );
       vec.set_size_priv_(typename vector_type::size_type{});
-      }
+      };
+      
+  ///\brief erases element at pos \ref pos
+  ///\returns Iterator following the removed element.
+  ///         If pos refers to the last element, then the end() iterator is returned
+  template<vector_value_move_assignable vector_type>
   inline constexpr auto
   erase( vector_type & vec,
          typename vector_type::const_iterator pos
@@ -332,15 +347,7 @@ namespace coll::detail
   ///\returns Iterator following the last removed element.
   ///         If last==end() prior to removal, then the updated end() iterator is returned.
   ///         If [first, last) is an empty range, then last is returned. 
-  template<typename vector_type>
-    requires requires
-      {
-      typename vector_type::const_iterator;
-      typename vector_type::iterator;
-      typename vector_type::size_type;
-      typename vector_type::value_type;
-      requires ( true == std::is_move_assignable_v<typename vector_type::value_type> );
-      }
+  template<vector_value_move_assignable vector_type>
   inline constexpr auto
   erase( vector_type & vec,
          typename vector_type::const_iterator first,
@@ -418,8 +425,7 @@ namespace coll::detail
   template<typename vector_type, typename ...Args>
     requires requires( vector_type & vec)
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       requires std::constructible_from<typename vector_type::value_type,Args...>;
       vec.set_size_priv_(typename vector_type::size_type{});
       }
@@ -437,8 +443,7 @@ namespace coll::detail
   template<typename vector_type, typename ...Args>
     requires requires(vector_type & vec)
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       { vector_type::support_reallocation() } -> std::same_as<bool>;
       requires std::constructible_from<typename vector_type::value_type,Args...>;
       }
@@ -524,8 +529,7 @@ namespace coll::detail
   template<typename vector_type, concepts::random_access_iterator source_iterator>
     requires requires( vector_type & vec)
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       { vector_type::support_reallocation() } -> std::same_as<bool>;
       //value must be constructible from *iterator 
       requires std::constructible_from<typename vector_type::value_type, detail::iterator_value_type_t<source_iterator>>;
@@ -664,8 +668,7 @@ namespace coll::detail
   concept emplace_constraints =
    requires( vector_type & vec)
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       requires std::constructible_from<typename vector_type::value_type, Args...>;
       vec.set_size_priv_(typename vector_type::size_type{});
       };
@@ -792,8 +795,7 @@ namespace coll::detail
   concept reserve_constraints =
     requires
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       requires ( true == std::is_move_constructible_v<typename vector_type::value_type> );
       { vector_type::support_reallocation() } -> std::same_as<bool>;
       requires ( true == vector_type::support_reallocation() );
@@ -864,24 +866,28 @@ namespace coll::detail
     }
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
-    requires requires
+  concept vector_with_move_and_default_constructible_value_type =
+    requires
       {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
+      requires vector_with_size_and_value<vector_type>;
       requires ( true == std::is_move_constructible_v<typename vector_type::value_type> );
       requires ( true == std::is_default_constructible_v<typename vector_type::value_type> );
       { vector_type::support_reallocation() } -> std::same_as<bool>;
-      }
+      };
+      
+  template<vector_with_move_and_default_constructible_value_type vector_type>
   inline constexpr vector_outcome_e
   default_append(vector_type & vec, internal_data_context_t<vector_type> const & my,
                  typename vector_type::size_type count )
       noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>
             && std::is_nothrow_default_constructible_v<typename vector_type::value_type>)
     {
-    constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<typename vector_type::value_type>
-                              && std::is_nothrow_default_constructible_v<typename vector_type::value_type>;
+    using value_type = typename vector_type::value_type;
     using size_type = typename vector_type::size_type;
-
+    
+    constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>
+                              && std::is_nothrow_default_constructible_v<value_type>;
+    
     if( count <= my.free_space() )
       {
       uninitialized_value_construct_n(my.end(), count );
@@ -893,15 +899,15 @@ namespace coll::detail
       if constexpr(vector_type::support_reallocation() )
         {
         size_type new_capacity{ growth(my.size(), count ) };
-        using value_type = typename vector_type::value_type;
-        //alocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
+        
+        //allocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
         typename noexcept_if<use_nothrow>::cond_except_holder
           new_space{ sv_allocate<value_type>(new_capacity) };
         if( new_space )
           {
           if constexpr(use_nothrow)
             {
-            //exists only of the purprose of better memory access order
+            //exists only of the purpose of better memory access order
             uninitialized_relocate_n( my.data(), my.size(), new_space.data() );
             uninitialized_value_construct_n( unext(new_space.data(), my.size()), count );
             }
@@ -930,15 +936,7 @@ namespace coll::detail
     return vector_outcome_e::out_of_storage;
     }
     
-  template<typename vector_type>
-    requires requires
-      {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
-      requires ( true == std::is_move_constructible_v<typename vector_type::value_type> );
-      requires ( true == std::is_default_constructible_v<typename vector_type::value_type> );
-      { vector_type::support_reallocation() } -> std::same_as<bool>;
-      }
+  template<vector_with_move_and_default_constructible_value_type vector_type>
   inline constexpr vector_outcome_e
   default_append(vector_type & vec, typename vector_type::size_type count )
       noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>
@@ -948,15 +946,7 @@ namespace coll::detail
       return default_append(vec,my,count);
       }
   //-------------------------------------------------------------------------------------------------------------------
-  template<typename vector_type>
-    requires requires
-      {
-      typename vector_type::value_type;
-      typename vector_type::size_type;
-      requires ( true == std::is_move_constructible_v<typename vector_type::value_type> );
-      requires ( true == std::is_default_constructible_v<typename vector_type::value_type> );
-      { vector_type::support_reallocation() } -> std::same_as<bool>;
-      }
+  template<vector_with_move_and_default_constructible_value_type vector_type>
   constexpr vector_outcome_e
   resize( vector_type & vec, typename vector_type::size_type new_size )
     noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>
