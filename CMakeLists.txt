@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 
 project(small_vectors
-        VERSION 1.0.7
+        VERSION 1.0.8
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         )
