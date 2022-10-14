@@ -163,6 +163,77 @@ using mixed_bitfiled_struct =
   result |= metatests::run_constexpr_test(fn_test);
   result |= metatests::run_consteval_test(fn_test);
   };
+  
+  using mixed_bitfiled_struct2 = 
+    meta_packed_struct<
+      member<uint8_t,mbs_fields::field_1,4>,
+      member<bool,mbs_fields::field_2,1>,
+      member<uint16_t ,mbs_fields::field_3,16>,
+      member<example_enum_value, mbs_fields::field_4,3>
+      >;
+  "test_metabitstruct_mixed2"_test = [&result]
+    {
+    auto fn_test = []()
+      {
+      metatests::test_result tr;
+      using enum mbs_fields;
+      constexpr auto fcount = filed_count<mixed_bitfiled_struct2>();
+      tr |= constexpr_test(fcount == 4);
+      constexpr auto s_bit_width = bit_width<mixed_bitfiled_struct2>();
+      tr |= constexpr_test(s_bit_width == 24);
+        {
+        mixed_bitfiled_struct2 mbs;
+        get<field_1>(mbs) = 0b1111;
+        tr |= constexpr_test(get<field_1>(mbs) == 0b1111 );
+        tr |= constexpr_test(get<field_2>(mbs) == false );
+        tr |= constexpr_test(get<field_3>(mbs) == 0 );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
+
+        auto packed_value = pack_value<uint32_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b1111 );
+        }
+        {
+        mixed_bitfiled_struct2 mbs;
+        get<field_2>(mbs) = true;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == true );
+        tr |= constexpr_test(get<field_3>(mbs) == 0 );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
+
+        auto packed_value = pack_value<uint32_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b10000 );
+        }
+        {
+        mixed_bitfiled_struct2 mbs;
+        get<field_3>(mbs) = 0xffff;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == false );
+        tr |= constexpr_test(get<field_3>(mbs) == 0xffff );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
+
+        auto packed_value = pack_value<uint32_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b00'1111111111111111'0'0000 );
+        }
+        {
+        using enum example_enum_value;
+        mixed_bitfiled_struct2 mbs;
+        get<field_2>(mbs) = true;
+        get<field_3>(mbs) = 0x0ff0;
+        get<field_4>(mbs) = value2;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == true );
+        tr |= constexpr_test(get<field_3>(mbs) == 0x0ff0 );
+        tr |= constexpr_test(get<field_4>(mbs) == value2 );
+
+        auto packed_value = pack_value<uint32_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b10'0000111111110000'1'0000 );
+        }
+      return tr;
+      };
+    result |= metatests::run_constexpr_test(fn_test);
+    result |= metatests::run_consteval_test(fn_test);
+    };
+
 
 "test_metabitstruct_mixed_constrcution"_test = [&result]
   {
