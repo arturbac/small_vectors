@@ -135,7 +135,7 @@ namespace utils
       
       unsigned bit_width = member_type::bit_width();
       pack_type value { static_cast<pack_type>(self.value) };
-      pack_type mask { static_cast<pack_type>((1u<<bit_width)-1u) };
+      pack_type mask { static_cast<pack_type>((pack_type(1u)<<bit_width)-1u) };
       if(std::is_constant_evaluated() )
         { if((mask & value) != value) throw "value outisde declared bit_width"; }
       else

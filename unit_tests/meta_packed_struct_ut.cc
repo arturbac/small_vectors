@@ -97,7 +97,7 @@ using mixed_bitfiled_struct =
   meta_packed_struct<
     member<uint8_t,mbs_fields::field_1,4>,
     member<bool,mbs_fields::field_2,1>,
-    member<uint16_t,mbs_fields::field_3,16>,
+    member<uint32_t ,mbs_fields::field_3,32>,
     member<example_enum_value, mbs_fields::field_4,3>
     >;
     
@@ -110,7 +110,7 @@ using mixed_bitfiled_struct =
     constexpr auto fcount = filed_count<mixed_bitfiled_struct>();
     tr |= constexpr_test(fcount == 4);
     constexpr auto s_bit_width = bit_width<mixed_bitfiled_struct>();
-    tr |= constexpr_test(s_bit_width == 24);
+    tr |= constexpr_test(s_bit_width == 40);
       {
       mixed_bitfiled_struct mbs;
       get<field_1>(mbs) = 0b1111;
@@ -119,7 +119,7 @@ using mixed_bitfiled_struct =
       tr |= constexpr_test(get<field_3>(mbs) == 0 );
       tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
-      auto packed_value = pack_value<uint32_t>(mbs);
+      auto packed_value = pack_value<uint64_t>(mbs);
       tr |= constexpr_test(packed_value == 0b1111 );
       }
       {
@@ -130,7 +130,7 @@ using mixed_bitfiled_struct =
       tr |= constexpr_test(get<field_3>(mbs) == 0 );
       tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
-      auto packed_value = pack_value<uint32_t>(mbs);
+      auto packed_value = pack_value<uint64_t>(mbs);
       tr |= constexpr_test(packed_value == 0b10000 );
       }
       {
@@ -141,7 +141,7 @@ using mixed_bitfiled_struct =
       tr |= constexpr_test(get<field_3>(mbs) == 0xffff );
       tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
-      auto packed_value = pack_value<uint32_t>(mbs);
+      auto packed_value = pack_value<uint64_t>(mbs);
       tr |= constexpr_test(packed_value == 0b00'1111111111111111'0'0000 );
       }
       {
@@ -155,8 +155,8 @@ using mixed_bitfiled_struct =
       tr |= constexpr_test(get<field_3>(mbs) == 0x0ff0 );
       tr |= constexpr_test(get<field_4>(mbs) == value2 );
 
-      auto packed_value = pack_value<uint32_t>(mbs);
-      tr |= constexpr_test(packed_value == 0b10'0000111111110000'1'0000 );
+      auto packed_value = pack_value<uint64_t>(mbs);
+      tr |= constexpr_test(packed_value == 0b10'00000000000000000000111111110000'1'0000 );
       }
     return tr;
     };
