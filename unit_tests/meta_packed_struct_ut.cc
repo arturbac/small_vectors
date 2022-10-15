@@ -21,7 +21,54 @@ using bool_bitfiled_struct =
 
 int main()
 {
+  
 metatests::test_result result;
+"test_bitmask"_test = [&result]
+  {
+  auto fn_test = []()
+    {
+    metatests::test_result tr;
+      {
+      tr |=constexpr_test(utils::bitmask_v<uint8_t,0> == 0x0u);
+      tr |=constexpr_test(utils::bitmask_v<uint8_t,8> == 0xFFu);
+      tr |=constexpr_test(utils::bitmask_v<uint8_t,7> == 0x7Fu);
+      tr |=constexpr_test(utils::bitmask_v<uint8_t,1> == 0x1u);
+      
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,7> == 0x7Fu);
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,1> == 0x1u);
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,8> == 0xFFu);
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,13> == (1u<<13)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,9> == (1u<<9)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint16_t,16> == 0xFFFFu);
+      
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,8> == 0xFFu);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,7> == 0x7Fu);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,1> == 0x1u);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,28> == (1u<<28)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,23> == (1u<<23)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,29> == (1u<<29)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint32_t,32> == 0xFFFFFFFFu);
+      
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,0> == 0x0u);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,8> == 0xFFu);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,7> == 0x7Fu);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,1> == 0x1u);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,28> == (1u<<28)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,23> == (1u<<23)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,29> == (1u<<29)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,32> == 0xFFFFFFFFu);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,58> == (1LLu<<58)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,53> == (1LLu<<53)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,59> == (1LLu<<59)-1);
+      tr |=constexpr_test(utils::bitmask_v<uint64_t,64> == 0xFFFFFFFFFFFFFFFFLLu);
+      }
+      
+    return tr;
+    };
+  result |= metatests::run_constexpr_test(fn_test);
+  result |= metatests::run_consteval_test(fn_test);
+  };
+  
 "test_metabitstruct_bool"_test = [&result]
   {
   auto fn_test = []()
@@ -233,8 +280,78 @@ using mixed_bitfiled_struct =
     result |= metatests::run_constexpr_test(fn_test);
     result |= metatests::run_consteval_test(fn_test);
     };
+    
+  using mixed_bitfiled_struct3 = 
+    meta_packed_struct<
+      member<uint8_t,mbs_fields::field_1,4>,
+      member<bool,mbs_fields::field_2,1>,
+      member<uint64_t ,mbs_fields::field_3,56>,
+      member<example_enum_value, mbs_fields::field_4,3>
+      >;
+  "test_metabitstruct_mixed3"_test = [&result]
+    {
+    auto fn_test = []()
+      {
+      metatests::test_result tr;
+      using enum mbs_fields;
+      constexpr auto fcount = filed_count<mixed_bitfiled_struct3>();
+      tr |= constexpr_test(fcount == 4);
+      constexpr auto s_bit_width = bit_width<mixed_bitfiled_struct3>();
+      tr |= constexpr_test(s_bit_width == 64);
+        {
+        mixed_bitfiled_struct3 mbs;
+        get<field_1>(mbs) = 0b1111;
+        tr |= constexpr_test(get<field_1>(mbs) == 0b1111 );
+        tr |= constexpr_test(get<field_2>(mbs) == false );
+        tr |= constexpr_test(get<field_3>(mbs) == 0 );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
+        auto packed_value = pack_value<uint64_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b1111 );
+        }
+        {
+        mixed_bitfiled_struct3 mbs;
+        get<field_2>(mbs) = true;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == true );
+        tr |= constexpr_test(get<field_3>(mbs) == 0 );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
+        auto packed_value = pack_value<uint64_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b10000 );
+        }
+        {
+        mixed_bitfiled_struct3 mbs;
+        get<field_3>(mbs) = (0x1llu<<56)-1;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == false );
+        tr |= constexpr_test(get<field_3>(mbs) == (0x1llu<<56)-1 );
+        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
+
+        auto packed_value = pack_value<uint64_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b00'11111111111111111111111111111111111111111111111111111111'0'0000 );
+        }
+        {
+        using enum example_enum_value;
+        mixed_bitfiled_struct3 mbs;
+        get<field_2>(mbs) = true;
+        get<field_3>(mbs) = 0b01111111111111111111111111111111111111111111111111111110;
+        get<field_4>(mbs) = value2;
+        tr |= constexpr_test(get<field_1>(mbs) == 0 );
+        tr |= constexpr_test(get<field_2>(mbs) == true );
+        tr |= constexpr_test(get<field_3>(mbs) == 0b01111111111111111111111111111111111111111111111111111110 );
+        tr |= constexpr_test(get<field_4>(mbs) == value2 );
+
+        auto packed_value = pack_value<uint64_t>(mbs);
+        tr |= constexpr_test(packed_value == 0b10'01111111111111111111111111111111111111111111111111111110'1'0000 );
+        
+        }
+      return tr;
+      };
+    result |= metatests::run_constexpr_test(fn_test);
+    result |= metatests::run_consteval_test(fn_test);
+    };
+    
 "test_metabitstruct_mixed_constrcution"_test = [&result]
   {
   auto fn_test = []()

@@ -124,6 +124,24 @@ namespace utils
         return bit_width<next_member_t>() + my_bit_width;
       }
       
+    /// \brief compile time bitmsk calculating
+    template <std::unsigned_integral T, uint32_t N>
+    struct bitmask_m {
+      static T constexpr value = bitmask_m < T, ( N - 1u ) >::value | T( T(1u) << ( N - 1 ) );
+      };
+      
+    template <std::unsigned_integral T>
+    struct bitmask_m<T, 0u> {
+      static T constexpr value = T( 0u );
+      };
+    }
+    
+  /// \brief compile time bitmsk calculating
+  template <std::unsigned_integral T, uint32_t number_of_bits>
+  constexpr T bitmask_v = detail::bitmask_m<T,number_of_bits>::value;
+    
+  namespace detail
+    {
     template<std::unsigned_integral pack_type, typename sub_member_type, typename meta_packed_struct>
     constexpr auto pack_value(unsigned offset,  meta_packed_struct const & ms )
         -> pack_type
@@ -133,9 +151,9 @@ namespace utils
       //cast meta to exactly my self inherited type
       member_type const & self = static_cast<member_type const &>(ms);
       
-      unsigned bit_width = member_type::bit_width();
+      constexpr unsigned bit_width = member_type::bit_width();
       pack_type value { static_cast<pack_type>(self.value) };
-      pack_type mask { static_cast<pack_type>((pack_type(1u)<<bit_width)-1u) };
+      pack_type mask { bitmask_v<pack_type,bit_width> };
       if(std::is_constant_evaluated() )
         { if((mask & value) != value) throw "value outisde declared bit_width"; }
       else
