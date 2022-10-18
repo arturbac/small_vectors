@@ -27,6 +27,7 @@ namespace utils
              && ((sizeof(value_type)*8) >= BitWidth )
     struct member
       {
+      using value_t = value_type;
       using tag_type = decltype(tag_value);
       static constexpr tag_type tag() noexcept { return tag_value; }
       static constexpr uint8_t bit_width() noexcept { return BitWidth; }
@@ -165,6 +166,24 @@ namespace utils
       else
         return static_cast<pack_type>(pack_value<pack_type,next_member_t>(offset+bit_width,ms) | my_value_packed);
       }
+
+    template<typename meta_packed_struct, typename sub_member_type, std::unsigned_integral pack_type>
+    constexpr void unpack_value(meta_packed_struct& mps, unsigned offset, pack_type pack)
+      {
+      using next_member_t = typename sub_member_type::next_member_t;
+      using member_type = typename sub_member_type::member_type;
+      using value_type = typename member_type::value_t;
+
+      constexpr unsigned bit_width = member_type::bit_width();
+
+      pack = pack >> offset;
+      auto& value{ detail::get<member_type::tag()>(mps) };
+      constexpr auto mask{ bitmask_v<pack_type, bit_width> };
+      value = static_cast<value_type>(pack & mask);
+
+      if constexpr( !std::is_same_v<void, next_member_t>)
+        return unpack_value<meta_packed_struct, next_member_t>(mps, bit_width, pack);
+      }
     }
 
   using detail::member;
@@ -216,6 +235,14 @@ namespace utils
   constexpr auto pack_value(meta_packed_struct const & ms ) noexcept
     {
     return detail::pack_value<pack_type,typename meta_packed_struct::first_member_t>(0,ms);
+    }
+
+  template<typename meta_packed_struct, std::unsigned_integral pack_type>
+  constexpr auto unpack_value(pack_type pack)
+    {
+    meta_packed_struct mps{};
+    detail::unpack_value<meta_packed_struct, typename meta_packed_struct::first_member_t>(mps, 0, pack);
+    return mps;
     }
     
   template<auto tag_value, typename meta_packed_struct>

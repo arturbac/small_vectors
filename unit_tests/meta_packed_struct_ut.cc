@@ -376,5 +376,55 @@ using mixed_bitfiled_struct =
   result |= metatests::run_constexpr_test(fn_test);
   result |= metatests::run_consteval_test(fn_test);
   };
+
+"test_metabitstruct2_mixed_unpack"_test = [&result]
+  {
+  auto fn_test = []()
+    {
+    metatests::test_result tr;
+    using enum mbs_fields;
+    using enum example_enum_value;
+
+    uint32_t packed_value{ 0b011000011111111000010010 };
+    auto mbs{ unpack_value<mixed_bitfiled_struct2>(packed_value) };
+
+    tr |= constexpr_test(get<field_1>(mbs) == 0x02 );
+    tr |= constexpr_test(get<field_2>(mbs) == true );
+    tr |= constexpr_test(get<field_3>(mbs) == 0x0ff0 );
+    tr |= constexpr_test(get<field_4>(mbs) == value3 );
+
+    return true;
+    };
+  result |= metatests::run_constexpr_test(fn_test);
+  result |= metatests::run_constexpr_test(fn_test);
+  };
+
+"test_metabitstruct_mixed_unpack"_test = [&result]
+  {
+  auto fn_test = []()
+    {
+    metatests::test_result tr;
+    using enum mbs_fields;
+    using enum example_enum_value;
+
+    mixed_bitfiled_struct mbs;
+    get<field_1>(mbs) = 0b1011;
+    get<field_2>(mbs) = false;
+    get<field_3>(mbs) = 0b10101010101010101010101010101010;
+    get<field_4>(mbs) = value1;
+
+    auto packed_value{ pack_value<uint64_t>(mbs) };
+
+    auto mbs_unpacked{ unpack_value<decltype(mbs)>(packed_value) };
+    tr |= constexpr_test(get<field_1>(mbs) == get<field_1>(mbs_unpacked));
+    tr |= constexpr_test(get<field_2>(mbs) == get<field_2>(mbs_unpacked));
+    tr |= constexpr_test(get<field_3>(mbs) == get<field_3>(mbs_unpacked));
+    tr |= constexpr_test(get<field_4>(mbs) == get<field_4>(mbs_unpacked));
+
+    return true;
+    };
+  result |= metatests::run_constexpr_test(fn_test);
+  result |= metatests::run_constexpr_test(fn_test);
+  };
 return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
