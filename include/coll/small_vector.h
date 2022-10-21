@@ -192,6 +192,22 @@ namespace coll
       return data()[index];
       }
       
+    template<concepts::unsigned_arithmetic_integral arg_size_type>
+    [[nodiscard]]
+    inline constexpr auto const & at( arg_size_type index ) const noexcept
+      {
+      assert(index< size());
+      return data()[index];
+      }
+      
+    template<concepts::unsigned_arithmetic_integral arg_size_type>
+    [[nodiscard]]
+    inline constexpr auto & at( arg_size_type index ) noexcept
+      {
+      assert(index< size());
+      return data()[index];
+      }
+      
     //compatibility with old code
     inline constexpr bool empty() const noexcept
       { return detail::empty(*this); }
