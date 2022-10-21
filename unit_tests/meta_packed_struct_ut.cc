@@ -371,7 +371,7 @@ using mixed_bitfiled_struct =
     tr |= constexpr_test(get<field_2>(mbs) == true );
     tr |= constexpr_test(get<field_3>(mbs) == 0x0ff0 );
     tr |= constexpr_test(get<field_4>(mbs) == value1 );
-    return true;
+    return tr;
     };
   result |= metatests::run_constexpr_test(fn_test);
   result |= metatests::run_consteval_test(fn_test);
