@@ -3,7 +3,7 @@
 //
 // Description:
 // \class strong_type
-// \brief enkapsulacja typow POD chronaica przed blednym podstawieniami i rzutowaniami
+// \brief encapsulation of basic types guarding for invalid substitution and casting
 // \code example
 /// \code{
 ///  struct row_tag :
@@ -14,23 +14,23 @@
 // Author: artur bac 2008-2022
 //
 #pragma once
+
+#include <concepts>
 #include <utility>
 #include <limits>
 // Get the declaration of the primary std::hash template.
 // We are not permitted to declare it ourselves.
 // <typeindex> is guaranteed to provide such a declaration, 
 // and is much cheaper to include than <functional>.
- 
 #include <typeindex> 
 #include <type_traits>
 #include <iostream>
-// #include <strutil/strconv_numeric.h>
 #include <compare>
 
   struct strong_type_default_traits
     {
     static constexpr bool enable_arithemtic = true;
-    static constexpr bool enable_comparision = true;
+    static constexpr bool enable_comparison = true;
     static constexpr bool enable_hash_specialization = true;
     static constexpr bool enable_binary_operators = true;
     static constexpr bool enable_ostream = true;
@@ -50,22 +50,29 @@
     value_type            value_;
     
   public:
-    constexpr value_type           value() const noexcept               { return value_; }
-    constexpr value_type           operator*() const noexcept           { return value_; }
+    constexpr const_reference_type value() const noexcept               { return value_; }
+    constexpr const_reference_type operator*() const noexcept           { return value_; }
     //used only for implementing operators
     constexpr reference_type       ref_value() noexcept { return value_; }
     
     static constexpr class_type max() noexcept { return class_type(std::numeric_limits<value_type>::max()); }
     
-    constexpr strong_type() noexcept(noexcept(ValueType{})) = default;
+    constexpr strong_type()
+        noexcept(std::is_nothrow_default_constructible_v<value_type>) = default;
 
-    constexpr explicit strong_type( value_type v ) noexcept(noexcept(ValueType{v})) : value_{ v } {}
+    template<typename compat_type>
+      requires std::constructible_from<value_type,compat_type>
+    constexpr explicit strong_type( compat_type && v )
+        noexcept(std::is_nothrow_constructible_v<value_type,compat_type>)
+      : value_{ std::forward<compat_type>(v) } {}
     
     constexpr strong_type( strong_type && v) noexcept = default; 
-    constexpr strong_type( strong_type const & v) noexcept(noexcept(ValueType{v.value_})) = default; 
+    constexpr strong_type( strong_type const & v)
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>) = default;
     
     constexpr strong_type & operator =( strong_type && other) noexcept = default;
-    constexpr strong_type & operator =( strong_type const & other) noexcept(noexcept(ValueType{other.value_})) = default;
+    constexpr strong_type & operator =( strong_type const & other)
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>) = default;
     };
 
     //--------------------------------------------------------------------------------------------------------------
@@ -73,21 +80,41 @@
     // hash
     //
     //--------------------------------------------------------------------------------------------------------------
+  namespace concepts
+    {
+    template<typename tag>
+    concept tag_hash_specialization =
+      requires
+        {
+        tag::enable_hash_specialization;
+        requires tag::enable_hash_specialization == true;
+        };
+    }
 
-  template<typename value_type, typename tag>
+  template<typename value_type, concepts::tag_hash_specialization tag>
   struct std::hash<strong_type<value_type,tag>>
     {
     using class_type = strong_type<value_type,tag>;
-    
-    template<std::enable_if_t<tag::enable_hash_specialization, int> = 0>
+
     constexpr std::size_t operator()( strong_type<value_type,tag> t ) const noexcept
       {
       return std::hash<value_type>()( *t );
       }
     };
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_ostream, int> = 0>
-  inline std::ostream & operator <<( std::ostream & out, strong_type<value_type,tag> value )
+  namespace concepts
+    {
+    template<typename tag>
+    concept tag_ostream =
+      requires
+        {
+        tag::enable_ostream;
+        requires tag::enable_ostream == true;
+        };
+    }
+
+  template<typename value_type, concepts::tag_ostream tag>
+  inline std::ostream & operator <<( std::ostream & out, strong_type<value_type,tag> const & value )
     {
     out << *value;
     return out;
@@ -98,7 +125,17 @@
   // strong_type arithemtic
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  namespace concepts
+    {
+    template<typename tag>
+    concept tag_arithemtic =
+      requires
+        {
+        tag::enable_arithemtic;
+        requires tag::enable_arithemtic == true;
+        };
+    }
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
   operator ++( strong_type<value_type,tag> & v ) noexcept
     {
@@ -106,7 +143,7 @@
     return v;
     }
     
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag>
   operator ++( strong_type<value_type,tag> & v, int ) noexcept
     {
@@ -115,7 +152,7 @@
     return r;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
   operator --( strong_type<value_type,tag> & v ) noexcept
     {
@@ -123,7 +160,7 @@
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag>
   operator --( strong_type<value_type,tag> & v, int ) noexcept
     {
@@ -137,83 +174,84 @@
   // strong_type comprision
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
+  namespace concepts
+    {
+    template<typename tag>
+    concept tag_comparison =
+      requires
+        {
+        tag::enable_comparison;
+        requires tag::enable_comparison == true;
+        };
+    }
+  template<typename value_type, concepts::tag_comparison tag>
+  [[nodiscard]]
   inline constexpr bool
-  operator ==( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator ==( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return lhs.value() == rhs.value(); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
+  template<typename value_type, concepts::tag_comparison tag>
+  [[nodiscard]]
   inline constexpr bool
-  operator !=( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator !=( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return lhs.value() != rhs.value(); }
     
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
-  inline constexpr bool
-  operator <(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return lhs.value() < rhs.value(); }
-
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
-  inline constexpr bool
-  operator <=(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return lhs.value() <= rhs.value(); }
-
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
-  inline constexpr bool
-  operator >(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return lhs.value() > rhs.value(); }
-
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
-  inline constexpr bool
-  operator >=(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return lhs.value() >= rhs.value(); }
-
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_comparision, int> = 0>
+  template<typename value_type, concepts::tag_comparison tag>
+  [[nodiscard]]
   inline constexpr auto
-  operator <=>( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator <=>( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return lhs.value() <=> rhs.value(); }
   //--------------------------------------------------------------------------------------------------------------
   //
   // strong_type arithmetic
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag> 
-  operator +(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return strong_type<value_type,tag>( lhs.value() + rhs.value() ); }
+  operator +(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
+    { return strong_type<value_type,tag>( static_cast<value_type>(lhs.value() + rhs.value()) ); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator -(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return strong_type<value_type,tag>( lhs.value() - rhs.value() ); }
+  operator -(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
+    { return strong_type<value_type,tag>( static_cast<value_type>(lhs.value() - rhs.value()) ); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator *(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return strong_type<value_type,tag>( lhs.value() * rhs.value() ); }
+  operator *(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
+    { return strong_type<value_type,tag>( static_cast<value_type>(lhs.value() * rhs.value()) ); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator *(strong_type<value_type,tag> lhs, int rhs) noexcept 
-    { return strong_type<value_type,tag>{ static_cast<typename strong_type<value_type,tag>::value_type>( lhs.value() * rhs ) }; }
+  operator *(strong_type<value_type,tag> const & lhs, int rhs) noexcept
+    { return strong_type<value_type,tag>{ static_cast<value_type>( lhs.value() * rhs ) }; }
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator /(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return strong_type<value_type,tag>( lhs.value() / rhs.value() ); }
+  operator /(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
+    { return strong_type<value_type,tag>( static_cast<value_type>(lhs.value() / rhs.value()) ); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator /(strong_type<value_type,tag> lhs, unsigned rhs) noexcept
-    { return strong_type<value_type,tag>{ lhs.value() / static_cast<typename strong_type<value_type,tag>::value_type>(rhs) }; }
+  operator /(strong_type<value_type,tag> const & lhs, unsigned rhs) noexcept
+    { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() / static_cast<value_type>(rhs)) }; }
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator %(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
-    { return strong_type<value_type,tag>( lhs.value() % rhs.value() ); }
+  operator %(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
+    { return strong_type<value_type,tag>( static_cast<value_type>(lhs.value() % rhs.value()) ); }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator %(strong_type<value_type,tag> lhs, unsigned rhs) noexcept
+  operator %(strong_type<value_type,tag> const & lhs, unsigned rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() % static_cast<value_type>(rhs)) }; }
     
   //--------------------------------------------------------------------------------------------------------------
@@ -221,49 +259,68 @@
   // strong_type binary bit operations
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  namespace concepts
+    {
+    template<typename tag>
+    concept tag_binary_operators =
+      requires
+        {
+        tag::enable_binary_operators;
+        requires tag::enable_binary_operators == true;
+        };
+    }
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator ^(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator ^(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() ^ rhs.value()) }; }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator ~(strong_type<value_type,tag> v) noexcept
-    { return strong_type<value_type,tag>{ ~v.value() }; }
+  operator ~(strong_type<value_type,tag> const & v) noexcept
+    { return strong_type<value_type,tag>{ static_cast<value_type>(~v.value()) }; }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator <<(strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator <<(strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>( lhs.value() << rhs.value() ) }; }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator <<(strong_type<value_type,tag> lhs, unsigned rhs) noexcept
+  operator <<(strong_type<value_type,tag> const & lhs, unsigned rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() << rhs) }; }
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator >>( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator >>( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() >> rhs.value()) }; }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator >>( strong_type<value_type,tag> lhs, unsigned rhs) noexcept
+  operator >>( strong_type<value_type,tag> const & lhs, unsigned rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() >> rhs) }; }
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator &( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator &( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() & rhs.value() ) }; }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator &( strong_type<value_type,tag> lhs, uint16_t rhs) noexcept
+  operator &( strong_type<value_type,tag> const & lhs, uint16_t rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>( lhs.value() & rhs ) }; }
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
+  [[nodiscard]]
   inline constexpr strong_type<value_type,tag>
-  operator |( strong_type<value_type,tag> lhs, strong_type<value_type,tag> rhs) noexcept
+  operator |( strong_type<value_type,tag> const & lhs, strong_type<value_type,tag> const & rhs) noexcept
     { return strong_type<value_type,tag>{ static_cast<value_type>(lhs.value() | rhs.value()) }; }
 
   //--------------------------------------------------------------------------------------------------------------
@@ -271,41 +328,41 @@
   // strong_type arithmetic
   //
   //--------------------------------------------------------------------------------------------------------------
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
-  operator +=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator +=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() += rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
-  operator -=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator -=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() -= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
-  operator *=(strong_type<value_type,tag> &v, strong_type<value_type,tag> rhs) noexcept
+  operator *=(strong_type<value_type,tag> &v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() *= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
-  operator /=(strong_type<value_type,tag> &v, strong_type<value_type,tag> rhs) noexcept
+  operator /=(strong_type<value_type,tag> &v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() /= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_arithemtic, int> = 0>
+  template<typename value_type, concepts::tag_arithemtic tag>
   constexpr strong_type<value_type,tag> const &
-  operator %=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator %=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() %= rhs.value();
     return v;
@@ -317,41 +374,41 @@
   //
   //--------------------------------------------------------------------------------------------------------------
   
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
   constexpr strong_type<value_type,tag> const &
-  operator ^=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator ^=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() ^= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
   constexpr strong_type<value_type,tag> const &
-  operator <<=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator <<=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() <<= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
   constexpr strong_type<value_type,tag> const &
-  operator >>=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator >>=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() >>= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
   constexpr strong_type<value_type,tag> const &
-  operator &=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator &=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() &= rhs.value();
     return v;
     }
 
-  template<typename value_type, typename tag, std::enable_if_t<tag::enable_binary_operators, int> = 0>
+  template<typename value_type, concepts::tag_binary_operators tag>
   constexpr strong_type<value_type,tag> const &
-  operator |=(strong_type<value_type,tag> & v, strong_type<value_type,tag> rhs) noexcept
+  operator |=(strong_type<value_type,tag> & v, strong_type<value_type,tag> const & rhs) noexcept
     {
     v.ref_value() |= rhs.value();
     return v;
