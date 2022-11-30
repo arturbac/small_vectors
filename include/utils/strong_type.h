@@ -64,7 +64,7 @@
       requires std::constructible_from<value_type,compat_type>
     constexpr explicit strong_type( compat_type && v )
         noexcept(std::is_nothrow_constructible_v<value_type,compat_type>)
-      : value_{ std::forward<compat_type>(v) } {}
+      : value_{ value_type(std::forward<compat_type>(v)) } {}
     
     constexpr strong_type( strong_type && v) noexcept = default; 
     constexpr strong_type( strong_type const & v)

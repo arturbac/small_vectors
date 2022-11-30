@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 
 project(small_vectors
-        VERSION 1.0.11
+        VERSION 1.0.12
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         )
@@ -19,7 +19,7 @@ include(cmake/CPM.cmake)
 CPMAddPackage(
   NAME PackageProject.cmake
   GITHUB_REPOSITORY TheLartians/PackageProject.cmake
-  VERSION 1.9.0
+  VERSION 1.10.0
 )
 
 #-----------------------------------------------------------------------------
