@@ -543,11 +543,20 @@ namespace coll::detail
     {
     constexpr bool use_nothrow = is_nothrow_move_constr_and_constr_v<typename vector_type::value_type,
                                                         detail::iterator_value_type_t<source_iterator>>;
-
+    
     using size_type = typename vector_type::size_type;
-    if( !std::is_constant_evaluated() )
-      assert(itend > itbeg);
     auto const new_el_count{ std::distance(itbeg,itend) };
+    
+    if( new_el_count == 0 ) [[unlikely]]
+      return vector_outcome_e::no_error;
+      
+    if( new_el_count < 0 ) [[unlikely]]
+      {
+      if( !std::is_constant_evaluated() )
+        assert(false);
+      return vector_outcome_e::invalid_source_range;
+      }
+      
     size_type const u_new_el_count{ static_cast<size_type>(new_el_count) };
     
     internal_data_context_t my{vec};
