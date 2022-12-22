@@ -85,17 +85,17 @@ int main()
       using test_type = strong_type<value_type, test_tag>;
 
       test_type tst{ value_type{0x55}};
-      test_result tr
-        = constexpr_test( *++tst == 0x56 )
-        | constexpr_test( *tst++ == 0x56 )
-        | constexpr_test( *tst == 0x57 )
+      test_result
+      tr = constexpr_test( *++tst == 0x56 );
+      tr |= constexpr_test( *tst++ == 0x56 );
+      tr |= constexpr_test( *tst == 0x57 );
 
-        | constexpr_test( *--tst == 0x56 )
-        | constexpr_test( *tst-- == 0x56 )
-        | constexpr_test( *tst == 0x55 )
+      tr |= constexpr_test( *--tst == 0x56 );
+      tr |= constexpr_test( *tst-- == 0x56 );
+      tr |= constexpr_test( *tst == 0x55 );
 
-        | constexpr_test( *(tst + test_type(value_type{1})) == 0x56 )
-        | constexpr_test( *(tst - test_type(value_type{1})) == 0x54 );
+      tr |= constexpr_test( *(tst + test_type(value_type{1})) == 0x56 );
+      tr |= constexpr_test( *(tst - test_type(value_type{1})) == 0x54 );
 
       tst = test_type{ value_type{13}};
       tr |= constexpr_test( *(tst * test_type(value_type{2})) == 26 );
