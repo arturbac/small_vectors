@@ -42,3 +42,7 @@ add_unittest(small_vector_ut)
 add_unittest(composed_pointer_with_data_ut)
 add_unittest(meta_packed_struct_ut)
 add_unittest(strong_type_ut)
+
+find_package( Boost 1.81 COMPONENTS system )
+add_unittest(shared_mem_util_ut)
+target_link_libraries(shared_mem_util_ut PRIVATE Boost::system )
