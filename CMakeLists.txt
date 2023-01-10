@@ -75,7 +75,6 @@ if( PROJECT_IS_TOP_LEVEL )
         -Wno-unused-command-line-argument
         )
       if(SMALL_VECTORS_ENABLE_LLD_LINKER)
-        list(APPEND SMALL_VECTORS_COMPILE_OPTIONS -fuse-ld=lld )
         add_link_options( -fuse-ld=lld )
       endif()
   endif()

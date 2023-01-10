@@ -380,10 +380,7 @@ namespace coll::detail
             std::destroy_at(ptr_);
         }
       };
-      
 
-
-      
     template<typename value_type>
     cond_destroy_at(value_type * ptr) -> cond_destroy_at<value_type>;
     

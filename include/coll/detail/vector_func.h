@@ -209,7 +209,7 @@ namespace coll::detail
   inline constexpr auto &
   back(auto & vec) noexcept
     { return at(vec, nic_sub(size(vec),1u)); }
-    
+
   //-------------------------------------------------------------------------------------------------------------------
     
   template<typename vector_type, typename size_type>

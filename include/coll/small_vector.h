@@ -366,6 +366,9 @@ namespace coll
   template<typename V, std::unsigned_integral S, uint64_t N>
   small_vector( small_vector<V,S,N> const & ) -> small_vector<V,S,N>;
   
+  template<typename V, uint64_t N>
+  using vector = small_vector<V,std::uint32_t,0>;
+  
   namespace concepts
     {
     ///\brief constraint requiring type to be a static_vector or const static_vector
@@ -412,7 +415,8 @@ namespace coll
   inline constexpr auto
   end( small_vector_type & vec ) noexcept
     { return detail::end(vec); }
-    
+  
+  using detail::front;
   using detail::back;
   using detail::erase_at_end;
   using detail::clear;

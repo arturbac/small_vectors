@@ -315,7 +315,8 @@ namespace coll
   inline constexpr auto
   end( static_vector_type & vec ) noexcept
     { return detail::end(vec); }
-    
+  
+  using detail::front;
   using detail::back;
   using detail::erase_at_end;
   using detail::clear;
