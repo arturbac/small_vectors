@@ -12,7 +12,7 @@ namespace detail
   template<typename Type, std::size_t offset>
   concept concept_aligned_offset = requires
   {
-   (offset % alignof(Type)) == 0;
+  requires (offset % alignof(Type)) == 0;
   };
   template<typename type>
   struct end_offset_of

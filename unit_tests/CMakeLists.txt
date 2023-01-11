@@ -45,5 +45,7 @@ add_unittest(strong_type_ut)
 
 # github ubuntu latest is very old
 find_package( Boost 1.74 COMPONENTS system )
-add_unittest(shared_mem_util_ut)
-target_link_libraries(shared_mem_util_ut PRIVATE Boost::system )
+if(Boost_FOUND)
+  add_unittest(shared_mem_util_ut)
+  target_link_libraries(shared_mem_util_ut PRIVATE Boost::system )
+endif()

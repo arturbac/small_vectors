@@ -25,6 +25,11 @@ using time_point = clock_type::time_point;
 using namespace std::chrono_literals;
 using namespace std::string_view_literals;
 
+static_assert(ip::detail::concept_aligned_offset<int,2> == false );
+static_assert(ip::detail::concept_aligned_offset<int,0> == true );
+static_assert(ip::detail::concept_aligned_offset<int,4> == true );
+static_assert(ip::detail::concept_aligned_offset<int,5> == false );
+
 constexpr auto shmem_name {"shmem test"};
 int main()
 {
@@ -210,7 +215,6 @@ int main()
       return *this;
       }
     };
-    
   using foo_obj_decl = ip::shared_type_decl<foo>;
   using ref_obj_decl = ip::shared_type_decl<int,foo_obj_decl>;
   using message_decl = ip::shared_type_decl<message,ref_obj_decl>;
