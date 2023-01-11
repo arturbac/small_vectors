@@ -106,10 +106,12 @@ int main()
     {
     bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
     bip::mapped_region cregion{ shm_obj, bip::read_write };
+    
     vector_type & vector { ip::ref<shared_vector_decl>(cregion) };
     ut::expect(size(vector) == 1u );
     ut::expect(front(vector) == 2u );
     ut::expect(resize(vector,512) == coll::vector_outcome_e::no_error ) >> ut::fatal;
+    pop_back(vector);
     std::iota(begin(vector), end(vector), 2);
     
     return true;
@@ -118,26 +120,33 @@ int main()
   
   ut::expect(static_cast<bool>(child)) >> ut::fatal;
   ut::expect(child->join()) >> ut::fatal;
-  ut::expect(size(vector_obj) == 512u );
+  ut::expect(size(vector_obj) == 511u );
   ut::expect(front(vector_obj) == 2 );
-  ut::expect(back(vector_obj) == 513 );
+  ut::expect(back(vector_obj) == 512 );
   };
   
 "test_atomic_mutex"_test = [&]
   {
+
+  //
   using semaphore_decl = ip::shared_type_decl<std::atomic<std::size_t>>;
   using atomic_mutex_decl = ip::shared_type_decl<ip::atomic_mutex,semaphore_decl>;
+  //
+  
   bip::mapped_region region ( shm, bip::read_write );
   ip::atomic_mutex & sync_obj{ *ip::construct_at<atomic_mutex_decl>(region) };
   std::atomic<std::size_t> & shemaphore{ *ip::construct_at<semaphore_decl>(region, 0u) };
+  
   
   auto beg {clock_type::now()};
   auto child = ip::fork([](std::string_view shared_mem_name )
     {
     bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
     bip::mapped_region cregion{ shm_obj, bip::read_write };
+    
     ip::atomic_mutex & csync_obj { ip::ref<atomic_mutex_decl>(cregion) };
     std::atomic<std::size_t> & cshemaphore{ ip::ref<semaphore_decl>(cregion) };
+
     std::unique_lock lck(csync_obj);
     cshemaphore.store(1u, std::memory_order_release );
     std::this_thread::sleep_for(1500ms);
@@ -150,7 +159,11 @@ int main()
   while(curr_value == 0)
     {
     std::this_thread::yield();
-    curr_value = shemaphore.load(std::memory_order_acquire);
+    curr_value = 1u; //shemaphore.load(std::memory_order_acquire);
+    if(shemaphore.compare_exchange_strong(curr_value, 0, std::memory_order_release))
+      {
+        
+      }
     }
     
     {
@@ -172,13 +185,41 @@ int main()
     int64_t c;
     void * p;
     };
+  struct message
+    {
+    using string_type = coll::static_vector<char, 512>;
+    string_type string_;
+    
+    constexpr explicit message( std::string_view value ) noexcept
+      { assign(value); }
+      
+    constexpr auto view() const noexcept 
+      { return std::string_view{string_.begin(), string_.size() }; }
+    
+    constexpr void assign( std::string_view value ) noexcept
+      {
+      auto const sz{ static_cast<string_type::size_type>(
+          std::min<size_t>( string_type::capacity(), value.size()))};
+      resize(string_,sz);
+      std::copy_n(value.begin(), sz, begin(string_));
+      }
+      
+    constexpr message & operator=(std::string_view value) noexcept
+      {
+      assign(value);
+      return *this;
+      }
+    };
     
   using foo_obj_decl = ip::shared_type_decl<foo>;
   using ref_obj_decl = ip::shared_type_decl<int,foo_obj_decl>;
+  using message_decl = ip::shared_type_decl<message,ref_obj_decl>;
+  
   bip::mapped_region region ( shm, bip::read_write );
   
   foo & foo_obj{*ip::construct_at<foo_obj_decl>(region, foo{.a=1,.a_=0,.b=0.5, .c=0xffffffff, .p= {} })};
   auto & ref_obj{*ip::construct_at<ref_obj_decl>(region, 2u)};
+  auto & ref_string { *ip::construct_at<message_decl>(region, "message hello world") };
   
   auto child = ip::fork([](std::string_view shared_mem_name )
     {
@@ -192,9 +233,12 @@ int main()
     cfoo_obj.b = 1.5;
     cfoo_obj.c = -0x1ffffffff;
     cfoo_obj.p = std::addressof(cfoo_obj);
+    auto & cref_string { ip::ref<message_decl>(cregion) };
+    ut::expect( cref_string.view() == "message hello world" );
+    cref_string = "hello world from child";
     auto & cref_obj{ip::ref<ref_obj_decl>(cregion)};
     cref_obj += 2;
-    // std::cout  << "c ref " << cref_obj << " addr " << &cref_obj << " " << cregion.get_address() << std::endl;
+
     return true;
     },
     shmem_name );
@@ -204,8 +248,10 @@ int main()
   ut::expect( foo_obj.b == 1.5 );
   ut::expect( foo_obj.c == -0x1ffffffff );
   ut::expect( foo_obj.p != std::addressof(foo_obj) );
+  
+  ut::expect( ref_string.view() == "hello world from child" );
+  
   ut::expect(ref_obj == 4 );
-  // std::cout << "p ref " << ref_obj << " addr " << &ref_obj << " " << region.get_address() << std::endl;
 
   };
   bip::shared_memory_object::remove(shmem_name);
