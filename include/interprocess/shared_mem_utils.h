@@ -52,8 +52,9 @@ namespace detail
    {region.get_address()} -> concept_pointer;
   };
   }
-template<detail::concept_type_decl shared_type_decl_type, detail::concept_mapped_region mapped_region, typename ... Args>
-inline decltype(auto) construct_at( mapped_region & region, Args && ... args ) noexcept
+template<detail::concept_type_decl shared_type_decl_type, typename ... Args>
+inline auto construct_at( detail::concept_mapped_region auto & region, Args && ... args ) noexcept
+    -> typename shared_type_decl_type::type *
   {
   using type = typename shared_type_decl_type::type;
   constexpr auto offset { static_cast<ptrdiff_t>(shared_type_decl_type::offset) };
@@ -61,14 +62,15 @@ inline decltype(auto) construct_at( mapped_region & region, Args && ... args ) n
   return std::construct_at( reinterpret_cast<type *>(addr), args ... );
   }
   
-template<detail::concept_type_decl shared_type_decl_type, detail::concept_mapped_region mapped_region>
+template<detail::concept_type_decl shared_type_decl_type>
 [[nodiscard]]
-inline decltype(auto) ref( mapped_region & region ) noexcept
-{
+inline auto ref( detail::concept_mapped_region auto & region ) noexcept
+   -> typename shared_type_decl_type::type &
+  {
   using type = typename shared_type_decl_type::type;
   constexpr auto offset { static_cast<ptrdiff_t>(shared_type_decl_type::offset) };
   auto addr{ std::next(reinterpret_cast<uint8_t *>(region.get_address()),offset) };
   return *std::launder( reinterpret_cast<type *>(addr) );
-}
+  }
 
 }
