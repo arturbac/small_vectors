@@ -164,11 +164,7 @@ int main()
   while(curr_value == 0)
     {
     std::this_thread::yield();
-    curr_value = 1u; //shemaphore.load(std::memory_order_acquire);
-    if(shemaphore.compare_exchange_strong(curr_value, 0, std::memory_order_release))
-      {
-        
-      }
+    curr_value = shemaphore.load(std::memory_order_acquire);
     }
     
     {
