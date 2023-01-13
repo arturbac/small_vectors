@@ -59,6 +59,8 @@ int main()
       {
       if( (curr_value & 1) == 0)
         ccounter.compare_exchange_strong(curr_value, curr_value+1, std::memory_order_release);
+      else
+        std::this_thread::yield();
       ++child_counter_obj;
       curr_value = ccounter.load(std::memory_order_acquire);
       }
@@ -78,6 +80,8 @@ int main()
     {
     if( (curr_value & 1) != 0)
       counter.compare_exchange_strong(curr_value, curr_value+1, std::memory_order_release);
+    else
+      std::this_thread::yield();
     curr_value = counter.load(std::memory_order_acquire);
     ++parent_counter_obj;
     }
