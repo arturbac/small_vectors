@@ -366,7 +366,7 @@ namespace coll
   template<typename V, std::unsigned_integral S, uint64_t N>
   small_vector( small_vector<V,S,N> const & ) -> small_vector<V,S,N>;
   
-  template<typename V, uint64_t N>
+  template<typename V>
   using vector = small_vector<V,std::uint32_t,0>;
   
   namespace concepts
