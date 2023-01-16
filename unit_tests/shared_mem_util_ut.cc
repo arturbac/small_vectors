@@ -17,6 +17,7 @@
 namespace ut = boost::ut;
 using boost::ut::operator""_test;
 using namespace ut::operators::terse;
+using enum std::memory_order;
 
 namespace bip = boost::interprocess;
 
@@ -54,15 +55,15 @@ int main()
     decltype(auto) ccounter_obj { ip::ref<sync_counter_decl>(cregion) };
     decltype(auto) child_counter_obj{ *ip::construct_at<child_counter_decl>(cregion) };
     std::atomic_ref ccounter { ccounter_obj };
-    auto curr_value = ccounter.load(std::memory_order_acquire);
+    auto curr_value = ccounter.load(acquire);
     while( curr_value < number_of_counts)
       {
       if( (curr_value & 1) == 0)
-        ccounter.compare_exchange_strong(curr_value, curr_value+1, std::memory_order_release);
+        ccounter.compare_exchange_strong(curr_value, curr_value+1, release);
       else
         std::this_thread::yield();
       ++child_counter_obj;
-      curr_value = ccounter.load(std::memory_order_acquire);
+      curr_value = ccounter.load(acquire);
       }
     ut::expect(child_counter_obj >= number_of_counts);
     return child_counter_obj >= number_of_counts;
@@ -74,15 +75,15 @@ int main()
   // parent process
   std::atomic_ref counter { counter_obj };
   auto beg {clock_type::now()};
-  auto curr_value = counter.load(std::memory_order_acquire);
+  auto curr_value = counter.load(acquire);
   std::size_t parent_counter_obj {};
   while( curr_value < number_of_counts)
     {
     if( (curr_value & 1) != 0)
-      counter.compare_exchange_strong(curr_value, curr_value+1, std::memory_order_release);
+      counter.compare_exchange_strong(curr_value, curr_value+1, release);
     else
       std::this_thread::yield();
-    curr_value = counter.load(std::memory_order_acquire);
+    curr_value = counter.load(acquire);
     ++parent_counter_obj;
     }
   auto end {clock_type::now()};
@@ -157,18 +158,18 @@ int main()
     std::atomic<std::size_t> & cshemaphore{ ip::ref<semaphore_decl>(cregion) };
 
     std::unique_lock lck(csync_obj);
-    cshemaphore.store(1u, std::memory_order_release );
+    cshemaphore.store(1u, release );
     std::this_thread::sleep_for(1500ms);
     return true;
     },
     shmem_name );
   ut::expect(static_cast<bool>(child)) >> ut::fatal;
   
-  auto curr_value = shemaphore.load(std::memory_order_acquire);
+  auto curr_value = shemaphore.load(acquire);
   while(curr_value == 0)
     {
     std::this_thread::yield();
-    curr_value = shemaphore.load(std::memory_order_acquire);
+    curr_value = shemaphore.load(acquire);
     }
     
     {
