@@ -20,6 +20,7 @@ namespace coll::detail
   sv_deallocate( storage_context_t<value_type, size_type> storage ) noexcept;
   
   template<typename value_type, typename size_type>
+  requires (sizeof(value_type) != 0 )
   [[nodiscard,gnu::always_inline]]
   inline constexpr storage_context_t<value_type, size_type>
   sv_allocate( size_type count ) noexcept;

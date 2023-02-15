@@ -6,11 +6,10 @@
 #include <utility>
 #include <cassert>
 #include <source_location>
-// #define BOOST_TEST_DYN_LINK
-// #include <boost/test/unit_test.hpp>
-// #include <boost/mpl/list.hpp>
 #include <iostream>
-#include <boost/ut.hpp>
+
+#include <boost_ut.h>
+
 
 namespace metatests
 {

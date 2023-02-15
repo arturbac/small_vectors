@@ -3,6 +3,7 @@
 #include "uninitialized_constexpr.h"
 #include "vector_storage.h"
 #include <utils/enum_support.h>
+#include <memory>
 
 namespace coll::detail
 {
@@ -384,7 +385,9 @@ namespace coll::detail
     erase_at_end(vec, my, std::prev(my.end(),1));
     }
   //-------------------------------------------------------------------------------------------------------------------
+  
   template<typename value_type, typename size_type>
+  requires (sizeof(value_type) != 0 )
   [[nodiscard,gnu::always_inline]]
   inline constexpr storage_context_t<value_type, size_type>
   sv_allocate( size_type capacity ) noexcept
@@ -395,8 +398,14 @@ namespace coll::detail
     else
       {
       std::align_val_t alignment{alignof(value_type)};
+      size_t alloc_size { capacity * sizeof(value_type) };
       return storage_type{static_cast<value_type*>(
-            ::operator new(capacity * sizeof(value_type), alignment, std::nothrow_t{})),
+// https://clang.llvm.org/docs/LanguageExtensions.html#builtin-operator-new-and-builtin-operator-delete
+#if defined(__has_builtin) && __has_builtin(__builtin_operator_new) >= 201802L
+            __builtin_operator_new(alloc_size, alignment, std::nothrow_t{})),
+#else
+            ::operator new(alloc_size, alignment, std::nothrow_t{})),
+#endif
            capacity };
       }
     }
@@ -409,7 +418,11 @@ namespace coll::detail
     else
       {
       std::align_val_t alignment{alignof(value_type)};
+#if defined(__has_builtin) && __has_builtin(__builtin_operator_new) >= 201802L
+      __builtin_operator_delete(storage.data, /*storage.capacity * sizeof(value_type),*/ alignment, std::nothrow_t{} );
+#else
       ::operator delete(storage.data, /*storage.capacity * sizeof(value_type),*/ alignment, std::nothrow_t{} );
+#endif
       }
     }
   //-------------------------------------------------------------------------------------------------------------------
