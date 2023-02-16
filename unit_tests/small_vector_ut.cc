@@ -38,7 +38,7 @@ constexpr bool equal( auto const & result, auto const & expected ) noexcept
   }
 
 //---------------------------------------------------------------------------------------------------------------------
-consteval small_vector_storage_type
+constexpr small_vector_storage_type
 expected_istorage(auto capacity_req) noexcept
   { return capacity_req == 0u ? dynamic : buffered; }
 //---------------------------------------------------------------------------------------------------------------------
