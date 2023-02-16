@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
+include(CheckCXXCompilerFlag)
 
 project(small_vectors
         VERSION 1.0.17
@@ -74,6 +75,10 @@ if( PROJECT_IS_TOP_LEVEL )
         -Wno-padded
         -Wno-unused-command-line-argument
         )
+      check_cxx_compiler_flag(-Wunsafe-buffer-usage WUNSAFE_BUFFER_USAGE)
+      if(WUNSAFE_BUFFER_USAGE)
+        list(APPEND SMALL_VECTORS_COMPILE_OPTIONS -Wno-unsafe-buffer-usage)
+      endif()
       if(SMALL_VECTORS_ENABLE_LLD_LINKER)
         add_link_options( -fuse-ld=lld )
       endif()
