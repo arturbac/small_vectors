@@ -94,11 +94,16 @@
   template<typename value_type, concepts::tag_hash_specialization tag>
   struct std::hash<strong_type<value_type,tag>>
     {
-    using class_type = strong_type<value_type,tag>;
-
-    constexpr std::size_t operator()( strong_type<value_type,tag> t ) const noexcept
+#if defined(__cpp_static_call_operator)
+    static
+#endif
+    constexpr std::size_t operator()( strong_type<value_type,tag> t )
+#if !defined(__cpp_static_call_operator)
+       const
+#endif
+       noexcept
       {
-      return std::hash<value_type>()( *t );
+      return std::hash<value_type>{}( *t );
       }
     };
 
