@@ -124,7 +124,7 @@
     [[gnu::always_inline]]
     inline constexpr iterator unaligned_store( iterator it, input_type value ) noexcept
        {
-       return std::copy_n(reinterpret_cast<uint8_t const *>(&value), sizeof(store_type), it );
+       return std::copy_n(std::launder(reinterpret_cast<uint8_t const *>(&value)), sizeof(store_type), it );
        }
        
     ///\brief stores \param value at \param it location, input value type must match requested storage type
@@ -136,7 +136,7 @@
     [[gnu::always_inline]]
     inline constexpr iterator unaligned_store( iterator it, input_type value ) noexcept
        {
-       return std::copy_n(reinterpret_cast<uint8_t const *>(&value), sizeof(store_type), it );
+       return std::copy_n(std::launder(reinterpret_cast<uint8_t const *>(&value)), sizeof(store_type), it );
        }
        
      //---------------------------------------------------------------------------------------------------
