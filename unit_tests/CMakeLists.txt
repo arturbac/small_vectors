@@ -3,7 +3,6 @@ target_sources( ut_core PRIVATE unit_test_core.cc )
 target_link_libraries( ut_core
   PUBLIC
     small_vectors
-    #Boost::unit_test_framework Boost::system
     Boost::ut
     )
 target_include_directories( ut_core PUBLIC ut_core )

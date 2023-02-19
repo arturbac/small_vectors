@@ -19,21 +19,23 @@
       "name": "clang-15-release",
       "inherits": "cfg-common",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++"
+        "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++",
+        "CMAKE_CXX_STANDARD" : "20"
       }
     },
     {
       "name": "clang-16-release",
       "inherits": "cfg-common",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "/usr/lib/llvm/16/bin/clang++"
+        "CMAKE_CXX_COMPILER" : "/usr/lib/llvm/16/bin/clang++",
+        "CMAKE_CXX_STANDARD" : "23"
       }
     },
     {
       "name": "gcc-12-release",
       "inherits": "cfg-common",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "/usr/x86_64-pc-linux-gnu/gcc-bin/12/g++"
+        "CMAKE_CXX_COMPILER": "g++-12"
       }
     }
   ],
