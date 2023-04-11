@@ -13,6 +13,7 @@
 #include <memory>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 namespace ut = boost::ut;
 using boost::ut::operator""_test;
@@ -31,6 +32,19 @@ static_assert(ip::detail::concept_aligned_offset<int,0> == true );
 static_assert(ip::detail::concept_aligned_offset<int,4> == true );
 static_assert(ip::detail::concept_aligned_offset<int,5> == false );
 
+struct destruction_only 
+  {
+  template<typename T>
+#if defined(__cpp_static_call_operator)
+    static
+#endif
+  void operator()(T * addr ) 
+#if !defined(__cpp_static_call_operator)
+       const
+#endif
+  noexcept
+   { addr->~T(); }
+  };
 constexpr auto shmem_name {"shmem test"};
 int main()
 {
@@ -259,6 +273,56 @@ int main()
   ut::expect(ref_obj == 4 );
 
   };
+  
+
+"test_semaphore"_test = [&]
+  {
+  using semaphore_decl = ip::shared_type_decl<bip::interprocess_semaphore>;
+  using semaphore2_decl = ip::shared_type_decl<bip::interprocess_semaphore,semaphore_decl>;
+  using integer_decl = ip::shared_type_decl<std::int64_t, semaphore2_decl>;
+
+  bip::mapped_region region ( shm, bip::read_write );
+  std::unique_ptr<bip::interprocess_semaphore,destruction_only> 
+    semaphore_obj{ip::construct_at<semaphore_decl>(region, 0)},
+    semaphore2_obj{ip::construct_at<semaphore2_decl>(region, 0)};
+
+  decltype(auto) integer_obj{*ip::construct_at<integer_decl>(region, 0xf1)};
+  
+  auto child = ip::fork([](std::string_view shared_mem_name )
+      {
+      bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
+      bip::mapped_region cregion{ shm_obj, bip::read_write };
+
+      decltype(auto) child_semaphore_obj { ip::ref<semaphore_decl>(cregion) };
+      decltype(auto) child_semaphore2_obj { ip::ref<semaphore2_decl>(cregion) };
+      decltype(auto) child_integer_obj { ip::ref<integer_decl>(cregion) };
+      child_semaphore2_obj.post();
+      child_semaphore_obj.wait();
+      ut::expect(child_integer_obj == 2);
+      return true;
+      },
+    shmem_name );
+  auto child2 = ip::fork([](std::string_view shared_mem_name )
+    {
+     bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
+     bip::mapped_region cregion{ shm_obj, bip::read_write };
+
+     decltype(auto) child_semaphore_obj { ip::ref<semaphore_decl>(cregion) };
+     decltype(auto) child_semaphore2_obj { ip::ref<semaphore2_decl>(cregion) };
+     decltype(auto) child_integer_obj { ip::ref<integer_decl>(cregion) };
+     child_semaphore2_obj.wait();
+     child_integer_obj = 2;
+     child_semaphore_obj.post();
+
+     return true;
+    },
+    shmem_name );
+  
+  ut::expect(child->join()) >> ut::fatal;
+  ut::expect(child2->join()) >> ut::fatal;
+  ut::expect(integer_obj == 2);
+  };
+
   bip::shared_memory_object::remove(shmem_name);
 }
 

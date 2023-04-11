@@ -13,7 +13,7 @@ namespace coll::detail
   inline constexpr bool is_relocatable_v = std::is_trivially_copyable_v<V>;
   
   template< typename iterator_type>
-  using iterator_value_type_t =typename std::iterator_traits<iterator_type>::value_type;
+  using iterator_value_type_t = std::iter_value_t<iterator_type>;
   
   ///\return distance for growing valid range of iterator pair
   template<concepts::unsigned_arithmetic_integral size_type, typename iterator>
@@ -28,6 +28,12 @@ namespace coll::detail
   inline constexpr auto unext( iterator ptr, size_type offset ) noexcept
     {
     return std::next( ptr, static_cast<ptrdiff_t>(offset) );
+    }
+  template<concepts::unsigned_arithmetic_integral size_type, typename iterator>
+    requires ( not concepts::unsigned_arithmetic_integral<iterator> )
+  inline constexpr auto uprev( iterator ptr, size_type offset ) noexcept
+    {
+    return std::prev( ptr, static_cast<ptrdiff_t>(offset) );
     }
   ///\brief no implicit convertion sum
   template<concepts::unsigned_arithmetic_integral size_type, concepts::unsigned_arithmetic_integral... Args>
@@ -92,9 +98,31 @@ namespace coll::detail
       ::new (store) value_type;
     }
     
+  template<typename value_type>
+  constexpr void uninitialized_value_construct( value_type * store )
+    noexcept(std::is_nothrow_default_constructible_v<value_type>)
+    {
+    std::construct_at(store);
+    }
+    
+  template<typename iterator>
+  inline constexpr void
+  uninitialized_default_construct(iterator first, iterator last)
+      noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
+    {
+    if( std::is_constant_evaluated())
+      {
+      for(; first != last; ++first)
+        std::construct_at(std::addressof(*first));
+      }
+    else
+      std::uninitialized_default_construct(first, last);
+    }
+    
   template<typename value_type, typename size_type>
   inline constexpr void
   uninitialized_value_construct_n(value_type * first, size_type count)
+      noexcept(std::is_nothrow_constructible_v<value_type>)
     {
     if( std::is_constant_evaluated())
       {
@@ -105,6 +133,35 @@ namespace coll::detail
       std::uninitialized_value_construct_n(first, count);
     }
     
+  template<typename iterator>
+  inline constexpr auto
+  uninitialized_value_construct(iterator first, iterator last)
+      noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
+    {
+    if( std::is_constant_evaluated())
+      {
+      for(; first != last; ++first)
+        std::construct_at(std::addressof(*first));
+      }
+    else
+      std::uninitialized_value_construct(first, last);
+    return last;
+    }
+  
+  template<typename iterator>
+  inline constexpr iterator
+  uninitialized_fill(iterator first, iterator last, iterator_value_type_t<iterator> fill_value )
+      noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
+    {
+    constexpr bool use_nothrow  = std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>;
+    using unwind = range_unwinder<use_nothrow,iterator>;
+    unwind cur{ first };
+    for (; cur.last_ != last; (void) ++cur.last_)
+      std::construct_at(std::addressof(*cur.last_), fill_value );
+    cur.release();
+    return cur.last_;
+    }
+    
   template<typename InputIterator>
   inline constexpr decltype(auto) deref_iter( InputIterator iter ) noexcept
     { return *iter; }
@@ -113,12 +170,26 @@ namespace coll::detail
   inline constexpr auto && deref_iter( std::move_iterator<InputIterator> iter ) noexcept
     { return std::move(*iter); }
   
+  template<concepts::input_iterator InputIterator, concepts::forward_iterator ForwardIterator>
+  inline constexpr ForwardIterator
+  uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator result)
+    noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>)
+    {
+    constexpr bool use_nothrow  = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
+    using unwind = range_unwinder<use_nothrow,ForwardIterator>;
+    unwind cur{ result };
+    for (; first != last; ++first, (void) ++cur.last_)
+      std::construct_at(std::addressof(*cur.last_), *first );
+    cur.release();
+    return cur.last_;
+    }
+    
   template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
   inline constexpr void
   uninitialized_copy_n(InputIterator first, Size count, ForwardIterator result)
     noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>)
     {
-    constexpr bool use_nothrow  = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
+    constexpr bool use_nothrow  = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
     using unwind = range_unwinder<use_nothrow,ForwardIterator>;
     unwind cur{ result };
     auto src{ first };

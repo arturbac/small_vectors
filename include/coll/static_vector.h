@@ -52,9 +52,6 @@ namespace coll
     [[no_unique_address]]
     detail::static_vector_storage<value_type,capacity_> storage_;
     
-    [[no_unique_address]]
-    size_type size_ = 0;
-    
     [[nodiscard]]
     inline static constexpr auto
     capacity() noexcept
@@ -73,7 +70,7 @@ namespace coll
     [[nodiscard]]
     inline constexpr size_type
     size() const noexcept
-      { return size_; }
+      { return storage_.size_; }
   
     [[nodiscard]]
     inline static constexpr size_type
@@ -86,30 +83,29 @@ namespace coll
       noexcept(std::is_nothrow_move_constructible_v<value_type>)
         requires std::move_constructible<value_type>
       {
-      if constexpr(std::is_nothrow_move_constructible_v<value_type>)
-        detail::uninitialized_relocate_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      else
-        detail::uninitialized_relocate_with_copy_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      size_ = std::exchange(rh.size_, 0);
+      storage_.construct_move( std::move(rh.storage_) );
       }
       
     constexpr static_vector( static_vector const & rh )
       noexcept(std::is_nothrow_copy_constructible_v<value_type>)
         requires std::copy_constructible<value_type>
       {
-      detail::uninitialized_copy_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      size_ = rh.size_;
+      storage_.construct_copy(rh.storage_);
+      }
+      
+    template<uint64_t M>
+      requires ( M < N && std::copy_constructible<value_type> )
+    explicit constexpr static_vector( static_vector<value_type,M> const & rh )
+      noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+      {
+      storage_.construct_copy(rh.storage_);
       }
       
     constexpr static_vector & operator =( static_vector && rh )
         noexcept(std::is_nothrow_move_assignable_v<value_type>)
       requires std::movable<value_type>
       {
-      if constexpr(std::is_nothrow_move_constructible_v<value_type>)
-        detail::uninitialized_relocate_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      else
-        detail::uninitialized_relocate_with_copy_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      size_ = std::exchange(rh.size_,0);
+      storage_.assign_move( std::move(rh.storage_) );
       return *this;
       }
       
@@ -117,8 +113,7 @@ namespace coll
         noexcept(std::is_nothrow_copy_assignable_v<value_type>)
       requires std::copyable<value_type>
       {
-      detail::uninitialized_copy_n( detail::begin(rh), rh.size(), detail::begin(*this) );
-      size_ = rh.size_;
+      storage_.assign_copy(rh.storage_);
       return *this;
       }
     
@@ -126,7 +121,7 @@ namespace coll
     constexpr ~static_vector()
       {
       if constexpr (!std::is_trivially_destructible_v<value_type> )
-        detail::destroy_range(data(), size_type{0}, size_);
+        detail::destroy_range(data(), size_type{0}, storage_.size_);
       }
 
     //compatibility with old code
@@ -179,7 +174,7 @@ namespace coll
     [[nodiscard]]
     inline constexpr auto const & operator[]( arg_size_type index ) const noexcept
       {
-      assert(index< size_);
+      assert(index< storage_.size_);
       return data()[index];
       }
     
@@ -187,7 +182,7 @@ namespace coll
     [[nodiscard]]
     inline constexpr auto & operator[]( arg_size_type index ) noexcept
       {
-      assert(index< size_);
+      assert(index< storage_.size_);
       return data()[index];
       }
       
@@ -270,7 +265,7 @@ namespace coll
       { return detail::erase_at_end(*this, pos); }
       
     inline constexpr void set_size_priv_(size_type pos_ix) noexcept
-      { size_ = pos_ix; }
+      { storage_.size_ = pos_ix; }
     };
     
   namespace concepts
@@ -391,8 +386,8 @@ namespace coll
       detail::uninitialized_relocate_n( range_mid, move_count, end(vec2) );
     else
       detail::uninitialized_relocate_with_copy_n( range_mid, move_count, end(vec2) );
-    vec1.size_ -= move_count;
-    vec2.size_ += move_count;
+    vec1.storage_.size_ -= move_count;
+    vec2.storage_.size_ += move_count;
     }
 
   ///\brief split \ref vec1 in half moving half of elements to the end of \ref vec2

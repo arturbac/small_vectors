@@ -48,6 +48,14 @@ namespace coll::concepts
       requires not std::same_as<std::remove_cv_t<value_type>,bool>;
       requires     std::unsigned_integral<value_type>;
       };
+      
+  template<typename value_type>
+  concept allocate_constraint =
+  requires
+    {
+    requires sizeof(value_type) != 0;
+    requires alignof(value_type) % sizeof(value_type) == 0u;
+    };
 }
 
 namespace coll::detail

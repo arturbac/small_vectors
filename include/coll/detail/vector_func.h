@@ -385,9 +385,8 @@ namespace coll::detail
     erase_at_end(vec, my, std::prev(my.end(),1));
     }
   //-------------------------------------------------------------------------------------------------------------------
-  
-  template<typename value_type, typename size_type>
-  requires (sizeof(value_type) != 0 )
+
+  template<concepts::allocate_constraint value_type, typename size_type>
   [[nodiscard,gnu::always_inline]]
   inline constexpr storage_context_t<value_type, size_type>
   sv_allocate( size_type capacity ) noexcept

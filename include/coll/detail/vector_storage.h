@@ -19,9 +19,7 @@ namespace coll::detail
   inline constexpr void
   sv_deallocate( storage_context_t<value_type, size_type> storage ) noexcept;
   
-  template<typename value_type, typename size_type>
-  requires (sizeof(value_type) != 0 )
-  [[nodiscard,gnu::always_inline]]
+  template<concepts::allocate_constraint value_type, typename size_type>
   inline constexpr storage_context_t<value_type, size_type>
   sv_allocate( size_type count ) noexcept;
   
@@ -98,21 +96,27 @@ namespace coll::detail
     using size_type = size_type_select_t<N>;
     using storage_context_type = storage_context_t<value_type, size_type>;
     
-    static constexpr size_type capacity = N;
+    static constexpr size_type capacity() noexcept { return N; }
+    static constexpr size_type buffered_capacity = N;
     static constexpr bool value_type_has_trivial_liftime = 
               std::is_trivially_default_constructible_v<value_type> &&
               std::is_trivially_destructible_v<value_type>;
+              
+    static constexpr bool supports_reallocation {false};
     
     using storage_type = 
       std::conditional_t<value_type_has_trivial_liftime,
-                         std::array<value_type,capacity>,
-                         aligned_storage_for_no_trivial<value_type,capacity>>;
+                         std::array<value_type,buffered_capacity>,
+                         aligned_storage_for_no_trivial<value_type,buffered_capacity>>;
 
     // If the member is not empty, any tail padding in it may be also reused to store other data members. 
     [[no_unique_address]]
     storage_type data_;
     
-    constexpr static_vector_storage() noexcept = default;
+    [[no_unique_address]]
+    size_type size_;
+    
+    constexpr static_vector_storage() noexcept : size_{} {}
       
     [[nodiscard]]
     constexpr value_type const *
@@ -128,7 +132,62 @@ namespace coll::detail
     inline constexpr storage_context_type
     context() noexcept
       {
-      return storage_context_type{ data_.data(), capacity };
+      return storage_context_type{ data_.data(), buffered_capacity };
+      }
+      
+    inline constexpr void construct_move(static_vector_storage && rh )
+          noexcept(std::is_nothrow_move_constructible_v<value_type>)
+        requires std::move_constructible<value_type>
+      {
+      constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>;
+      if constexpr (use_nothrow)
+        uninitialized_relocate_n( rh.data(), rh.size_, data() );
+      else
+        uninitialized_relocate_with_copy_n( rh.data(), rh.size_, data() );
+
+      size_ = std::exchange(rh.size_, 0);
+      }
+      
+    inline constexpr void assign_move( static_vector_storage && rh )
+        noexcept(std::is_nothrow_move_assignable_v<value_type>)
+      requires std::movable<value_type>
+      {
+      constexpr bool use_nothrow = std::is_nothrow_move_assignable_v<value_type>;
+      
+      if constexpr (not std::is_trivially_destructible_v<value_type>)
+        {
+        size_type const old_size = size_;
+        if( old_size != 0u )
+          destroy_range(data(), size_type{0}, old_size );
+        } 
+
+      if constexpr(use_nothrow)
+        uninitialized_relocate_n( rh.data(), rh.size_, data() );
+      else
+        uninitialized_relocate_with_copy_n( rh.data(), rh.size_, data() );
+
+      size_ = std::exchange(rh.size_,0);
+      }
+    template<uint64_t M>
+    constexpr void construct_copy( static_vector_storage<value_type,M> const & rh )
+      requires (M <= buffered_capacity && std::copy_constructible<value_type>)
+      {
+      size_type my_size = rh.size_;
+      uninitialized_copy_n( rh.data(), my_size, data() );
+      size_ = my_size;
+      }
+      
+    template<uint64_t M>
+    constexpr void assign_copy( static_vector_storage<V,M> const & rh )
+      requires (M <= buffered_capacity && std::copy_constructible<value_type>)
+      {
+      if constexpr (!std::is_trivially_destructible_v<value_type> )
+        destroy_range(data(), size_type(0u), size_ );
+      
+      size_ = 0u;
+      size_type my_size = rh.size_;
+      uninitialized_copy_n( rh.data(), my_size, data() );
+      size_ = my_size;
       }
     };
 
@@ -427,7 +486,9 @@ namespace coll::detail
     static constexpr bool value_type_has_trivial_liftime = 
               std::is_trivially_default_constructible_v<value_type> &&
               std::is_trivially_destructible_v<value_type>;
-
+              
+    static constexpr bool supports_reallocation {true};
+    
     using buffered_storage_type =
       std::conditional_t<value_type_has_trivial_liftime,
                          std::array<value_type,buffered_capacity>,
@@ -539,7 +600,8 @@ namespace coll::detail
       if constexpr (not std::is_trivially_destructible_v<value_type>)
         {
         size_type const old_size = size_;
-        destroy_range(data(), size_type{0}, old_size );
+        if( old_size != 0u )
+          destroy_range(data(), size_type{0}, old_size );
         } 
       //design decision if right is buffered then free space and left become buffered
       //on the other hand left may stay dynamic but elements will be copied too so there is no reason to hold memory
@@ -771,7 +833,7 @@ namespace coll::detail
       size_type my_size = rh.size_;
 
       //design decision dont overallocate
-//       size_type new_capacity{ detail::growth(my_size, size_type(0u) ) };
+      // size_type new_capacity{ detail::growth(my_size, size_type(0u) ) };
       size_type new_capacity{ my_size };
       typename noexcept_if<std::is_nothrow_copy_constructible_v<value_type>>::cond_except_holder
          new_space{ detail::sv_allocate<value_type>(new_capacity) };
