@@ -54,7 +54,7 @@ namespace coll::concepts
   requires
     {
     requires sizeof(value_type) != 0;
-    requires alignof(value_type) % sizeof(value_type) == 0u;
+    requires sizeof(value_type) % alignof(value_type) == 0u;
     };
 }
 
