@@ -29,10 +29,10 @@ struct basic_fixed_string
   constexpr iterator begin() noexcept { return iterator{&data_[0]}; }
   
   [[nodiscard]]
-  constexpr char_type* data() noexcept { return &data_[0]; }
+  constexpr char_type * data() noexcept { return &data_[0]; }
   
   [[nodiscard]]
-  constexpr const_iterator data() const noexcept { return &data_[0]; }
+  constexpr char_type const * data() const noexcept { return &data_[0]; }
   
   [[nodiscard]]
   constexpr const_iterator end() const noexcept { return const_iterator{&data_[N]}; }
@@ -72,7 +72,7 @@ template <typename char_type, std::size_t N>
 basic_fixed_string(char_type const (&str)[N]) -> basic_fixed_string<char_type, N - 1>;
 
 template <typename char_type, std::size_t N, std::size_t M>
-consteval auto concat_fixed_string(basic_fixed_string<char_type, N> l,
+constexpr auto concat_fixed_string(basic_fixed_string<char_type, N> l,
                                    basic_fixed_string<char_type, M> r) noexcept
   {
   basic_fixed_string<char_type, N + M> result;
@@ -83,7 +83,7 @@ consteval auto concat_fixed_string(basic_fixed_string<char_type, N> l,
   }
 
 template <typename char_type, std::size_t N, std::size_t M, typename... U>
-consteval auto concat_fixed_string(basic_fixed_string<char_type, N> l,
+constexpr auto concat_fixed_string(basic_fixed_string<char_type, N> l,
                                    basic_fixed_string<char_type, M> r, U... u) noexcept
   { return concat_fixed_string(l, concat_fixed_string(r, u...)); }
 
