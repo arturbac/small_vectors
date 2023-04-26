@@ -63,6 +63,14 @@ consteval bool verify_basic_string()
     tr |= constexpr_test(s == "1234aBc"sv);
   }
   {
+    auto s{ basic_fixed_string{ "12" } + "34" + cast_fixed_string<char>("aBc") };
+    tr |= constexpr_test(s == "1234aBc"sv);
+  }
+  {
+    auto s{ "12" + basic_fixed_string{ "34" } + cast_fixed_string<char>("aBc") };
+    tr |= constexpr_test(s == "1234aBc"sv);
+  }
+  {
     using uchar = unsigned char;
     auto s{ cast_fixed_string<uchar>("12") };
     constexpr uchar expected[]{ uchar('1'), uchar('2'), uchar('\0') };

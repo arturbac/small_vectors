@@ -88,6 +88,19 @@ constexpr auto concat_fixed_string(basic_fixed_string<char_type, N> l,
   { return concat_fixed_string(l, concat_fixed_string(r, u...)); }
 
 
+template <typename char_type, std::size_t N, std::size_t M>
+constexpr auto operator +(basic_fixed_string<char_type, N> l,
+                          basic_fixed_string<char_type, M> r) noexcept
+  { return concat_fixed_string(l, r); }
+  
+template <typename char_type, std::size_t N, std::size_t M>
+constexpr auto operator +(basic_fixed_string<char_type, N> l, const char_type (&r)[M]) noexcept
+  { return concat_fixed_string(l, basic_fixed_string{r} ); }
+  
+template <typename char_type, std::size_t N, std::size_t M>
+constexpr auto operator +(const char_type (&l)[N], basic_fixed_string<char_type, M> r ) noexcept
+  { return concat_fixed_string( basic_fixed_string{l}, r ); }
+
 template <typename decl_chr_type, typename char_type, std::size_t N>
 inline consteval auto cast_fixed_string(char_type const (&str)[N]) noexcept
   { return basic_fixed_string<decl_chr_type, N - 1>(str); }
