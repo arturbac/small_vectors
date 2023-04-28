@@ -37,6 +37,13 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++-12"
       }
+    },
+    {
+      "name": "clang-15-release-coverage",
+      "inherits": "clang-15-release",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "--coverage"
+      }
     }
   ],
   "buildPresets": [

@@ -23,6 +23,7 @@
 #include "detail/uninitialized_constexpr.h"
 #include "detail/vector_storage.h"
 #include "detail/vector_func.h"
+#include "detail/iterator.h"
 
 namespace coll
 {
@@ -39,8 +40,8 @@ namespace coll
     using reference = value_type &;
     using const_reference = value_type const &;
     using size_type = typename detail::size_type_select_t<N>;
-    using const_iterator = value_type const *;
-    using iterator = value_type *;
+    using const_iterator = detail::adapter_iterator<value_type const *>;
+    using iterator = detail::adapter_iterator<value_type *>;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -53,28 +54,28 @@ namespace coll
     detail::static_vector_storage<value_type,capacity_> storage_;
     
     [[nodiscard]]
-    inline static constexpr auto
-    capacity() noexcept
+    static inline constexpr auto
+    capacity() noexcept -> size_type 
       { return capacity_; }
     
     [[nodiscard]]
-    inline constexpr value_type const *
-    data() const noexcept
+    inline constexpr auto
+    data() const noexcept -> value_type const *
       { return storage_.data(); }
        
     [[nodiscard]]
-    inline constexpr value_type *
-    data() noexcept
+    inline constexpr auto
+    data() noexcept -> value_type *
       { return storage_.data(); }
     
     [[nodiscard]]
-    inline constexpr size_type
-    size() const noexcept
+    inline constexpr auto
+    size() const noexcept -> size_type
       { return storage_.size_; }
   
     [[nodiscard]]
-    inline static constexpr size_type
-    max_size() noexcept
+    static inline constexpr auto
+    max_size() noexcept -> size_type
       { return capacity_; }
       
     constexpr static_vector() noexcept = default;
@@ -125,54 +126,62 @@ namespace coll
       }
 
     //compatibility with old code
-    inline constexpr bool empty() const noexcept
+    inline constexpr auto
+    empty() const noexcept -> bool
       { return detail::empty(*this); }
       
-    inline constexpr auto begin() const noexcept 
-      { return detail::begin(*this); }
+    inline constexpr auto
+    begin() const noexcept -> const_iterator
+      { return const_iterator{detail::begin(*this)}; }
       
-    inline constexpr auto cbegin() const noexcept 
-      { return detail::cbegin(*this); }
+    inline constexpr auto
+    cbegin() const noexcept -> const_iterator
+      { return const_iterator{detail::cbegin(*this)}; }
       
-    inline constexpr auto begin() noexcept 
-      { return detail::begin(*this); }
+    inline constexpr auto
+    begin() noexcept -> iterator
+      { return iterator{detail::begin(*this)}; }
       
-    inline constexpr auto end() const noexcept 
-      { return detail::end(*this); }
+    inline constexpr auto
+    end() const noexcept -> const_iterator
+      { return const_iterator{detail::end(*this)}; }
     
-    inline constexpr auto cend() const noexcept 
-      { return detail::end(*this); }
+    inline constexpr auto
+    cend() const noexcept -> const_iterator
+      { return const_iterator{detail::end(*this)}; }
       
-    inline constexpr auto end() noexcept 
-      { return detail::end(*this); }
+    inline constexpr auto
+    end() noexcept -> iterator
+      { return iterator{detail::end(*this)}; }
 
-    inline constexpr reverse_iterator 
-    rbegin() noexcept
+    inline constexpr auto
+    rbegin() noexcept -> reverse_iterator
       { return reverse_iterator{end()}; }
     
-    inline constexpr const_reverse_iterator 
-    rbegin() const noexcept
+    inline constexpr auto
+    rbegin() const noexcept -> const_reverse_iterator
       { return const_reverse_iterator{end()}; }
       
-    inline constexpr const_reverse_iterator 
-    crbegin() const noexcept
+    inline constexpr auto
+    crbegin() const noexcept -> const_reverse_iterator
       { return const_reverse_iterator{end()}; }
       
-    inline constexpr reverse_iterator 
-    rend() noexcept
+    inline constexpr auto
+    rend() noexcept -> reverse_iterator
       { return reverse_iterator{begin()}; }
       
-    inline constexpr const_reverse_iterator 
-    rend() const noexcept
+    inline constexpr auto
+    rend() const noexcept -> const_reverse_iterator
       { return const_reverse_iterator{begin()}; }
       
-    inline constexpr const_reverse_iterator 
-    crend() const noexcept
+    inline constexpr auto
+    crend() const noexcept -> const_reverse_iterator
       { return const_reverse_iterator{begin()}; }
-      
+
     template<concepts::unsigned_arithmetic_integral arg_size_type>
     [[nodiscard]]
-    inline constexpr auto const & operator[]( arg_size_type index ) const noexcept
+    inline constexpr auto
+    operator[]( arg_size_type index ) const noexcept -> value_type const &
       {
       assert(index< storage_.size_);
       return data()[index];
@@ -180,7 +189,8 @@ namespace coll
     
     template<concepts::unsigned_arithmetic_integral arg_size_type>
     [[nodiscard]]
-    inline constexpr auto & operator[]( arg_size_type index ) noexcept
+    inline constexpr auto
+    operator[]( arg_size_type index ) noexcept -> value_type &
       {
       assert(index< storage_.size_);
       return data()[index];
@@ -202,22 +212,22 @@ namespace coll
     inline constexpr void
     push_back(T && value )
         noexcept(noexcept(emplace_back<tune>(*this, std::forward<T>(value))))
-       { return emplace_back<tune>(*this, std::forward<T>(value)); }
+       { emplace_back<tune>(*this, std::forward<T>(value)); }
       
-    inline constexpr auto const &
-    front() const noexcept
+    inline constexpr auto
+    front() const noexcept -> value_type const &
       { return detail::front(*this); }
     
-    inline constexpr auto &
-    front() noexcept
+    inline constexpr auto
+    front() noexcept -> value_type &
       { return detail::front(*this); }
       
-    inline constexpr auto const &
-    back() const noexcept
+    inline constexpr auto
+    back() const noexcept -> value_type const &
       { return detail::back(*this); }
       
-    inline constexpr auto & 
-    back() noexcept
+    inline constexpr auto
+    back() noexcept -> value_type &
       { return detail::back(*this); }
       
     inline constexpr void
@@ -225,22 +235,23 @@ namespace coll
       { detail::clear(*this); }
       
     inline constexpr auto
-    erase(const_iterator pos ) 
-        noexcept(noexcept(detail::erase(*this, pos)))
+    erase(const_iterator pos )
+        noexcept(noexcept(detail::erase(*this, pos))) -> iterator
       { return detail::erase(*this, pos); }
       
     inline constexpr auto
-    erase(const_iterator first, const_iterator last ) 
-        noexcept(noexcept(detail::erase(*this, first, last)))
+    erase(const_iterator first, const_iterator last )
+        noexcept(noexcept(detail::erase(*this, first, last))) -> iterator
       { return detail::erase(*this, first, last); }
       
-    inline constexpr void pop_back() noexcept 
+    inline constexpr void
+    pop_back() noexcept 
       { detail::pop_back(*this); }
       
     template<concepts::random_access_iterator source_iterator>
     inline constexpr auto
     insert(iterator itpos, source_iterator itbeg, source_iterator itend )
-        noexcept(noexcept(detail::insert(*this, itpos, itbeg, itend)))
+        noexcept(noexcept(detail::insert(*this, itpos, itbeg, itend))) -> vector_outcome_e
       { return detail::insert(*this, itpos, itbeg, itend); }
       
     template<vector_tune_e tune = vector_tune_e::checked, typename ...Args>
@@ -257,11 +268,11 @@ namespace coll
       
     inline constexpr auto
     resize( size_type new_size )
-        noexcept(noexcept(detail::resize(*this, new_size)))
+        noexcept(noexcept(detail::resize(*this, new_size))) -> vector_outcome_e
       { return detail::resize(*this, new_size); }
       
     inline constexpr auto
-    erase_at_end(const_iterator pos ) noexcept
+    erase_at_end(const_iterator pos ) noexcept -> iterator
       { return detail::erase_at_end(*this, pos); }
       
     inline constexpr void set_size_priv_(size_type pos_ix) noexcept
@@ -296,20 +307,19 @@ namespace coll
   [[nodiscard]]
   inline constexpr auto
   begin( static_vector_type & vec ) noexcept
-    { return detail::begin(vec); }
+    { return vec.begin(); }
     
   template<typename V, uint64_t N>
   [[nodiscard]]
   inline constexpr auto
   cbegin( static_vector<V,N> const & vec ) noexcept
-    { return detail::cbegin(vec); }
+    { return vec.cbegin(); }
 
-    
   template<concepts::same_as_static_vector static_vector_type>
   [[nodiscard]]
   inline constexpr auto
   end( static_vector_type & vec ) noexcept
-    { return detail::end(vec); }
+    { return vec.end(); }
   
   using detail::front;
   using detail::back;

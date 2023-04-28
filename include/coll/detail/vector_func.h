@@ -165,14 +165,20 @@ namespace coll::detail
     {
     using value_type = typename vector_type::value_type;
     using size_type = typename vector_type::size_type;
+    using iterator = typename vector_type::iterator;
+    using const_iterator = typename vector_type::const_iterator;
     
     storage_context_t<value_type,size_type> ctx;
     size_type size_;
     
     inline constexpr value_type * data() const noexcept { return ctx.data; }
     inline constexpr value_type const * cdata() const noexcept { return data(); }
-    inline constexpr value_type * end() const noexcept { return unext(data(), size_); }
-    inline constexpr value_type const * cend() const noexcept { return unext(cdata(), size_); }
+    
+    inline constexpr iterator begin() const noexcept { return iterator{data()}; }
+    inline constexpr const_iterator cbegin() const noexcept { return const_iterator{data()}; }
+    inline constexpr iterator end() const noexcept { return unext(begin(), size_); }
+    inline constexpr const_iterator cend() const noexcept { return end(); }
+    
     inline constexpr size_type size() const noexcept { return size_; }
     inline constexpr size_type capacity() const noexcept { return ctx.capacity; }
     inline constexpr size_type free_space() const noexcept { return nic_sub(capacity(),size()); }
@@ -254,15 +260,16 @@ namespace coll::detail
   inline constexpr auto
   erase_at_end( vector_type & vec, internal_data_context_t<vector_type> const & my,
                 typename vector_type::const_iterator pos ) noexcept
+      -> typename vector_type::iterator
     {
     using size_type = typename vector_type::size_type;
     
-    size_type pos_ix = udistance<size_type>( my.cdata(), pos );
+    size_type pos_ix = udistance<size_type>( my.cbegin(), pos );
     //unsigned cast prevent negative from invalid pos to buffer overflow
     if( pos_ix < my.size() )
       {
       detail::erase_at_end_impl(vec, my, pos_ix );
-      return unext(my.data(), pos_ix);
+      return unext(my.begin(), pos_ix);
       }
     return my.end();
     }
@@ -276,6 +283,7 @@ namespace coll::detail
   inline constexpr auto
   erase_at_end( vector_type & vec,
                 typename vector_type::const_iterator pos ) noexcept
+      -> typename vector_type::iterator
     {
     internal_data_context_t const my{vec};
     return erase_at_end( vec, my, pos );
@@ -329,17 +337,17 @@ namespace coll::detail
     using size_type = typename vector_type::size_type;
     internal_data_context_t const my{vec};
 
-    size_type const pos_ix = udistance<size_type>( my.cdata(), pos );
+    size_type const pos_ix = udistance<size_type>( my.cbegin(), pos );
     if(pos_ix != my.size())
       {
       size_type const last_ix = nic_sum(pos_ix, 1u);
       if( last_ix != my.size() )
-        std::move( unext(my.data(), last_ix), my.end(), unext(my.data(), pos_ix) );
+        std::move( unext(my.begin(), last_ix), my.end(), unext(my.begin(), pos_ix) );
       if constexpr (!std::is_trivially_destructible_v<value_type> )
         std::destroy_at( unext(my.data(), nic_sub(my.size(), 1u)) );
 
       vec.set_size_priv_( nic_sub(my.size(), 1u));
-      return unext(my.data(), pos_ix);
+      return unext(my.begin(), pos_ix);
       }
     return my.end();
     }
@@ -360,17 +368,17 @@ namespace coll::detail
     
     internal_data_context_t const my{vec};
 
-    size_type const first_ix = udistance<size_type>( my.cdata(), first );
+    size_type const first_ix = udistance<size_type>( my.cbegin(), first );
     if(first_ix != my.size())
       {
-      size_type const last_ix = udistance<size_type>( my.cdata(), last );
+      size_type const last_ix = udistance<size_type>( my.cbegin(), last );
       if( first_ix != last_ix)
         {
         if( last_ix != my.size() )
-          std::move( unext(my.data(), last_ix), my.end(), unext(my.data(), first_ix));
+          std::move( unext(my.begin(), last_ix), my.end(), unext(my.begin(), first_ix));
         detail::erase_at_end_impl( vec, nic_sum(nic_sub(my.size(), last_ix), first_ix) );
         }
-      return unext(my.data(), first_ix);
+      return unext(my.begin(), first_ix);
       }
     return my.end();
     }
@@ -430,7 +438,7 @@ namespace coll::detail
   emplace_back_unchecked(vector_type & vec, internal_data_context_t<vector_type> const & my, Args &&... args)
       noexcept(std::is_nothrow_constructible_v<typename vector_type::value_type,Args...>)
     {
-    std::construct_at(my.end(), std::forward<Args>(args)...);
+    std::construct_at( std::addressof(*my.end()), std::forward<Args>(args)...);
     vec.set_size_priv_( nic_sum(my.size(), 1u));
     }
     
@@ -571,8 +579,8 @@ namespace coll::detail
       
     size_type const u_new_el_count{ static_cast<size_type>(new_el_count) };
     
-    internal_data_context_t my{vec};
-    auto itpos { unext(my.data(), udistance<size_type>(my.cdata(),citpos)) };
+    internal_data_context_t const my{vec};
+    auto itpos { unext(my.begin(), udistance<size_type>(my.cbegin(),citpos)) };
     //comparing unsigned cast of new_el_count prevents working with negative range in itbeg, itend
     if( u_new_el_count <= my.free_space() )
       {
@@ -639,7 +647,7 @@ namespace coll::detail
              new_space{ sv_allocate<value_type>(new_capacity) };
           if( new_space )
             {
-            size_type lower_el_count{ udistance<size_type>( my.data(), itpos) };
+            size_type lower_el_count{ udistance<size_type>( my.begin(), itpos) };
 
             //insert new elements
             uninitialized_copy_n(itbeg, u_new_el_count, unext(new_space.data(), lower_el_count));
@@ -649,24 +657,24 @@ namespace coll::detail
             if constexpr( std::is_nothrow_move_constructible_v<value_type>)
               {
               //relocate lower part
-              uninitialized_relocate_n( my.data(), lower_el_count, new_space.data() );
+              uninitialized_relocate_n( my.begin(), lower_el_count, new_space.data() );
               //relocate upper part, last loop unwinds if throws by itself
-              uninitialized_relocate_n( unext(my.data(), lower_el_count),
+              uninitialized_relocate_n( unext(my.begin(), lower_el_count),
                                                   nic_sub(my.size(),lower_el_count),
                                                   unext(new_space.data(), nic_sum(lower_el_count, u_new_el_count)) );
               }
             else
               {
-              uninitialized_copy_n( my.data(), lower_el_count, new_space.data() );
+              uninitialized_copy_n( my.begin(), lower_el_count, new_space.data() );
               typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range
                 lower_part_unwind{ new_space.data(), size_type{0u}, lower_el_count };
               //cond_destroy_range_at
               //relocate upper part, last loop unwinds if throws by itself
-              uninitialized_relocate_with_copy_n( unext(my.data(), lower_el_count),
+              uninitialized_relocate_with_copy_n( unext(my.begin(), lower_el_count),
                                                   nic_sub(my.size(), lower_el_count),
                                                   unext(new_space.data(), nic_sum(lower_el_count,u_new_el_count)) );
               //finish moving lower part
-              destroy_range(my.data(), size_type{0u}, lower_el_count );
+              destroy_range(my.begin(), size_type{0u}, lower_el_count );
               lower_part_unwind.release();
               }
             ext_range_unwind.release();
@@ -713,7 +721,7 @@ namespace coll::detail
     // free   free
     // free   free
     
-    auto itpos { unext(my.data(), udistance<size_type>(my.cdata(),citpos)) };
+    auto itpos { unext(my.begin(), udistance<size_type>(my.cbegin(),citpos)) };
     size_type const old_el_count{ udistance<size_type>(itpos, my.end()) };
     if( old_el_count != 0 )
       {
@@ -726,7 +734,7 @@ namespace coll::detail
       }
     else
       {
-      std::construct_at(my.end(), std::forward<Args>(args)...);
+      std::construct_at( std::addressof(*my.end()), std::forward<Args>(args)...);
       vec.set_size_priv_( nic_sum(my.size(), 1u) );
       }
     }
@@ -736,7 +744,7 @@ namespace coll::detail
   emplace_unchecked(vector_type & vec, typename vector_type::const_iterator citpos, Args &&... args)
       noexcept(is_nothrow_move_constr_and_constr_v<typename vector_type::value_type, Args...>)
     {
-    internal_data_context_t my{vec};
+    internal_data_context_t const my{vec};
     emplace_unchecked_impl( vec, my, citpos, std::forward<Args>(args)... );
     }
   //-------------------------------------------------------------------------------------------------------------------
@@ -749,8 +757,8 @@ namespace coll::detail
     constexpr bool use_nothrow = is_nothrow_move_constr_and_constr_v<typename vector_type::value_type,Args...>;
     
     using size_type = typename vector_type::size_type;
-    internal_data_context_t my{vec};
-    auto itpos { unext(my.data(), udistance<size_type>(my.cdata(),citpos)) };
+    internal_data_context_t const my{vec};
+    auto itpos { unext(my.begin(), udistance<size_type>(my.cbegin(),citpos)) };
 
     if( my.free_space() != 0u )
       {
@@ -770,15 +778,15 @@ namespace coll::detail
             new_space{ sv_allocate<value_type>(new_capacity) };
           if( new_space )
             {
-            size_type const lower_el_count{ udistance<size_type>( my.data(), itpos) };
+            size_type const lower_el_count{ udistance<size_type>( my.begin(), itpos) };
               {
               typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_at 
                 el{ std::construct_at( unext(new_space.data(), lower_el_count), std::forward<Args>(args)...) };
               
               if constexpr( std::is_nothrow_move_constructible_v<value_type>)
                 {
-                uninitialized_relocate_n( my.data(), lower_el_count, new_space.data() );
-                uninitialized_relocate_n( unext(my.data(), lower_el_count), nic_sub(my.size(), lower_el_count),
+                uninitialized_relocate_n( my.begin(), lower_el_count, new_space.data() );
+                uninitialized_relocate_n( unext(my.begin(), lower_el_count), nic_sub(my.size(), lower_el_count),
                                       unext(new_space.data(), nic_sum(lower_el_count,1u)) );
                 }
               else
@@ -789,12 +797,12 @@ namespace coll::detail
                 typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range
                   lower_part_unwind{ new_space.data(), size_type{0u}, lower_el_count };
 
-                uninitialized_relocate_with_copy_n( unext(my.data(), lower_el_count),
+                uninitialized_relocate_with_copy_n( unext(my.begin(), lower_el_count),
                                                       nic_sub(my.size(), lower_el_count),
                                                       unext(new_space.data(), nic_sum(lower_el_count, 1u)) );
                 //finish moving lower part
                 if constexpr (not std::is_trivially_destructible_v<value_type>)
-                  destroy_range(my.data(), size_type{0u}, lower_el_count );
+                  destroy_range(my.begin(), size_type{0u}, lower_el_count );
                 
                 lower_part_unwind.release();
                 }
@@ -831,15 +839,15 @@ namespace coll::detail
     {
     constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<typename vector_type::value_type>;
     using value_type = typename vector_type::value_type;
-    //alocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
+    //allocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
     typename noexcept_if<use_nothrow>::cond_except_holder
       new_space{ sv_allocate<value_type>(new_capacity) };
     if( new_space )
       {
       if constexpr(use_nothrow)
-        uninitialized_relocate_n( my.data(), my.size(), new_space.data() );
+        uninitialized_relocate_n( my.begin(), my.size(), new_space.data() );
       else
-        uninitialized_relocate_with_copy_n( my.data(), my.size(), new_space.data() );
+        uninitialized_relocate_with_copy_n( my.begin(), my.size(), new_space.data() );
       //deallocate old space
       storage_context_t old_storage{ vec.exchange_priv_(new_space.release(), my.size() ) };
       if(old_storage.data != nullptr )
@@ -859,9 +867,9 @@ namespace coll::detail
     typename noexcept_if<use_nothrow>::cond_except_holder_revert
       old_storage{ vec, my.size(), vec.switch_static_priv_() };
     if constexpr(use_nothrow)
-      uninitialized_relocate_n( my.data(), my.size(), vec.data() );
+      uninitialized_relocate_n( my.begin(), my.size(), vec.begin() );
     else
-      uninitialized_relocate_with_copy_n( my.data(), my.size(), vec.data() );
+      uninitialized_relocate_with_copy_n( my.begin(), my.size(), vec.begin() );
     vec.set_size_priv_(my.size());
     sv_deallocate(old_storage.release());
     return vector_outcome_e::no_error;
@@ -877,7 +885,7 @@ namespace coll::detail
     {
     if( new_capacity < max_size(vec) )
       {
-      internal_data_context_t my{vec};
+      internal_data_context_t const my{vec};
       if( new_capacity > my.capacity() )
         return relocate_elements_dyn(vec, my, new_capacity);
       else
@@ -929,7 +937,7 @@ namespace coll::detail
           if constexpr(use_nothrow)
             {
             //exists only of the purpose of better memory access order
-            uninitialized_relocate_n( my.data(), my.size(), new_space.data() );
+            uninitialized_relocate_n( my.begin(), my.size(), new_space.data() );
             uninitialized_value_construct_n( unext(new_space.data(), my.size()), count );
             }
           else
@@ -940,9 +948,9 @@ namespace coll::detail
               new_elems_unwind{new_space.data(), my.size(), nic_sum(my.size(),count)};
               
             if constexpr( std::is_nothrow_move_constructible_v<value_type>)
-              uninitialized_relocate_n( my.data(), my.size(), new_space.data() );
+              uninitialized_relocate_n( my.begin(), my.size(), new_space.data() );
             else
-              uninitialized_relocate_with_copy_n( my.data(), my.size(), new_space.data() );
+              uninitialized_relocate_with_copy_n( my.begin(), my.size(), new_space.data() );
             
             new_elems_unwind.release();
             }
@@ -973,7 +981,7 @@ namespace coll::detail
     noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>
                    && std::is_nothrow_default_constructible_v<typename vector_type::value_type>)
     {
-    internal_data_context_t my{vec};
+    internal_data_context_t const my{vec};
 
     if( my.size() != new_size )
       {
@@ -983,7 +991,7 @@ namespace coll::detail
           return default_append(vec, my, nic_sub(new_size, my.size()) );
         else
           {
-          erase_at_end( vec, unext(my.data(), new_size) );
+          erase_at_end( vec, unext(my.begin(), new_size) );
           return vector_outcome_e::no_error;
           }
         }
@@ -1000,7 +1008,7 @@ namespace coll::detail
   shrink_to_fit( vector_type & vec )
       noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
     {
-    internal_data_context_t my{vec};
+    internal_data_context_t const my{vec};
     if constexpr(vector_type::buffered_capacity() != 0 )
       {
       if( my.free_space() != 0 && my.capacity() > vector_type::buffered_capacity() )

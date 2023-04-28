@@ -68,7 +68,7 @@ namespace coll::detail
     // random
     [[nodiscard]]
     inline constexpr auto
-    operator[](difference_type index) const noexcept -> reference
+    operator[](std::size_t index) const noexcept -> reference
       { return current_[index]; }
 
     inline constexpr auto

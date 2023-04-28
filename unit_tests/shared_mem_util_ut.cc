@@ -214,7 +214,7 @@ int main()
       { assign(value); }
       
     constexpr auto view() const noexcept 
-      { return std::string_view{string_.begin(), string_.size() }; }
+      { return std::string_view{string_.begin(), string_.end() }; }
     
     constexpr void assign( std::string_view value ) noexcept
       {

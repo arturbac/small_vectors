@@ -119,10 +119,10 @@ namespace coll::detail
       std::uninitialized_default_construct(first, last);
     }
     
-  template<typename value_type, typename size_type>
+  template<typename iterator, typename size_type>
   inline constexpr void
-  uninitialized_value_construct_n(value_type * first, size_type count)
-      noexcept(std::is_nothrow_constructible_v<value_type>)
+  uninitialized_value_construct_n(iterator first, size_type count)
+      noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
     {
     if( std::is_constant_evaluated())
       {
