@@ -248,7 +248,8 @@ namespace coll::detail::string
     }
   
   template<typename vector_storage, typename Operation >
-  inline constexpr void resize_and_overwrite( vector_storage & storage, typename vector_storage::size_type sz, Operation op )
+  inline constexpr void resize_and_overwrite( vector_storage & storage,
+                                              typename vector_storage::size_type sz, Operation op )
     {
     using char_type = typename vector_storage::value_type;
     using size_type = typename vector_storage::size_type;
@@ -269,10 +270,15 @@ namespace coll::detail::string
         storage_context_t new_space{ sv_allocate<char_type>(new_capacity) };
         auto data{storage.data()};
         uninitialized_copy(data, data + storage.size_, new_space.data );
-      
+        if (std::is_constant_evaluated())
+          {
+          // for constant evaluated mode we have to initialize storage to allow user operator assignment
+          // in constant evaluated mode assignment to uninitialized store is not allowed
+          uninitialized_value_construct( new_space.data + storage.size_, new_space.data + new_capacity );
+          }
         typename vector_storage::size_type new_size{ op( new_space.data, new_capacity - null_termination )};
         cond_null_terminate(new_space.data+new_size);
-        // storage.size_ = new_size;
+
         //deallocate old space
         storage_context_t old_storage{ storage.exchange_priv_(new_space, new_size ) };
         if(old_storage.data != nullptr ) [[unlikely]]

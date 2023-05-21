@@ -399,6 +399,11 @@ struct basic_string_t
   resize( size_type new_size, char_type ch )
     { detail::string::resize(storage_, new_size, ch); }
     
+  ///\brief Resizes the string to contain at most count characters, using the user-provided operation op to modify the possibly indeterminate contents and set the length.
+  template<typename Operation >
+  constexpr void resize_and_overwrite( size_type new_size, Operation op )
+    { detail::string::resize_and_overwrite(storage_,new_size, op); }
+
   constexpr void
     shrink_to_fit()
       requires detail::buffered_storage_tag<storage_tag>

@@ -530,6 +530,45 @@ int main()
     result |= run_constexpr_test<string_type_list>(fn_tmpl);
     };
     
+  "basic_string_resize_and_overwrite"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename string_type>
+        ( string_type const *) -> metatests::test_result
+      {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      using size_type = typename string_type::size_type;
+      auto constexpr text_short{cast_fixed_string<char_type>("a")};
+      st vs{text_short.view()};
+      vs.resize_and_overwrite(8u,
+                              [](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
+                              {
+                              std::iota(data, data+8, char_type('1'));
+                              return 8u;
+                              });
+      {
+      auto constexpr expected{cast_fixed_string<char_type>("12345678")};
+      constexpr_test( vs == expected.view());
+      }
+      constexpr_test(is_null_termianted(vs));
+      vs.resize_and_overwrite(3u,
+                              [](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
+                              {
+                              std::iota(data, data+3, char_type('a'));
+                              return 3u;
+                              });
+      {
+      auto constexpr expected{cast_fixed_string<char_type>("abc")};
+      constexpr_test( vs == expected.view());
+      }
+      return {};
+      };
+      
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+    };
+    
   "basic_string_insert"_test = [&]
     {
     auto fn_tmpl =
