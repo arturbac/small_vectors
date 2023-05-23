@@ -708,6 +708,12 @@ struct basic_string_t
     auto count{static_cast<size_type>(std::distance(first,last))};
     return replace(pos,count,count2,ch);
     }
+  
+  inline constexpr void
+  swap( basic_string_t & other ) noexcept
+    {
+    detail::string::swap(storage_, other.storage_);
+    }
   };
   
   using detail::size;

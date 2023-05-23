@@ -159,6 +159,14 @@ namespace coll::detail::string
     storage.size_ = sz;
     }
     
+  template<typename vector_storage>
+  inline constexpr void swap( vector_storage & lstorage, vector_storage & rstorage)
+    {
+    lstorage.swap(rstorage);
+    cond_null_terminate(lstorage.data()+lstorage.size_);
+    cond_null_terminate(rstorage.data()+rstorage.size_);
+    }
+    
   template<typename vector_storage, typename input_iterator>
   inline constexpr auto
   copy_construct( input_iterator first, input_iterator last )

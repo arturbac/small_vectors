@@ -198,6 +198,21 @@ namespace coll::detail
     cur.release();
     }
     
+  template <concepts::input_iterator InputIterator, concepts::forward_iterator ForwardIterator>
+  inline constexpr void
+  uninitialized_move(InputIterator first, InputIterator last, ForwardIterator result)
+      noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
+    {
+    constexpr bool use_nothrow  = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
+    using unwind = range_unwinder<use_nothrow,ForwardIterator>;
+    unwind cur{ result };
+    auto src{ std::make_move_iterator(first) };
+    auto end{ std::make_move_iterator(last) };
+    for (; src != end; ++src, (void) ++cur.last_)
+      std::construct_at(std::addressof(*cur.last_), std::move(*src));
+    cur.release();
+    }
+    
   template <concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
   inline constexpr void
   uninitialized_move_n(InputIterator first, Size count, ForwardIterator result)
@@ -297,5 +312,19 @@ namespace coll::detail
     if constexpr (!std::is_trivially_destructible_v<value_type> )
       destroy_range( first, size_type(0u),  count );
 
+    }
+    
+  template<concepts::forward_iterator iterator, std::integral size_type>
+  inline constexpr void
+  uninitialized_uneven_range_swap( iterator iter1, size_type size1, iterator iter2, size_type size2)
+      noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<iterator>>)
+    {
+    if(size1 > size2 )
+      {
+      std::swap(iter1,iter2);
+      std::swap(size1,size2);
+      }
+    std::swap_ranges( iter1, iter1 + size1, iter2 );
+    uninitialized_move( iter2 + size1, iter2 + size2, iter1 + size1 );
     }
 }

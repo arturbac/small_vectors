@@ -189,6 +189,14 @@ namespace coll::detail
       uninitialized_copy_n( rh.data(), my_size, data() );
       size_ = my_size;
       }
+      
+    constexpr void swap( static_vector_storage & rh ) 
+        noexcept(std::is_nothrow_copy_assignable_v<value_type>)
+      requires std::copyable<value_type>
+      {
+      uninitialized_uneven_range_swap(data(),size_,rh.data(),rh.size_);
+      std::swap(size_, rh.size_);
+      }
     };
 
   // union
@@ -631,6 +639,45 @@ namespace coll::detail
       size_ = std::exchange(rh.size_,0);
       }
       
+    constexpr void swap( small_vector_storage & rh ) 
+        noexcept(std::is_nothrow_copy_assignable_v<value_type>)
+      requires std::copyable<value_type>
+      {
+      int32_t const swap_case = ((active_ == dynamic) <<1) | (rh.active_ == dynamic);
+      switch( swap_case )
+        {
+        case 0: //both static
+          {
+          uninitialized_uneven_range_swap(data_.buffered.data(),size_,rh.data_.buffered.data(),rh.size_);
+          break;
+          }
+        case 1: //left static right dynamic
+          {
+          auto dyn = rh.data_.dynamic;
+          rh.data_ = {};
+          rh.active_ = buffered;
+          uninitialized_copy_n( data_.buffered.data(), size_, rh.data_.buffered.data() );
+          data_ = dyn;
+          active_ = dynamic;
+          break;
+          }
+        case 2: //left dynamic right static
+          {
+          auto dyn = data_.dynamic;
+          data_ = {};
+          active_ = buffered;
+          uninitialized_copy_n( rh.data_.buffered.data(), rh.size_, data_.buffered.data() );
+          rh.data_ = dyn;
+          rh.active_ = dynamic;
+          break;
+          }
+        case 3: //both dynamic
+          std::swap(data_.dynamic, rh.data_.dynamic);
+          break;
+        }
+      std::swap(size_, rh.size_);
+      }
+      
     template<uint64_t M>
     ///\warning copy constructor may throw always, for dynamic as there is no other way to signalize allocation error
     constexpr void construct_copy( small_vector_storage<V,S,M> const & rh )
@@ -824,6 +871,13 @@ namespace coll::detail
         }
       dynamic = std::exchange(rh.dynamic, {});
       size_ = std::exchange(rh.size_,0);
+      }
+      
+    constexpr void swap( small_vector_storage & rh ) noexcept
+      requires std::movable<value_type>
+      {
+      std::swap(dynamic,rh.dynamic);
+      std::swap(size_, rh.size_);
       }
       
     template<uint64_t M>

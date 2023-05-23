@@ -235,7 +235,7 @@ int main()
       auto constexpr text_long{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, consectetur adipiscing elit."
                                                        " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
       auto constexpr text_short{cast_fixed_string<char_type>("1234")};
-
+      
       st vs{text_short.view()};
       st vl{text_long.view()};
       auto sub_view{ text_long.view().substr(7u) };
@@ -291,6 +291,98 @@ int main()
       vl.assign(text_short.begin(), text_short.end());
       constexpr_test(vl == text_short.view());
       constexpr_test(is_null_termianted(vl));
+      return {};
+      };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+    };
+    
+  "basic_string_swap"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename string_type>
+        ( string_type const *) -> metatests::test_result
+      {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      auto constexpr text_long1{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                                                       " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+      auto constexpr text_long2{cast_fixed_string<char_type>("Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+      auto constexpr text_short1{cast_fixed_string<char_type>("1234")};
+      auto constexpr text_short2{cast_fixed_string<char_type>("abc")};
+      
+      {
+      st vs1;
+      st vs2;
+      vs1.swap(vs2);
+      constexpr_test(empty(vs1));
+      constexpr_test(empty(vs2));
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1;
+      st vs2{text_short2.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_short2.view());
+      constexpr_test(empty(vs2));
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_short1.view()};
+      st vs2;
+      vs1.swap(vs2);
+      constexpr_test(empty(vs1));
+      constexpr_test(vs2 == text_short1.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_short1.view()};
+      st vs2{text_short2.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_short2.view());
+      constexpr_test(vs2 == text_short1.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_short2.view()};
+      st vs2{text_short1.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_short1.view());
+      constexpr_test(vs2 == text_short2.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_long1.view()};
+      st vs2{text_short1.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_short1.view());
+      constexpr_test(vs2 == text_long1.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_short1.view()};
+      st vs2{text_long1.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_long1.view());
+      constexpr_test(vs2 == text_short1.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
+      {
+      st vs1{text_long1.view()};
+      st vs2{text_long2.view()};
+      vs1.swap(vs2);
+      constexpr_test(vs1 == text_long2.view());
+      constexpr_test(vs2 == text_long1.view());
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
+      }
       return {};
       };
     result |= run_consteval_test<string_type_list>(fn_tmpl);
