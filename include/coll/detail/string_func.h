@@ -6,6 +6,25 @@
 
 namespace coll::detail::string
 {
+  struct static_string_tag { };
+  struct buffered_string_tag {};
+  
+  template<typename tag>
+  concept static_storage_tag = std::same_as<tag,static_string_tag>;
+
+  template<typename tag>
+  concept buffered_storage_tag = std::same_as<tag,buffered_string_tag>;
+
+  template<typename storage_tag, typename storage_type>
+    requires static_storage_tag<storage_tag>
+  inline constexpr void storage_cleanup( storage_type &) noexcept
+    {}
+    
+  template<typename storage_tag, typename storage_type>
+    requires detail::string::buffered_storage_tag<storage_tag>
+  inline constexpr void storage_cleanup(storage_type & storage) noexcept
+    { storage.destroy(); }
+    
   inline constexpr bool null_terminate_string = true;
   inline constexpr uint8_t null_termination = null_terminate_string ? 1u : 0u;
   

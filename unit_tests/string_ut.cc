@@ -634,9 +634,10 @@ int main()
       auto constexpr text_short{cast_fixed_string<char_type>("a")};
       st vs{text_short.view()};
       vs.resize_and_overwrite(8u,
-                              [](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
+                              [](char_type * data, size_type buff_cap) noexcept -> size_type
                               {
                               std::iota(data, data+8, char_type('1'));
+                              constexpr_test(buff_cap >= 8u);
                               return 8u;
                               });
       {
@@ -645,9 +646,10 @@ int main()
       }
       constexpr_test(is_null_termianted(vs));
       vs.resize_and_overwrite(3u,
-                              [](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
+                              [](char_type * data, size_type buff_cap) noexcept -> size_type
                               {
                               std::iota(data, data+3, char_type('a'));
+                              constexpr_test(buff_cap >= 3u);
                               return 3u;
                               });
       {

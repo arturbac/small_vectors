@@ -28,14 +28,8 @@
 
 namespace coll
 {
-struct static_string_tag
-  {
-    
-  };
-struct buffered_string_tag
-  {
-    
-  };
+using coll::detail::string::static_string_tag;
+using coll::detail::string::buffered_string_tag;
 
 template<typename V, uint64_t N, typename storage_tag>
 struct basic_string_t;
@@ -88,14 +82,7 @@ using static_u32string = static_basic_string<char32_t,capacity>;
 template<uint64_t capacity>
 using static_wstring = static_basic_string<wchar_t,capacity>;
 
-namespace detail
-{
-template<typename tag>
-concept static_storage_tag = std::same_as<tag,static_string_tag>;
 
-template<typename tag>
-concept buffered_storage_tag = std::same_as<tag,buffered_string_tag>;
-}
 template<typename V, uint64_t N, typename T>
 struct basic_string_t
   {
@@ -132,14 +119,14 @@ struct basic_string_t
   [[nodiscard]]
   inline static constexpr auto
   capacity() noexcept -> size_type
-     requires detail::static_storage_tag<storage_tag>
+     requires detail::string::static_storage_tag<storage_tag>
     { return buffered_capacity_ - coll::detail::string::null_termination; }
   
   /// \returns the number of characters that can be held in currently allocated storage 
   [[nodiscard]]
   inline constexpr auto
   capacity() const noexcept -> size_type
-      requires detail::buffered_storage_tag<storage_tag>
+      requires detail::string::buffered_storage_tag<storage_tag>
     { return storage_.capacity() - coll::detail::string::null_termination; }
     
   [[nodiscard]]
@@ -161,14 +148,14 @@ struct basic_string_t
   [[nodiscard]]
   inline static constexpr auto
   max_size() noexcept -> size_type
-       requires detail::static_storage_tag<storage_tag>
+       requires detail::string::static_storage_tag<storage_tag>
     { return buffered_capacity_ - coll::detail::string::null_termination; }
   
   /// \returns the maximum number of elements the string is able to hold
   [[nodiscard]]
   inline static constexpr auto
   max_size() noexcept -> size_type
-       requires detail::buffered_storage_tag<storage_tag>
+       requires detail::string::buffered_storage_tag<storage_tag>
     { return std::numeric_limits<size_type>::max() - coll::detail::string::null_termination; }
 
   /// \returns the number of char_type elements in the string, i.e. std::distance(begin(), end()).
@@ -263,16 +250,11 @@ struct basic_string_t
     detail::string::assign_copy(storage_, first, last );
     return *this;
     }
-    
-  inline constexpr
-  ~basic_string_t()
-      requires detail::static_storage_tag<storage_tag> = default;
 
   constexpr
   ~basic_string_t()
-      requires detail::buffered_storage_tag<storage_tag>
     {
-    storage_.destroy();
+    detail::string::storage_cleanup<storage_tag>(storage_);
     }
     
   [[nodiscard]]
@@ -388,7 +370,7 @@ struct basic_string_t
     
   constexpr void
   reserve( size_type new_cap )
-      requires detail::buffered_storage_tag<storage_tag>
+      requires detail::string::buffered_storage_tag<storage_tag>
     { detail::string::reserve(storage_, new_cap); }
     
   constexpr void
@@ -406,7 +388,7 @@ struct basic_string_t
 
   constexpr void
     shrink_to_fit()
-      requires detail::buffered_storage_tag<storage_tag>
+      requires detail::string::buffered_storage_tag<storage_tag>
     {
     detail::string::shrink_to_fit(storage_);
     }
