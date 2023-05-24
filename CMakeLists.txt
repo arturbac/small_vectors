@@ -12,7 +12,10 @@ set(CMAKE_MODULE_PATH
   )
   
 include(FeatureSummary)
-include(cmake/CPM.cmake)
+option(SMALL_VECTORS_ENABLE_CPM_PACKAGING "cmake packaging by cpm" ON)
+
+if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
+  include(cmake/CPM.cmake)
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/cpm-cmake/CPM.cmake for more info
@@ -22,13 +25,17 @@ CPMAddPackage(
   GITHUB_REPOSITORY TheLartians/PackageProject.cmake
   VERSION 1.10.0
 )
-
+endif()
 #-----------------------------------------------------------------------------
 # options
 #-----------------------------------------------------------------------------
+if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
+  option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest"  ${PROJECT_IS_TOP_LEVEL} )
+  add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
+else()
+  set(SMALL_VECTORS_ENABLE_UNIT_TESTS OFF)
+endif()
 
-option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest" ${PROJECT_IS_TOP_LEVEL} )
-add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
 if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
   FetchContent_Declare(
     ut
@@ -91,15 +98,18 @@ if( PROJECT_IS_TOP_LEVEL )
       )
   endif()
 endif()
-packageProject(
-  NAME ${PROJECT_NAME}
-  VERSION ${PROJECT_VERSION}
-  NAMESPACE small_vectors
-  BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION ${INCLUDE_INSTALL_DIR}
-  COMPATIBILITY SameMajorVersion
-)
+
+if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
+  packageProject(
+    NAME ${PROJECT_NAME}
+    VERSION ${PROJECT_VERSION}
+    NAMESPACE small_vectors
+    BINARY_DIR ${PROJECT_BINARY_DIR}
+    INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+    INCLUDE_DESTINATION ${INCLUDE_INSTALL_DIR}
+    COMPATIBILITY SameMajorVersion
+  )
+endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${INCLUDE_INSTALL_DIR} )
 
