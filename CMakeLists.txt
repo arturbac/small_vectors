@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 include(CheckCXXCompilerFlag)
 
 project(small_vectors
-        VERSION 1.1.8
+        VERSION 1.1.9
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
@@ -101,7 +101,7 @@ packageProject(
   COMPATIBILITY SameMajorVersion
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${INCLUDE_INSTALL_DIR} )
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${INCLUDE_INSTALL_DIR} )
 
 if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
   add_custom_target( unit_tests )
