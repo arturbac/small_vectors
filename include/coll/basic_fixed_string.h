@@ -1,10 +1,10 @@
 #pragma once
 
+#include "detail/coll_concepts.h"
 #include "detail/iterator.h"
 #include <string_view>
 #include <algorithm>
 #include <array>
-
 
 namespace coll
 {
@@ -40,6 +40,22 @@ struct basic_fixed_string
   [[nodiscard]]
   constexpr iterator end() noexcept { return iterator{&data_[N]}; }
 
+  [[nodiscard]]
+  inline constexpr auto 
+  operator[]( concepts::unsigned_arithmetic_integral auto index ) const noexcept
+      -> char_type const &
+    {
+    return data_[index];
+    }
+    
+  [[nodiscard]]
+  inline constexpr auto
+  at( concepts::unsigned_arithmetic_integral auto index ) const noexcept
+      -> char_type const &
+    {
+    return data_[index];
+    }
+    
   constexpr basic_fixed_string() noexcept  = default;
 
   template <std::same_as<char_type> other_char_type>
