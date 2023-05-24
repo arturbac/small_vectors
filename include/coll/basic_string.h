@@ -521,6 +521,31 @@ struct basic_string_t
     return *this;
     }
     
+  constexpr auto
+  erase( const_iterator pos )
+    -> iterator
+    {
+    size_type const index { static_cast<size_type>(std::distance(cbegin(),pos)) };
+    detail::string::erase(storage_, index, 1u);
+    return std::next(begin(), index);
+    }
+    
+  constexpr auto
+  erase( const_iterator first, const_iterator last )
+    -> iterator
+    {
+    size_type const index { static_cast<size_type>(std::distance(cbegin(),first)) };
+    if(last != cend()) [[unlikely]]
+      {
+      size_type const count { static_cast<size_type>(std::distance(first, last)) };
+      detail::string::erase(storage_, index, count);
+      }
+    else
+      resize(index);
+
+    return std::next(begin(), index);
+    }
+    
   constexpr void pop_back()
     {
     detail::string::pop_back(storage_);

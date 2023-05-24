@@ -1045,27 +1045,78 @@ int main()
       using st = string_type;
       using char_type = typename string_type::char_type;
       auto constexpr text_long{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                                                       " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
-      st vs{text_long};
+                                                         " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
         {
-        vs.erase(0u,5u);
-        auto constexpr expected{cast_fixed_string<char_type>(" ipsum dolor sit amet, consectetur adipiscing elit."
-                                           " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
-        constexpr_test( vs == expected.view() );
-        constexpr_test(is_null_termianted(vs));
+        st vs{text_long};
+          {
+          vs.erase(0u,5u);
+          auto constexpr expected{cast_fixed_string<char_type>(" ipsum dolor sit amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase(5u,5u);
+          auto constexpr expected{cast_fixed_string<char_type>(" ipsuor sit amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase(15u);
+          auto constexpr expected{cast_fixed_string<char_type>(" ipsuor sit ame")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
         }
         {
-        vs.erase(5u,5u);
-        auto constexpr expected{cast_fixed_string<char_type>(" ipsuor sit amet, consectetur adipiscing elit."
-                                           " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
-        constexpr_test( vs == expected.view() );
-        constexpr_test(is_null_termianted(vs));
-        }
-        {
-        vs.erase(15u);
-        auto constexpr expected{cast_fixed_string<char_type>(" ipsuor sit ame")};
-        constexpr_test( vs == expected.view() );
-        constexpr_test(is_null_termianted(vs));
+        st vs{text_long};
+          {
+          vs.erase( vs.begin() );
+          auto constexpr expected{cast_fixed_string<char_type>("orem ipsum dolor sit amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( vs.cbegin(), std::next(vs.cbegin(),5));
+          auto constexpr expected{cast_fixed_string<char_type>("ipsum dolor sit amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( std::next(vs.cbegin(),5), std::next(vs.cbegin(),5));
+          auto constexpr expected{cast_fixed_string<char_type>("ipsum dolor sit amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( std::next(vs.cbegin(),5), std::next(vs.cbegin(),15));
+          auto constexpr expected{cast_fixed_string<char_type>("ipsum amet, consectetur adipiscing elit."
+                                             " Praesent ac enim tellus. Pellentesque nec lectus ligula, eu iaculis ante.")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( std::next(vs.cbegin(),25), vs.cend());
+          auto constexpr expected{cast_fixed_string<char_type>("ipsum amet, consectetur a")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( std::next(vs.cbegin(),2) );
+          auto constexpr expected{cast_fixed_string<char_type>("ipum amet, consectetur a")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
+          {
+          vs.erase( vs.cend() );
+          auto constexpr expected{cast_fixed_string<char_type>("ipum amet, consectetur a")};
+          constexpr_test( vs == expected.view() );
+          constexpr_test(is_null_termianted(vs));
+          }
         }
       return {};
       };
