@@ -682,6 +682,18 @@ struct basic_string_t
     return *this;
     }
   
+  template<std::forward_iterator iterator>
+    requires std::same_as<char_type, std::iter_value_t<iterator>>
+  inline constexpr auto
+  replace( const_iterator first, const_iterator last, iterator first2, iterator last2 )
+      -> basic_string_t &
+    {
+    auto pos {static_cast<size_type>(std::distance(cbegin(),first))};
+    auto count{static_cast<size_type>(std::distance(first,last))};
+    detail::string::replace_copy(storage_, pos, count, first2, last2 );
+    return *this;
+    }
+    
   inline constexpr auto
   replace( const_iterator first, const_iterator last, std::convertible_to<view_type> auto const & v )
       -> basic_string_t &

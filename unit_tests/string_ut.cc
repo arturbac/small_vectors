@@ -954,6 +954,13 @@ int main()
         constexpr auto expected{cast_fixed_string<char_type>("1ZZZZZZZZZZZZZZZZZZZZYX")};
         constexpr_test( vs == expected.view());
         }
+      // replace( const_iterator first, const_iterator last, iterator first2, iterator last2 )
+        {
+        constexpr auto what{cast_fixed_string<char_type>("xyzuw4abcdef12345xyz")};
+        vs.replace(vs.begin()+1u, vs.begin()+4u, what.begin(), what.end());
+        constexpr auto expected{cast_fixed_string<char_type>("1xyzuw4abcdef12345xyzZZZZZZZZZZZZZZZZZYX")};
+        constexpr_test( vs == expected.view());
+        }
         }
       return {};
       };
@@ -1069,6 +1076,8 @@ int main()
           constexpr_test(is_null_termianted(vs));
           }
         }
+        // erase( const_iterator pos )
+        // erase( const_iterator first, const_iterator last )
         {
         st vs{text_long};
           {
