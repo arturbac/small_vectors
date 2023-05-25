@@ -26,6 +26,7 @@
 #include <type_traits>
 #include <iostream>
 #include <compare>
+#include <cstdint>
 
   struct strong_type_default_traits
     {

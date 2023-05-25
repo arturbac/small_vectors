@@ -51,6 +51,7 @@ int main()
   bip::shared_memory_object shm{ bip::open_or_create, shmem_name, bip::read_write };
   shm.truncate(8192);
   
+#if defined(__cpp_lib_atomic_ref)
 "test_basic_shared_mem"_test = [&]
   {
   using sync_counter_decl = ip::shared_type_decl<std::size_t>;
@@ -116,6 +117,7 @@ int main()
   std::cout << "child_counter " << child_counter << std::endl;
   std::cout << "parent_counter_obj " << parent_counter_obj << std::endl;
   };
+#endif
   
 "test_complex_objects"_test = [&]
   {
@@ -191,7 +193,7 @@ int main()
     auto end {clock_type::now()};
     auto measurment{ std::chrono::duration_cast<std::chrono::milliseconds>(end-beg)};
     ut::expect(measurment >= 1500ms );
-    std::cout << "atomic mutex measurment " << measurment << std::endl;
+    std::cout << "atomic mutex measurment " << measurment.count() << std::endl;
     }
   ut::expect(child->join()) >> ut::fatal;
   };

@@ -3,6 +3,7 @@
 #include <utils/utility_cxx20.h>
 #include "coll_concepts.h"
 #include <memory>
+#include <algorithm>
 
 namespace coll::detail
 {
