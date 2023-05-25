@@ -1173,7 +1173,7 @@ int main()
     result |= run_constexpr_test<string_type_list>(fn_tmpl);
     };
     
-  "basic_string_pop_find"_test = [&]
+  "basic_string_find"_test = [&]
     {
     auto fn_tmpl =
       []<typename string_type>
@@ -1245,7 +1245,7 @@ int main()
     result |= run_constexpr_test<string_type_list>(fn_tmpl);
     };
     
-  "basic_string_pop_rfind"_test = [&]
+  "basic_string_rfind"_test = [&]
     {
     auto fn_tmpl =
       []<typename string_type>
@@ -1286,6 +1286,55 @@ int main()
         constexpr_test( 0u == str.rfind( to_find, 10 , 2 ) );
         st to_find2{dolor};
         constexpr_test( string_type::npos == str.rfind( to_find2, 11, 5 ) );
+        }
+      return {};
+      };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+    };
+    
+  "basic_string_find_and_replace"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename string_type>
+        ( string_type const *) -> metatests::test_result
+      {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      auto constexpr text_long{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                                                       " Lorem ipsum dolor sit amet, consectetur adipiscing elit.")};
+      st vs{text_long};
+        {
+        constexpr auto what{cast_fixed_string<char_type>("Lorem")};
+        constexpr auto with{cast_fixed_string<char_type>("lOREM")};
+        vs.find_and_replace(what, with);
+        constexpr auto expected{cast_fixed_string<char_type>("lOREM ipsum dolor sit amet, consectetur adipiscing elit."
+                                                       " lOREM ipsum dolor sit amet, consectetur adipiscing elit.")};
+        constexpr_test( vs == expected.view());
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>(" ")};
+        constexpr auto with{cast_fixed_string<char_type>("__")};
+        vs.find_and_replace(what, with);
+        constexpr auto expected{cast_fixed_string<char_type>("lOREM__ipsum__dolor__sit__amet,__consectetur__adipiscing__elit."
+                                                       "__lOREM__ipsum__dolor__sit__amet,__consectetur__adipiscing__elit.")};
+        constexpr_test( vs == expected.view());
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("__a")};
+        constexpr auto with{cast_fixed_string<char_type>("=")};
+        vs.find_and_replace(what, with);
+        constexpr auto expected{cast_fixed_string<char_type>("lOREM__ipsum__dolor__sit=met,__consectetur=dipiscing__elit."
+                                                       "__lOREM__ipsum__dolor__sit=met,__consectetur=dipiscing__elit.")};
+        constexpr_test( vs == expected.view());
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("__")};
+        constexpr auto with{cast_fixed_string<char_type>("")};
+        vs.find_and_replace(what, with);
+        constexpr auto expected{cast_fixed_string<char_type>("lOREMipsumdolorsit=met,consectetur=dipiscingelit."
+                                                       "lOREMipsumdolorsit=met,consectetur=dipiscingelit.")};
+        constexpr_test( vs == expected.view());
         }
       return {};
       };

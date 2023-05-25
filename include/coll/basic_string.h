@@ -728,6 +728,28 @@ struct basic_string_t
     return replace(pos,count,count2,ch);
     }
   
+  ///\brief replaces all occurrences of \ref what with \ref with
+  inline constexpr auto
+  find_and_replace( std::convertible_to<view_type> auto const & what,
+                    std::convertible_to<view_type> auto const & with)
+      -> size_type
+    {
+    size_type const what_size = static_cast<size_type>(what.size());
+    size_type const with_size = static_cast<size_type>(with.size());
+    size_type replacments_count {};
+    if( what_size != 0 )
+      {
+      size_type fpos = find( what, 0 );
+      while( fpos != npos )
+         {
+         replace( fpos, what_size, with );
+         ++replacments_count;
+         fpos = find( what, static_cast<size_type>(fpos + with_size) );
+         }
+      }
+    return replacments_count;
+    }
+  
   inline constexpr void
   swap( basic_string_t & other ) noexcept
     {
