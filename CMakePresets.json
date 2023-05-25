@@ -43,14 +43,17 @@
       "name": "gcc-12-release",
       "inherits": "cfg-common",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "g++-12"
+        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
       "name": "gcc-13-release",
       "inherits": "cfg-common",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "g++-13"
+        "CMAKE_CXX_COMPILER": "g++-13",
+        "CMAKE_CXX_STANDARD" : "23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
