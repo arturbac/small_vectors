@@ -25,6 +25,8 @@
 #include "detail/vector_func.h"
 #include "detail/string_func.h"
 #include "detail/iterator.h"
+#include <numeric>
+#include <compare>
 
 namespace coll
 {
@@ -703,15 +705,7 @@ struct basic_string_t
     auto count{static_cast<size_type>(std::distance(first,last))};
     return replace(pos,count,v);
     }
-      
-  inline constexpr auto
-  replace( size_type pos, size_type count, std::convertible_to<view_type> auto const & s,
-           size_type pos2, size_type count2 = npos )
-      -> basic_string_t &
-    {
-    return replace(pos,count, static_cast<view_type>(s).substr(pos2,count2));
-    }
-      
+
   constexpr auto
   replace( size_type pos, size_type count, size_type count2, char_type ch )
       -> basic_string_t &

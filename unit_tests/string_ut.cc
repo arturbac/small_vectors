@@ -916,15 +916,7 @@ int main()
         vs.replace( vs.begin()+3, vs.begin()+4,what);
         constexpr_test( vs == expected.view());
         }
-      // replace( size_type pos, size_type count, std::convertible_to<view_type> auto const & s,
-      //          size_type pos2, size_type count2 = npos )
-        {
-        st vs{text_short};
-        constexpr auto what{cast_fixed_string<char_type>("ab1423")};
-        constexpr auto expected{cast_fixed_string<char_type>("b1234")};
-        vs.replace(0u,1u,what,1u,2u);
-        constexpr_test( vs == expected.view());
-        }
+
       // replace( size_type pos, size_type count, size_type count2, char_type ch )
         {
         st vs{text_short};
