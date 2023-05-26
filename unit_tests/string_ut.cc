@@ -328,6 +328,14 @@ int main()
       constexpr_test(empty(vs2));
       constexpr_test(is_null_termianted(vs1));
       constexpr_test(is_null_termianted(vs2));
+      swap(vs1,vs2);
+      constexpr_test(vs2 == text_short2.view());
+      constexpr_test(empty(vs1));
+      std::swap(vs1,vs2);
+      constexpr_test(vs1 == text_short2.view());
+      constexpr_test(empty(vs2));
+      constexpr_test(is_null_termianted(vs1));
+      constexpr_test(is_null_termianted(vs2));
       }
       {
       st vs1{text_short1.view()};
@@ -1544,6 +1552,28 @@ int main()
       constexpr_test( rstr == what.view() );
       st str2{ rstr.rbegin(), rstr.rend() };
       constexpr_test( str2 == text.view() );
+      return {};
+      };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+    };
+    
+  "basic_string_hash"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename string_type>
+        ( string_type const *) -> metatests::test_result
+      {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      constexpr auto text{cast_fixed_string<char_type>( "Lorem ipsum dolor sit amet" )};
+      constexpr std::hash<std::basic_string_view<char_type>> stl_hash{};
+      
+      st str{text};
+      if( std::is_constant_evaluated())
+        constexpr_test( coll::hash(str) != 0u );
+      else
+        constexpr_test( coll::hash(str) == stl_hash(str.view()) );
       return {};
       };
     result |= run_consteval_test<string_type_list>(fn_tmpl);

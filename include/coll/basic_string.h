@@ -144,27 +144,28 @@ struct basic_string_t
   c_str() const noexcept ->  value_type const *
      requires (detail::string::null_terminate_string)
     { return storage_.data(); }
-    
+  
+  /// \returns The largest possible number of char-like objects that can be stored in a basic_string.
   [[nodiscard]]
   inline static constexpr auto
   max_size() noexcept -> size_type
        requires detail::string::static_storage_tag<storage_tag>
     { return buffered_capacity_ - coll::detail::string::null_termination; }
   
-  /// \returns the maximum number of elements the string is able to hold
+  /// \returns The largest possible number of char-like objects that can be stored in a basic_string.
   [[nodiscard]]
   inline static constexpr auto
   max_size() noexcept -> size_type
        requires detail::string::buffered_storage_tag<storage_tag>
     { return std::numeric_limits<size_type>::max() - coll::detail::string::null_termination; }
 
-  /// \returns the number of char_type elements in the string, i.e. std::distance(begin(), end()).
+  /// \returns A count of the number of char-like objects currently in the string.
   [[nodiscard]]
   inline constexpr auto
   size() const noexcept -> size_type
     { return storage_.size_; }
   
-  /// \returns the number of char_type elements in the string, i.e. std::distance(begin(), end()).
+  /// \returns A count of the number of char-like objects currently in the string.
   [[nodiscard]]
   inline constexpr auto
   length() const noexcept -> size_type
@@ -807,10 +808,64 @@ struct basic_string_t
     }
     
   template<typename V, uint64_t N, typename T>
+  constexpr auto operator ==( basic_string_t<V,N,T> const & l, std::basic_string_view<V> r ) noexcept
+      -> bool
+    {
+    return l.view() == r;
+    }
+    
+  template<typename V, uint64_t N, typename T>
   constexpr auto operator <=>( basic_string_t<V,N,T> const & l, basic_string_t<V,N,T> const & r ) noexcept
       -> std::strong_ordering
     {
     return l.view() <=> r.view();
     }
+    
+  template<typename V, uint64_t N, typename T>
+  constexpr auto operator <=>( basic_string_t<V,N,T> const & l, std::basic_string_view<V> r ) noexcept
+      -> std::strong_ordering
+    {
+    return l.view() <=> r;
+    }
+    
+  template<typename V, uint64_t N, typename T>
+  inline constexpr void
+  swap( basic_string_t<V,N,T> & lhs, basic_string_t<V,N,T> & rhs) noexcept
+    {
+    lhs.swap(rhs);
+    }
+    
+  template<typename V, uint64_t N, typename T>
+  inline constexpr auto
+  hash( coll::basic_string_t<V,N,T> const & str ) noexcept
+    {
+    using char_type = V;
+    if (std::is_constant_evaluated())
+      return std::accumulate(begin(str), end(str), std::size_t{5381},
+                      [](std::size_t init, char_type c)
+                      { return init * (c ? static_cast<std::size_t>(c) + 33 : 5381); });
+    else
+      return std::hash<std::basic_string_view<V>>()(str.view());
+    }
+}
+
+namespace std
+{
+  template<typename V, uint64_t N, typename T>
+  struct hash<coll::basic_string_t<V,N,T>>
+    {
+#if defined(__cpp_static_call_operator)
+    static
+#endif
+    inline constexpr auto
+    operator()(coll::basic_string_t<V,N,T> const & str )
+#if !defined(__cpp_static_call_operator)
+       const
+#endif
+    noexcept
+      {
+      return coll::hash(str);
+      }
+    };
 }
 
