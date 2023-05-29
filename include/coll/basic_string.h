@@ -412,16 +412,6 @@ struct basic_string_t
     detail::string::insert_copy(storage_, index, t.begin(), t.end() );
     return *this;
     }
-  
-  inline constexpr auto
-  insert( size_type index, std::convertible_to<view_type> auto const & s,
-         size_type index_str, size_type count = npos )
-      -> basic_string_t &
-    {
-    view_type t{ static_cast<view_type>(s).substr(index_str,count)};
-    insert(index, t);
-    return *this;
-    }
 
   template<std::forward_iterator forward_it>
   constexpr auto

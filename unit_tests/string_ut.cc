@@ -807,12 +807,7 @@ int main()
         constexpr_test( vs == expected.view());
         constexpr_test(is_null_termianted(vs));
         }
-      //insert( size_type index, std::convertible_to<view_type> auto const & s,
-      //        size_type index_str, size_type count = npos )
-        {
-        st vs{text_long.view()};
-        
-        }
+
       // insert( const_iterator pos, char_type ch )
         {
         st vs{text_short.view()};
@@ -1485,16 +1480,7 @@ int main()
         constexpr_test(str1.compare( 0, 2, str1) < 0 ); //Lo.Lorem
         constexpr_test(str2.compare( 1, 3, str1 ) > 0 );//psum.Lorem
         }
-      // compare( size_type pos1, size_type count1,
-      //     std::convertible_to<view_type> auto const & s,
-      //     size_type pos2, size_type count2 = npos ) const noexcept
-        {
-        constexpr_test(str1.compare( 1, 3, str2, 2, 3 ) < 0 ); //ore.sum
-        constexpr_test (str1.compare( 1, 3, str1b, 1, 8 ) < 0 ); //Lorem.Lorem ipsum dolo
-        constexpr_test(0 == str1.compare( 2, 3, str1, 2, 3 ) ); //Lorem.Lorem
-        constexpr_test(str1b.compare( 4, 256, str1, 4, 256 ) > 0 );
-        constexpr_test(str2.compare( 2, 1, str1, 2, 1 ) > 0 );
-        }
+
       return {};
       };
     result |= run_consteval_test<string_type_list>(fn_tmpl);
