@@ -661,14 +661,6 @@ struct basic_string_t
     {
     return view().compare(pos1,count1,static_cast<view_type>(s));
     }
-  inline constexpr auto
-  compare( size_type pos1, size_type count1,
-           std::convertible_to<view_type> auto const & s,
-           size_type pos2, size_type count2 = npos ) const noexcept
-      -> int
-    {
-    return view().compare(pos1,count1,static_cast<view_type>(s),pos2,count2);
-    }
     
   inline constexpr auto
   find_first_of(  std::convertible_to<view_type> auto const & v, size_type pos = 0u ) const noexcept
