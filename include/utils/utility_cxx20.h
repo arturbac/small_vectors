@@ -19,8 +19,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
 #pragma once
+
+#if !defined(SMALL_VECTORS_CXX_UTILITY)
+#define SMALL_VECTORS_CXX_UTILITY 1
+
 #include <concepts>
 #include <cstdint>
 #include <limits>
@@ -28,10 +31,26 @@
 #include <concepts>
 #include <memory>
 #include <utility>
+#include <bit>
 
+// on linux depending on system build c++ standard libc++ version has various test macros undefined even for pure constexpr inline functions ..
+#if defined(_LIBCPP_STD_VER) && _LIBCPP_STD_VER >= 20
+  #if !defined(__cpp_lib_bitops)
+    #define cpp_lib_bitops 201907L
+  #endif
+#endif
 namespace cxx20
 {
-  namespace detail
+#if defined(__cpp_lib_integer_comparison_functions)
+  using std::cmp_equal;
+  using std::cmp_not_equal;
+  using std::cmp_less;
+  using std::cmp_greater;
+  using std::cmp_less_equal;
+  using std::cmp_greater_equal;
+#else
+#if !defined(integer_comparison_functions_defiend)
+#define integer_comparison_functions_defiend
   {
   template<class T>
   concept integral_cmp_constraint =
@@ -89,7 +108,13 @@ namespace cxx20
   ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers: the comparison is safe against lossy integer conversion.
   template< class T, class U >
   constexpr bool cmp_greater_equal( T t, U u ) noexcept { return !cmp_less(t, u); }
+#endif // integer_comparison_functions_defiend
+#endif // __cpp_lib_integer_comparison_functions
 
+#if defined(__cpp_lib_bitops) || defined(cpp_lib_bitops)
+  using std::countr_zero;
+  using std::countl_zero;
+#else
   namespace detail
     {
     template<typename T>
@@ -104,14 +129,8 @@ namespace cxx20
   constexpr int countl_zero(T value ) noexcept
     {
 #if defined(_MSC_VER)
-  #if _HAS_CXX20
-      return std::countl_zero(value);
-  #else
       //msvc c++17 naive loop implementation
       return std::_Countl_zero_fallback(value);
-  #endif
-#elif __cplusplus > 201703L
-    return std::countl_zero( value );
 #else
     constexpr auto number_digits { std::numeric_limits<T>::digits };
 
@@ -144,18 +163,12 @@ namespace cxx20
   static_assert( countl_zero(uint32_t{ 4 }) == 32 - 3 );
   static_assert( countl_zero(uint64_t(4)) == 64 - 3 );
 
+
   template<detail::countx_constraint T>
   constexpr int countr_zero(T value ) noexcept
     {
 #if defined(_MSC_VER)
-#if _HAS_CXX20
-    return std::countr_zero(value);
-#else
     return std::_Countr_zero(value);
-#endif
-    
-#elif __cplusplus > 201703L
-    return std::countr_zero( value );
 #else
     static_assert(std::is_integral<T>::value && sizeof(T)<=8);
     
@@ -182,6 +195,7 @@ namespace cxx20
       }
 #endif
     }
+#endif //__cpp_lib_bitops
 
 #if defined(__cpp_lib_bit_cast)
     using std::bit_cast;
@@ -319,3 +333,5 @@ namespace cxx23
     }
 #endif
 }
+#endif //SMALL_VECTORS_CXX_UTILITY
+
