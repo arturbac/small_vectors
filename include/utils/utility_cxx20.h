@@ -24,14 +24,15 @@
 #if !defined(SMALL_VECTORS_CXX_UTILITY)
 #define SMALL_VECTORS_CXX_UTILITY 1
 
-#include <concepts>
+#include <type_traits>
 #include <cstdint>
 #include <limits>
-#include <bit>
-#include <concepts>
 #include <memory>
 #include <utility>
+#if __cplusplus > 201703L
 #include <bit>
+#include <concepts>
+#endif
 
 // on linux depending on system build c++ standard libc++ version has various test macros undefined even for pure constexpr inline functions ..
 #if defined(_LIBCPP_STD_VER) && _LIBCPP_STD_VER >= 20
@@ -51,29 +52,16 @@ namespace cxx20
 #else
 #if !defined(integer_comparison_functions_defiend)
 #define integer_comparison_functions_defiend
-  {
-  template<class T>
-  concept integral_cmp_constraint =
-    requires
-    {
-      requires std::integral<T>;
-      requires not std::same_as<T,bool>;
-      requires not std::same_as<T,char>;
-      requires not std::same_as<T,char8_t>;
-      requires not std::same_as<T,char16_t>;
-      requires not std::same_as<T,char32_t>;
-      requires not std::same_as<T,wchar_t>;
-    };
-  }
+
   ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers: the comparison is safe against lossy integer conversion.
-  template<detail::integral_cmp_constraint T, detail::integral_cmp_constraint U>
+  template< class T, class U >
   constexpr bool cmp_equal( T t, U u ) noexcept
     {
-    using UT = std::make_unsigned_t<T>;
-    using UU = std::make_unsigned_t<U>;
-    if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
+    using UT = typename std::make_unsigned<T>::type;
+    using UU = typename std::make_unsigned<U>::type;
+    if constexpr (std::is_signed<T>::value == std::is_signed<U>::value)
         return t == u;
-    else if constexpr (std::is_signed_v<T>)
+    else if constexpr (std::is_signed<T>::value)
         return t < 0 ? false : static_cast<UT>(t) == u;
     else
         return u < 0 ? false : t == static_cast<UU>(u);
@@ -84,14 +72,14 @@ namespace cxx20
   constexpr bool cmp_not_equal( T t, U u ) noexcept { return !cmp_equal(t, u); }
 
   ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers: the comparison is safe against lossy integer conversion.
-  template<detail::integral_cmp_constraint T, detail::integral_cmp_constraint U >
+  template< class T, class U >
   constexpr bool cmp_less( T t, U u ) noexcept
     {
-    using UT = std::make_unsigned_t<T>;
-    using UU = std::make_unsigned_t<U>;
-    if constexpr (std::is_signed_v<T> == std::is_signed_v<U> )
+    using UT = typename std::make_unsigned<T>::type;
+    using UU = typename std::make_unsigned<U>::type;
+    if constexpr (std::is_signed<T>::value == std::is_signed<U>::value )
         return t < u;
-    else if constexpr (std::is_signed_v<T>)
+    else if constexpr (std::is_signed<T>::value)
         return t < 0 ? true : static_cast<UT>(t) < u;
     else
         return u < 0 ? false : t < static_cast<UU>(u);
@@ -115,19 +103,11 @@ namespace cxx20
   using std::countr_zero;
   using std::countl_zero;
 #else
-  namespace detail
-    {
-    template<typename T>
-    concept countx_constraint =
-      requires (T)
-        {
-        requires std::unsigned_integral<T>;
-        sizeof(T) <= 8;
-        };
-    }
-  template<detail::countx_constraint T>
+  template<typename T>
   constexpr int countl_zero(T value ) noexcept
     {
+    static_assert(std::is_unsigned_v<T>);
+    static_assert(std::is_integral<T>::value && sizeof(T) <= 8);
 #if defined(_MSC_VER)
       //msvc c++17 naive loop implementation
       return std::_Countl_zero_fallback(value);
@@ -164,9 +144,11 @@ namespace cxx20
   static_assert( countl_zero(uint64_t(4)) == 64 - 3 );
 
 
-  template<detail::countx_constraint T>
+  template<typename T>
   constexpr int countr_zero(T value ) noexcept
     {
+    static_assert(std::is_unsigned_v<T>);
+    static_assert(std::is_integral<T>::value && sizeof(T) <= 8);
 #if defined(_MSC_VER)
     return std::_Countr_zero(value);
 #else
@@ -203,15 +185,22 @@ namespace cxx20
     #if !__has_builtin(__builtin_bit_cast)
         #error "Not bit_cast support at all implement using std::memcpy"
     #endif
+    
   template <class To, class From>
+#if __cplusplus > 201703L
   requires requires(To, From)
       {
       sizeof(To) == sizeof(From);
       requires std::is_trivially_copyable_v<From>;
       requires std::is_trivially_copyable_v<To>;
       }
+#endif
   constexpr To bit_cast( From const & src) noexcept
     {
+#if __cplusplus <= 201703L
+    static_assert(std::is_trivially_copyable_v<From>);
+    static_assert(std::is_trivially_copyable_v<To>);
+#endif
     return __builtin_bit_cast(To,src);
     }
 #endif
@@ -224,10 +213,14 @@ namespace cxx20
   constexpr T* assume_aligned(T* ptr)
   {
   #if __has_builtin(__builtin_assume_aligned)
+  #if __cplusplus > 201703L
   if( !std::is_constant_evaluated())
+  #endif
     return reinterpret_cast<T *>(__builtin_assume_aligned(ptr,N));
+  #if __cplusplus > 201703L
   else
     return ptr;
+  #endif
   #else
     return ptr;
   #endif
@@ -300,27 +293,35 @@ namespace cxx23
       swap_bytes_impl_t<sz,sz/2-1>::swap(l);
       }
     
-    namespace detail
-      {
+#if __cplusplus > 201703L
       template<typename T>
       concept trivially_copyable = std::is_trivially_copyable_v<T>;
       
       template<typename T>
       concept even_value_size = (sizeof(T) & 1) == 0;
-      }
-    template<typename value_type>
-    concept byte_swap_constraints =
-     requires( value_type )
-      {
-      requires detail::trivially_copyable<value_type>;
-      requires detail::even_value_size<value_type>;
-      };
+
+      template<typename value_type>
+      concept byte_swap_constraints =
+       requires( value_type )
+        {
+        requires detail::trivially_copyable<value_type>;
+        requires detail::even_value_size<value_type>;
+        };
+#endif
     }
 
+#if __cplusplus > 201703L
   template<detail::byte_swap_constraints value_type>
+#else
+  template<typename value_type>
+#endif
   [[gnu::always_inline,gnu::const]]
   constexpr value_type byteswap( value_type big_or_le ) noexcept
     {
+#if __cplusplus <= 201703L
+    static_assert(std::is_trivially_copyable_v<value_type>);
+    static_assert((sizeof(value_type) & 1) == 0);
+#endif
     struct store_type
       {
       alignas(alignof(value_type))
