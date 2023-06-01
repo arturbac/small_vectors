@@ -440,6 +440,7 @@ namespace coll
   using detail::insert;
   using detail::emplace;
   using detail::emplace_back;
+  using detail::push_back;
   using detail::reserve;
   using detail::resize;
   using detail::shrink_to_fit;

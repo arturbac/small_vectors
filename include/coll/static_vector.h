@@ -208,11 +208,12 @@ namespace coll
          return detail::emplace_back_unchecked(*this,std::forward<Args>(args)...);
        }
       
-    template<vector_tune_e tune = vector_tune_e::checked, typename T>
+    template<typename T>
     inline constexpr void
-    push_back(T && value )
-        noexcept(noexcept(emplace_back<tune>(*this, std::forward<T>(value))))
-       { emplace_back<tune>(*this, std::forward<T>(value)); }
+    push_back( T && value ) noexcept( noexcept(detail::emplace_back(*this, std::forward<T>(value) )))
+       {
+       detail::emplace_back(*this, std::forward<T>(value) );
+       }
       
     inline constexpr auto
     front() const noexcept -> value_type const &
@@ -353,12 +354,12 @@ namespace coll
     return detail::emplace_back(vec,std::forward<Args>(args)...);
     }
 
-  template<vector_tune_e tune = vector_tune_e::checked, typename V, uint64_t N, typename T>
+  template<typename V, uint64_t N, typename T>
   inline constexpr void
   push_back( static_vector<V,N> & vec, T && value )
-      noexcept(noexcept(emplace_back<tune>(vec,std::forward<T>(value))))
+      noexcept(noexcept( detail::emplace_back(vec, std::forward<T>(value)) ))
     {
-    return emplace_back<tune>(vec,std::forward<T>(value));
+    detail::emplace_back(vec, std::forward<T>(value) );
     }
 
   template<vector_tune_e tune = vector_tune_e::checked, typename V, uint64_t N, typename ...Args>

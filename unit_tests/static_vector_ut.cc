@@ -236,7 +236,45 @@ int main()
           | constexpr_test( vec[1u] == 2)
           | constexpr_test( vec[2u] == 3)
           | constexpr_test( vec[3u] == 4);
+
       return tr;
+      };
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
+    };
+
+  "test_static_vector_push_back"_test = [&result]
+    {
+    auto fn_tmpl = []<typename value_type>( value_type const * ) -> metatests::test_result
+      {
+      auto constexpr elements = 10;
+      using vector_type = static_vector<value_type,elements>;
+      using enum vector_tune_e;
+      using enum vector_outcome_e;
+      
+
+      vector_type vec;
+      vec.push_back(value_type{1});
+      
+      constexpr_test(size(vec) == 1);
+      constexpr_test( vec[0u] == 1);
+      
+      value_type const v2{2};
+      vec.push_back(v2);
+      
+      value_type v3{3};
+      vec.push_back(std::move(v3));
+      constexpr_test(size(vec) == 3);
+      constexpr_test( vec[0u] == 1);
+      constexpr_test( vec[1u] == 2);
+      constexpr_test( vec[2u] == 3);
+      
+      push_back(vec,value_type{1});
+      push_back(vec,v2);
+      v3 = 3;
+      push_back(vec,std::move(v3));
+      constexpr_test(size(vec) == 6);
+      return {};
       };
     result |= run_constexpr_test<traits_list>(fn_tmpl);
     result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
@@ -272,6 +310,7 @@ int main()
     result |= run_constexpr_test<traits_list>(fn_tmpl);
     result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
     };
+    
 //---------------------------------------------------------------------------------------------------------
   "test_static_vector_copy"_test = [&result]
     {

@@ -248,6 +248,41 @@ using boost::ut::neq;
 
     result |= constexpr_test(constexpr_test_small_vector_emplace_back());
     };
+    
+  "test_small_vector_push_back"_test = [&result]
+    {
+    auto fn = []() -> metatests::test_result
+      {
+      using value_type = uint32_t;
+      using st = small_vector<value_type, uint16_t, 3>;
+      st v;
+
+      v.push_back(value_type{1});
+      
+      constexpr_test(size(v) == 1);
+      constexpr_test( v[0u] == 1);
+      
+      value_type const v2{2};
+      v.push_back(v2);
+      
+      value_type v3{3};
+      v.push_back(std::move(v3));
+      constexpr_test(size(v) == 3);
+      constexpr_test( v[0u] == 1);
+      constexpr_test( v[1u] == 2);
+      constexpr_test( v[2u] == 3);
+      
+      push_back(v,value_type{1});
+      push_back(v,v2);
+      v3 = 3;
+      push_back(v,std::move(v3));
+      constexpr_test(size(v) == 6);
+
+      return {};
+      };
+      
+    result |= constexpr_test(fn());
+    };
 //---------------------------------------------------------------------------------------------------------------------
   "test_small_vector_emplace_back_0"_test = [&result]
     {
@@ -291,6 +326,41 @@ using boost::ut::neq;
       };
 
     result |= constexpr_test(fn_tmpl());
+    };
+    
+  "test_small_vector_push_back_0"_test = [&result]
+    {
+    auto fn = []() -> metatests::test_result
+      {
+      using value_type = uint32_t;
+      using st = small_vector<value_type, uint16_t, 0u>;
+      st v;
+
+      v.push_back(value_type{1});
+      
+      constexpr_test(size(v) == 1);
+      constexpr_test( v[0u] == 1);
+      
+      value_type const v2{2};
+      v.push_back(v2);
+      
+      value_type v3{3};
+      v.push_back(std::move(v3));
+      constexpr_test(size(v) == 3);
+      constexpr_test( v[0u] == 1);
+      constexpr_test( v[1u] == 2);
+      constexpr_test( v[2u] == 3);
+      
+      push_back(v,value_type{1});
+      push_back(v,v2);
+      v3 = 3;
+      push_back(v,std::move(v3));
+      constexpr_test(size(v) == 6);
+
+      return {};
+      };
+      
+    result |= constexpr_test(fn());
     };
   //---------------------------------------------------------------------------------------------------------------------
   "test_small_vector_emplace_back_tmpl"_test = [&result]

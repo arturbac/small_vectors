@@ -21,6 +21,9 @@ namespace coll::detail
       decl_enum_name_ns_sv(vector_outcome_e,out_of_storage)
       decl_enum_name_ns_sv(vector_outcome_e,invalid_source_range)
       }
+#if !defined(__clang__)
+    return {};
+#endif
     }
   //-------------------------------------------------------------------------------------------------------------------
   //excaption handling for classes
