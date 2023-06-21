@@ -1,17 +1,17 @@
-add_library( ut_core )
-target_sources( ut_core PRIVATE unit_test_core.cc )
-target_link_libraries( ut_core
+add_library( small_vectors_ut_core )
+target_sources( small_vectors_ut_core PRIVATE unit_test_core.cc )
+target_link_libraries( small_vectors_ut_core
   PUBLIC
     small_vectors
     Boost::ut
     )
-target_include_directories( ut_core PUBLIC ut_core )
-target_compile_options(ut_core
+target_include_directories( small_vectors_ut_core PUBLIC ut_core )
+target_compile_options(small_vectors_ut_core
   PUBLIC
     ${SMALL_VECTORS_COMPILE_OPTIONS}
     )
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  target_compile_options(ut_core
+  target_compile_options(small_vectors_ut_core
     PUBLIC
       -Wno-disabled-macro-expansion
       -Wno-used-but-marked-unused
@@ -21,14 +21,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       )
 endif()
 
-function( add_unittest name )
-  add_executable(${name})
-  target_sources(${name} PRIVATE ${name}.cc)
-  target_link_libraries( ${name} PRIVATE ut_core )
-
-  add_dependencies(unit_tests ${name} )
-  add_test( NAME ${name}_test COMMAND ${name} )
-endfunction()
+include(small_vectors_ut)
 
 add_unittest(unaligned_ut)
 target_compile_options(unaligned_ut PRIVATE -Wno-float-equal)
