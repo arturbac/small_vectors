@@ -107,9 +107,21 @@ static void dump_utf( auto const & result )
 namespace utf = coll::utf;
 int main()
 {
-
-  test_result result;
+  using utf::u8;
   
+  test_result result;
+  "length"_test = [&]
+    {
+    auto fn_tmpl = [] () -> metatests::test_result
+      {
+      constexpr_test( 1 == utf::detail::sequence_length( char8_t(0b0101'0000) ));
+      constexpr_test( 2 == utf::detail::sequence_length( char8_t(0b1101'1000) ));
+      constexpr_test( 3 == utf::detail::sequence_length( char8_t(0b1110'1000) ));
+      return {};
+      };
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+    };
   "length"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result

@@ -92,8 +92,16 @@ namespace coll::utf::detail
         small_vector_static_call_operator_const noexcept
       {
       auto lead = static_cast<u8>(in_lead);
+      //u+0000  u+007f  	0xxxxxxx
+      //u+0080  u+07ff  	110xxxxx 	10xxxxxx
+      //u+0800  u+ffff  	1110xxxx 	10xxxxxx 	10xxxxxx
+      //u+10000 u+10ffff 	11110xxx 	10xxxxxx 	10xxxxxx 	10xxxxxx
       if( lead < 0x80u )
           return 1u;
+#if 1
+      else
+        return static_cast<u8>(std::countl_one(lead));
+#else
       else if ((lead >> 5u) == 0x6u)
           return 2u;
       else if ((lead >> 4u) == 0xeu)
@@ -105,6 +113,7 @@ namespace coll::utf::detail
         assert(false);
         return 0u;
         }
+#endif
       }
     [[nodiscard]]
     small_vector_cpp_static_call_operator
