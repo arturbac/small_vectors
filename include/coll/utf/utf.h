@@ -72,6 +72,7 @@ namespace coll::utf
     inline constexpr utf_output_iterator_t & operator++() noexcept
       { return *this; }
     
+    [[nodiscard]]
     inline constexpr utf_output_iterator_t operator++(int) noexcept
       { return *this; }
     };
@@ -97,8 +98,10 @@ namespace coll::utf
     inline constexpr utf_input_view_t( iterator b, sentinel e) noexcept 
         : begin_{b}, end_{e}
       {}
-    
+    [[nodiscard]]
     inline constexpr iterator begin() const noexcept { return begin_; }
+    
+    [[nodiscard]]
     inline constexpr sentinel end() const noexcept { return end_; }
     };
   
@@ -107,6 +110,7 @@ namespace coll::utf
     {
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (!concepts::u32bit_iterator<source_iterator>)
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
@@ -115,6 +119,7 @@ namespace coll::utf
       }
 
     template<concepts::u32bit_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
@@ -124,6 +129,7 @@ namespace coll::utf
       }
 
     template<concepts::char_range forward_range>
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()( forward_range const & range )
         small_vector_static_call_operator_const noexcept
@@ -139,6 +145,7 @@ namespace coll::utf
     {
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (sizeof(std::iter_value_t<source_iterator>) != sizeof(char_type))
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
@@ -153,6 +160,7 @@ namespace coll::utf
 
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (sizeof(std::iter_value_t<source_iterator>) == sizeof(char_type))
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
@@ -161,6 +169,7 @@ namespace coll::utf
       }
       
     template<concepts::char_range forward_range>
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()( forward_range const & range )
         small_vector_static_call_operator_const noexcept
@@ -215,6 +224,7 @@ namespace coll::utf
     using string_type = basic_string_type<target_string_char>;
     
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()(source_iterator beg, sentinel end )
         small_vector_static_call_operator_const
@@ -242,6 +252,7 @@ namespace coll::utf
       }
       
     template<concepts::char_range forward_range>
+    [[nodiscard]]
     small_vector_cpp_static_call_operator
     constexpr auto operator()( forward_range const & range )
         small_vector_static_call_operator_const
