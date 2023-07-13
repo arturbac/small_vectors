@@ -51,6 +51,9 @@ coll::small_vector<int32_t,size_t,0> vec10;
 * verification of utf range - work in progress
 ```C++
 // any range (string string_view, array, vector ...) to output iterator with tpe deduction
+constexpr auto view( auto const & a ) noexcept
+  { return std::basic_string_view{ std::begin(a), std::end(a)}; }
+
 constexpr std::basic_string_view u8test{u8"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
 constexpr std::basic_string_view u16test{u16"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
 std::array<char16_t, u16test.size()> storage;
