@@ -240,6 +240,7 @@ namespace coll::utf::detail
         }
       else
         {
+        //u+10000 	[b]u+10ffff 	11110xxx 	10xxxxxx 	10xxxxxx 	10xxxxxx
         *result = static_cast<char_type>(lead_11110 | (cp >> 18)); ++result;
         *result = static_cast<char_type>(lead_10 | ((cp >> 12) & mask_6b)); ++result;
         *result = static_cast<char_type>(lead_10 | ((cp >> 6) & mask_6b)); ++result;
