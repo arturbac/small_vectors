@@ -115,7 +115,8 @@ namespace coll::utf
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
       {
-      return static_cast<std::size_t>(std::ranges::distance(utf_input_view_t{beg, end}));
+      // return static_cast<std::size_t>(std::ranges::distance(utf_input_view_t{beg, end}));
+      return static_cast<std::size_t>(std::distance(utf_forward_iterator_t{beg}, utf_forward_iterator_t{end}));
       }
 
     template<concepts::u32bit_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
@@ -151,8 +152,7 @@ namespace coll::utf
         small_vector_static_call_operator_const noexcept
       {
       using code_point_size_t = typename detail::code_point_size_selector_t<sizeof(char_type)>::code_point_size_t;
-      utf_input_view_t v{beg, end};
-      return coll::ranges::accumulate( std::ranges::begin(v), std::ranges::end(v),
+      return coll::ranges::accumulate(utf_forward_iterator_t{beg}, utf_forward_iterator_t{end},
                                        std::size_t{}, [code_point_size = code_point_size_t{}]
                                        (std::size_t init, char32_t cp) noexcept
                                          { return init + code_point_size(cp);} );
@@ -193,7 +193,8 @@ namespace coll::utf
     constexpr auto operator()(source_iterator beg, sentinel end, target_iterator out )
         small_vector_static_call_operator_const noexcept
       {
-      auto end_it{ std::ranges::copy( utf_input_view_t{beg, end}, utf_output_iterator_t(out) )};
+      // auto end_it{ std::ranges::copy( utf_input_view_t{beg, end}, utf_output_iterator_t(out) )};
+      auto end_it{ std::ranges::copy( utf_forward_iterator_t{beg}, utf_forward_iterator_t{end}, utf_output_iterator_t(out) )};
       return end_it.out.iter_;
       }
 
