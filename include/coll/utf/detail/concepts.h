@@ -11,6 +11,14 @@
 #error "missing __cpp_char8_t support"
 #endif
 
+#if defined(__cpp_static_call_operator)
+  #define small_vector_cpp_static_call_operator static
+  #define small_vector_static_call_operator_const
+#else
+  #define small_vector_cpp_static_call_operator
+  #define small_vector_static_call_operator_const const
+#endif
+
 namespace coll::utf
 {
   using u8 = std::uint8_t;

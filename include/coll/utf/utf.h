@@ -107,20 +107,26 @@ namespace coll::utf
     {
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (!concepts::u32bit_iterator<source_iterator>)
-    static constexpr auto operator()(source_iterator beg, sentinel end) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end)
+        small_vector_static_call_operator_const noexcept
       {
       return static_cast<std::size_t>(std::ranges::distance(utf_input_view_t{beg, end}));
       }
 
     template<concepts::u32bit_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
-    static constexpr auto operator()(source_iterator beg, sentinel end) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end)
+        small_vector_static_call_operator_const noexcept
       {
       //optimise if u32bit iterator is random access
       return static_cast<std::size_t>(std::ranges::distance(beg, end));
       }
 
     template<concepts::char_range forward_range>
-    static constexpr auto operator()( forward_range const & range ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()( forward_range const & range )
+        small_vector_static_call_operator_const noexcept
       {
       return operator()(std::ranges::begin(range), std::ranges::end(range) );
       }
@@ -133,7 +139,9 @@ namespace coll::utf
     {
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (sizeof(std::iter_value_t<source_iterator>) != sizeof(char_type))
-    static constexpr auto operator()(source_iterator beg, sentinel end) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end)
+        small_vector_static_call_operator_const noexcept
       {
       using code_point_size_t = typename detail::code_point_size_selector_t<sizeof(char_type)>::code_point_size_t;
       utf_input_view_t v{beg, end};
@@ -145,13 +153,17 @@ namespace coll::utf
 
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
       requires (sizeof(std::iter_value_t<source_iterator>) == sizeof(char_type))
-    static constexpr auto operator()(source_iterator beg, sentinel end) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end)
+        small_vector_static_call_operator_const noexcept
       {
       return static_cast<std::size_t>(std::ranges::distance(beg, end));
       }
       
     template<concepts::char_range forward_range>
-    static constexpr auto operator()( forward_range const & range ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()( forward_range const & range )
+        small_vector_static_call_operator_const noexcept
       {
       return operator()(std::ranges::begin(range), std::ranges::end(range) );
       }
@@ -168,14 +180,18 @@ namespace coll::utf
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel,
              concepts::char_iterator target_iterator>
       requires (sizeof(std::iter_value_t<source_iterator>) != sizeof(std::iter_value_t<target_iterator>))
-    static constexpr auto operator()(source_iterator beg, sentinel end, target_iterator out ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end, target_iterator out )
+        small_vector_static_call_operator_const noexcept
       {
       auto end_it{ std::ranges::copy( utf_input_view_t{beg, end}, utf_output_iterator_t(out) )};
       return end_it.out.iter_;
       }
 
     template<concepts::char_range forward_range, concepts::char_iterator target_iterator>
-    static constexpr auto operator()( forward_range const & range, target_iterator out  ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()( forward_range const & range, target_iterator out  )
+        small_vector_static_call_operator_const noexcept
       {
       return operator()(std::ranges::begin(range), std::ranges::end(range), out );
       }
@@ -184,36 +200,64 @@ namespace coll::utf
     };
     
   inline constexpr convert_t convert;
-  
+  namespace detail
+    {
+    template<template<typename > typename basic_string_type>
+    struct string_cpp_lib_string_resize_and_overwrite_t
+      {
+      static constexpr bool value = false;
+      };
+    }
+    
   template<concepts::char_type target_string_char, template<typename > typename basic_string_type = coll::basic_string>
   struct to_string_t
     {
     using string_type = basic_string_type<target_string_char>;
     
     template<concepts::char_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
-    static constexpr auto operator()(source_iterator beg, sentinel end )
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(source_iterator beg, sentinel end )
+        small_vector_static_call_operator_const
         -> string_type
       {
       using size_type = typename string_type::size_type;
       using capacity_type = capacity_t<target_string_char>;
+      
       auto const req_capacity{static_cast<size_type>(capacity_type{}(beg,end))};
       string_type result;
-      result.resize_and_overwrite(req_capacity,
-                                  [beg,end](target_string_char * out, size_type capacity) noexcept
-                                  {
-                                  auto end_it{convert(beg, end, out)};
-                                  return static_cast<size_type>(std::ranges::distance(out,end_it));
-                                  });
+      if constexpr(detail::string_cpp_lib_string_resize_and_overwrite_t<basic_string_type>::value)
+        result.resize_and_overwrite(req_capacity,
+                                    [beg,end](target_string_char * out, size_type) noexcept
+                                    {
+                                    auto end_it{convert(beg, end, out)};
+                                    return static_cast<size_type>(std::ranges::distance(out,end_it));
+                                    });
+      else
+        {
+        result.resize(req_capacity);
+        auto end_it{ convert(beg, end, result.begin()) };
+        result.resize(static_cast<size_type>(std::ranges::distance(result.begin(),end_it)));
+        }
       return result;
       }
       
     template<concepts::char_range forward_range>
-    static constexpr auto operator()( forward_range const & range )
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()( forward_range const & range )
+        small_vector_static_call_operator_const
         -> string_type
       {
       return operator()(std::ranges::begin(range), std::ranges::end(range) );
       }
     };
+  namespace detail
+    {
+    template<>
+    struct string_cpp_lib_string_resize_and_overwrite_t<coll::basic_string>
+      {
+      static constexpr bool value = true;
+      };
+    }
     
   inline constexpr to_string_t<char> to_string;
   inline constexpr to_string_t<char8_t> to_u8string;
@@ -231,6 +275,18 @@ namespace coll::utf
     inline constexpr to_string_t<char16_t,coll::utf::stl::basic_string> to_u16string;
     inline constexpr to_string_t<char32_t,coll::utf::stl::basic_string> to_u32string;
     inline constexpr to_string_t<wchar_t,coll::utf::stl::basic_string> to_wstring;
+    }
+  namespace detail
+    {
+    template<>
+    struct string_cpp_lib_string_resize_and_overwrite_t<coll::utf::stl::basic_string>
+      {
+  #if defined(__cpp_lib_string_resize_and_overwrite)
+      static constexpr bool value = true;
+  #else
+      static constexpr bool value = false;
+  #endif
+      };
     }
 }
 

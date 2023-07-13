@@ -15,7 +15,9 @@ namespace coll::utf::detail
   struct utf8_code_point_size_t
     {
     [[nodiscard]]
-    static constexpr u8 operator()( std::same_as<char32_t> auto cp ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( std::same_as<char32_t> auto cp )
+        small_vector_static_call_operator_const noexcept
       {
       if (cp < 0x80u)
         return 1u;
@@ -33,7 +35,9 @@ namespace coll::utf::detail
   struct utf16_code_point_size_t
     {
     [[nodiscard]]
-    static constexpr u8 operator()( std::same_as<char32_t> auto cp ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( std::same_as<char32_t> auto cp )
+        small_vector_static_call_operator_const noexcept
       {
       return (cp < 0xffffu) ? 1 : 2;
       }
@@ -44,7 +48,9 @@ namespace coll::utf::detail
   struct utf32_code_point_size_t
     {
     [[nodiscard]]
-    static constexpr u8 operator()( std::same_as<char32_t> auto ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( std::same_as<char32_t> auto )
+        small_vector_static_call_operator_const noexcept
       {
       return 1;
       }
@@ -81,7 +87,9 @@ namespace coll::utf::detail
   struct sequence_length_t
     {
     [[nodiscard]]
-    static constexpr u8 operator()( concepts::char_size<1> auto in_lead ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( concepts::char_size<1> auto in_lead )
+        small_vector_static_call_operator_const noexcept
       {
       auto lead = static_cast<u8>(in_lead);
       if( lead < 0x80u )
@@ -99,14 +107,18 @@ namespace coll::utf::detail
         }
       }
     [[nodiscard]]
-    static constexpr u8 operator()( concepts::char_size<2> auto in_lead ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( concepts::char_size<2> auto in_lead )
+        small_vector_static_call_operator_const noexcept
       {
       auto cp {static_cast<char16_t>(in_lead)};
       return !lead_surrogate(cp) ? 1 : 2 ;
       }
       
     [[nodiscard]]
-    static constexpr u8 operator()( concepts::char_size<4> auto ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr u8 operator()( concepts::char_size<4> auto )
+        small_vector_static_call_operator_const noexcept
       { return 1; }
     };
 
@@ -119,7 +131,9 @@ namespace coll::utf::detail
   struct dereference_t
     {
     [[nodiscard]]
-    static constexpr char32_t operator()(concepts::octet_iterator auto it) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr char32_t operator()(concepts::octet_iterator auto it)
+        small_vector_static_call_operator_const noexcept
       {
       switch(sequence_length(*it))
         {
@@ -157,7 +171,9 @@ namespace coll::utf::detail
       }
 
     [[nodiscard]]
-    static constexpr char32_t operator()(concepts::u16bit_iterator auto it) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr char32_t operator()(concepts::u16bit_iterator auto it)
+        small_vector_static_call_operator_const noexcept
       {
       auto cp {static_cast<char16_t>(*it)};
       if(lead_surrogate(cp))[[unlikely]]
@@ -171,7 +187,9 @@ namespace coll::utf::detail
       }
 
     [[nodiscard]]
-    static constexpr char32_t operator()(concepts::u32bit_iterator auto it) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr char32_t operator()(concepts::u32bit_iterator auto it)
+        small_vector_static_call_operator_const noexcept
       {
       return static_cast<char32_t>(*it);
       }
@@ -187,7 +205,9 @@ namespace coll::utf::detail
 
   struct append_t
     {
-    static constexpr auto operator()(std::same_as<char32_t> auto c, concepts::octet_iterator auto result) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(std::same_as<char32_t> auto c, concepts::octet_iterator auto result)
+        small_vector_static_call_operator_const noexcept
       {
       using char_type = std::iter_value_t<decltype(result)>;
       auto cp{ static_cast<u32>(c)};
@@ -220,7 +240,9 @@ namespace coll::utf::detail
       }
       
     [[nodiscard]]
-    static constexpr auto operator()(std::same_as<char32_t> auto cp, concepts::u16bit_iterator auto result ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(std::same_as<char32_t> auto cp, concepts::u16bit_iterator auto result )
+        small_vector_static_call_operator_const noexcept
       {
       using char_type = std::iter_value_t<decltype(result)>;
       if (cp > 0xffffu)
@@ -236,7 +258,9 @@ namespace coll::utf::detail
       }
       
     [[nodiscard]]
-    static constexpr auto operator()(std::same_as<char32_t> auto cp, concepts::u32bit_iterator auto result ) noexcept
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(std::same_as<char32_t> auto cp, concepts::u32bit_iterator auto result )
+        small_vector_static_call_operator_const noexcept
       {
       using char_type = std::iter_value_t<decltype(result)>;
       *result = static_cast<char_type>(cp); ++result;

@@ -1,6 +1,13 @@
 #include <unit_test_core.h>
 #include <coll/utf/utf.h>
 
+#if defined(__clang__) && !defined(_LIBCPP_STD_VER)
+//gnu libstdc++ violates union member access rules accessing not activated member in union in std::basic_string
+// UB in consteval code is not allowed (gcc ignores that and allows UB in consteval union access)
+constexpr bool enable_consteval_string_testing{false};
+#else
+constexpr bool enable_consteval_string_testing{true};
+#endif
 using metatests::constexpr_test;
 using metatests::run_consteval_test;
 using metatests::run_constexpr_test;
@@ -175,9 +182,12 @@ int main()
       constexpr_test( utf::to_u16string(u32test) == u16test );
       constexpr_test( utf::to_u16string(wtest) == u16test );
       
-      constexpr_test( utf::stl::to_u16string(u8test) == u16test );
-      constexpr_test( utf::stl::to_u16string(u32test) == u16test );
-      constexpr_test( utf::stl::to_u16string(wtest) == u16test );
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        {
+        constexpr_test( utf::stl::to_u16string(u8test) == u16test );
+        constexpr_test( utf::stl::to_u16string(u32test) == u16test );
+        constexpr_test( utf::stl::to_u16string(wtest) == u16test );
+        }
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
@@ -211,8 +221,11 @@ int main()
       constexpr_test( utf::to_u32string(u8test) == u32test );
       constexpr_test( utf::to_u32string(u16test) == u32test );
       
-      constexpr_test( utf::stl::to_u32string(u8test) == u32test );
-      constexpr_test( utf::stl::to_u32string(u16test) == u32test );
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        {
+        constexpr_test( utf::stl::to_u32string(u8test) == u32test );
+        constexpr_test( utf::stl::to_u32string(u16test) == u32test );
+        }
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
@@ -245,8 +258,11 @@ int main()
       constexpr_test( utf::to_wstring(u8test) == wtest );
       constexpr_test( utf::to_wstring(u16test) == wtest );
       
-      constexpr_test( utf::stl::to_wstring(u8test) == wtest );
-      constexpr_test( utf::stl::to_wstring(u16test) == wtest );
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        {
+        constexpr_test( utf::stl::to_wstring(u8test) == wtest );
+        constexpr_test( utf::stl::to_wstring(u16test) == wtest );
+        }
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
@@ -282,10 +298,12 @@ int main()
       constexpr_test( utf::to_u8string(u16test) == u8test);
       constexpr_test( utf::to_u8string(u32test) == u8test);
       constexpr_test( utf::to_u8string(wtest) == u8test);
-      
-      constexpr_test( utf::stl::to_u8string(u16test) == u8test);
-      constexpr_test( utf::stl::to_u8string(u32test) == u8test);
-      constexpr_test( utf::stl::to_u8string(wtest) == u8test);
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        {
+        constexpr_test( utf::stl::to_u8string(u16test) == u8test);
+        constexpr_test( utf::stl::to_u8string(u32test) == u8test);
+        constexpr_test( utf::stl::to_u8string(wtest) == u8test);
+        }
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
