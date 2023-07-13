@@ -1,6 +1,7 @@
 #include <unit_test_core.h>
 #include <coll/basic_fixed_string.h>
 #include <coll/basic_string.h>
+
 #include <iostream>
 
 using s_string = coll::static_string<256>;
@@ -100,8 +101,6 @@ all_elememnts_equal_to( iterator first, iterator last, std::iter_value_t<iterato
 
 int main()
 {
-  std::cout <<"";
-  
   test_result result;
   "basic_string_constr"_test = [&]
     {
