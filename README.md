@@ -1,6 +1,6 @@
 # small_vectors 
 ![MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![CMake](https://github.com/arturbac/fixed_math/workflows/CMake/badge.svg)
-![language](https://img.shields.io/badge/language-C%2B%2B20-blue.svg) 
+![language](https://img.shields.io/badge/language-C%2B%2B20-blue.svg)![language](https://img.shields.io/badge/language-C%2B%2B23-red.svg) 
 
 C++20,23 utilities library
 
@@ -24,6 +24,7 @@ C++20,23 utilities library
 * 
 ### examples
 
+#### small_vector and static_vector
 ```C++
 
 #include <coll/static_vector.h>
@@ -38,4 +39,28 @@ coll::small_vector<int32_t,uint8_t> vec10;
 //equivalent for std::vector<int32_t> with size type eq size_t and not in class buffer memory
 coll::small_vector<int32_t,size_t,0> vec10;
 
+```
+
+#### coll:utf convertion namespace
+
+* utf_input_view_t - utf view over range
+* length - number of code points in range
+* capacity_t<char_type> - number of bytes required to encode range into given char type, ie char8_t, char16_t, char32_t, wchar_t ...
+* convert - convert range into output iterator with other utf encoding
+* to_string_t<char_type> - convert utf range into coll::basic_string<> or std::basic_string<> with other utf encoding
+* verification of utf range - work in progress
+```C++
+// any range (string string_view, array, vector ...) to output iterator with tpe deduction
+constexpr std::basic_string_view u8test{u8"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
+constexpr std::basic_string_view u16test{u16"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
+std::array<char16_t, u16test.size()> storage;
+utf::convert( u8test, begin(storage));
+constexpr_test( view(storage) == u16test );
+
+//any range to own string
+constexpr_test( utf::to_u16string(u8test) == u16test );
+
+//any range to std string
+std::u16string str2 = utf::stl::to_u16string(u8test);
+constexpr_test( str2 == u16test );
 ```
