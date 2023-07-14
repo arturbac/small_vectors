@@ -48,7 +48,7 @@ coll::small_vector<int32_t,size_t,0> vec10;
 * capacity_t<char_type> - number of bytes required to encode range into given char type, ie char8_t, char16_t, char32_t, wchar_t ...
 * convert - convert range into output iterator with other utf encoding
 * to_string_t<char_type> - convert utf range into coll::basic_string<> or std::basic_string<> with other utf encoding
-* verification of utf range - work in progress
+* verify - verification of utf range
 ```C++
 // any range (string string_view, array, vector ...) to output iterator with tpe deduction
 constexpr auto view( auto const & a ) noexcept

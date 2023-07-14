@@ -205,8 +205,6 @@ namespace coll::utf
       {
       return operator()(std::ranges::begin(range), std::ranges::end(range), out );
       }
-      
-
     };
     
   inline constexpr convert_t convert;
@@ -300,5 +298,36 @@ namespace coll::utf
   #endif
       };
     }
+    
+  using detail::verify_status_e;
+  
+  struct verify_t
+    {
+    template<concepts::octet_iterator octet_iterator, std::sentinel_for<octet_iterator> sentinel>
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(octet_iterator beg, sentinel end )
+        small_vector_static_call_operator_const noexcept
+        -> verify_status_e
+      {
+      using enum verify_status_e;
+      verify_status_e result{};
+      while( beg != end && result <= overlength_code_point )
+        std::tie(result,beg) = detail::verify_code_point(beg, end);
+
+      return result;
+      }
+      
+    template<concepts::char_range forward_range>
+    [[nodiscard]]
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()( forward_range const & range )
+        small_vector_static_call_operator_const
+        -> verify_status_e
+      {
+      return operator()(std::ranges::begin(range), std::ranges::end(range) );
+      }
+    };
+
+  inline constexpr verify_t verify;
 }
 

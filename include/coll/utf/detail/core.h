@@ -92,13 +92,13 @@ namespace coll::utf::detail
         small_vector_static_call_operator_const noexcept
       {
       auto lead = static_cast<u8>(in_lead);
-      //u+0000  u+007f  	0xxxxxxx
+      //u+0000  u+007f  	00xxxxxx
       //u+0080  u+07ff  	110xxxxx 	10xxxxxx
       //u+0800  u+ffff  	1110xxxx 	10xxxxxx 	10xxxxxx
       //u+10000 u+10ffff 	11110xxx 	10xxxxxx 	10xxxxxx 	10xxxxxx
       if( lead < 0x80u )
           return 1u;
-#if 1
+#if defined(__cpp_lib_bitops)
       else
         return static_cast<u8>(std::countl_one(lead));
 #else
@@ -109,11 +109,8 @@ namespace coll::utf::detail
       else if ((lead >> 3u) == 0x1eu)
           return 4u;
       else
-        {
-        assert(false);
         return 0u;
-        }
-#endif
+ #endif
       }
     [[nodiscard]]
     small_vector_cpp_static_call_operator
@@ -132,6 +129,7 @@ namespace coll::utf::detail
     };
 
   inline constexpr sequence_length_t sequence_length;
+
   inline constexpr u32 mask_3b {0b111u};
   inline constexpr u32 mask_4b {0b1111u};
   inline constexpr u32 mask_5b {0b1'1111u};
@@ -279,4 +277,54 @@ namespace coll::utf::detail
     };
     
   inline constexpr append_t append;
+  
+  enum struct verify_status_e : uint8_t
+    {
+    valid,
+    
+    // non critical
+    overlength_code_point, 
+    
+    // invalid, can not be decoded
+    invalid_lead, 
+    truncated_code_point,
+    invalid_trail,
+    invalid_code_point
+    };
+    
+  struct verify_code_point_t
+    {
+    template<concepts::octet_iterator octet_iterator, std::sentinel_for<octet_iterator> sentinel>
+    small_vector_cpp_static_call_operator
+    constexpr auto operator()(octet_iterator beg, sentinel end )
+        small_vector_static_call_operator_const noexcept
+          -> std::pair<verify_status_e,octet_iterator>
+      {
+      using enum verify_status_e;
+      u8 const code_point_length{sequence_length(*beg)};
+
+      if( code_point_length > 4 || code_point_length < 1 ) [[unlikely]]
+        return {invalid_lead,{}};
+
+      if( std::ranges::distance(beg,end) < code_point_length ) [[unlikely]]
+        return {truncated_code_point,{}};
+      
+      auto end_cp{ std::ranges::next(beg,code_point_length) };
+      for(auto it{ std::ranges::next(beg,1)}; it < end_cp; ++it )
+        if( ((*it) & 0b1100'0000u) != lead_10) [[unlikely]]
+          return {invalid_trail,{}};
+      
+      // at this point code point can be decoded safely
+      char32_t const code_point{ dereference(beg)};
+      if( code_point > 0x10ffffu || (code_point >= lead_surrogate_min && code_point <= trail_surrogate_max) ) [[unlikely]]
+        return {invalid_code_point,{}};
+      
+      if( utf8_code_point_size(code_point) != code_point_length ) [[unlikely]]
+        return {overlength_code_point,end_cp};
+      
+      return {valid,end_cp};
+      }
+    };
+    
+  inline constexpr verify_code_point_t verify_code_point;
 }

@@ -1,5 +1,6 @@
 #include <unit_test_core.h>
 #include <coll/utf/utf.h>
+#include <codecvt>
 
 #if defined(__clang__) && !defined(_LIBCPP_STD_VER)
 //gnu libstdc++ violates union member access rules accessing not activated member in union in std::basic_string
@@ -123,6 +124,59 @@ int main()
     result |= run_constexpr_test(fn_tmpl);
     result |= run_consteval_test(fn_tmpl);
     };
+
+  "verify"_test = [&]
+    {
+    auto fn_tmpl = [] () -> metatests::test_result
+      {
+      using enum utf::detail::verify_status_e;
+      constexpr_test( utf::verify(u8test) == valid );
+      // test overlength
+      {
+        // ARABIC LETTER JEEM ISOLATED FORM 
+        // FE9D ﺝ
+        // 0xEFBA9D
+        // 0b1111'111010'011101
+        // proper encoding
+        // 0b1110'1111 0b10'111010 0b10'011101
+        // overlength
+        // 0b11110'000  10'001111 10'111010 10'011101
+        std::array<char8_t,4> ic{ 0b11110000, 0b10'001111, 0b10'111010, 0b10'011101 };
+        constexpr_test( utf::verify(ic) == overlength_code_point);
+        constexpr_test( utf::detail::dereference(ic.begin()) == char32_t(0xFE9D));
+      }
+      {
+        // invalid code point 0x17FFFF
+        // 0b11110'101 0b10'111111 0b10'111111 0b10'111111
+        std::array<char8_t,4> ic{ 0b11110'101, 0b10'111111, 0b10'111111, 0b10'111111 };
+        constexpr_test( utf::verify(ic) == invalid_code_point);
+      }
+      {
+        // missing trail
+        //   0b1110'1111 0b10'111010 0b10'011101 
+        //-> 0b1110'1111 0b10'111010 0b00'011101
+        std::array<char8_t,3> ic{ 0b1110'1111, 0b10'111010, 0b00'011101 };
+        constexpr_test( utf::verify(ic) == invalid_trail);
+      }
+      {
+        // truncated
+        //   0b1110'1111 0b10'111010 0b10'011101 
+        //-> 0b1110'1111 0b10'111010
+        std::array<char8_t,2> ic{ 0b1110'1111, 0b10'111010 };
+        constexpr_test( utf::verify(ic) == truncated_code_point);
+      }
+      {
+        // invalid_lead 0b111110
+        std::array<char8_t,4> ic{ 0b111110'00, 0b10'001111, 0b10'111010, 0b10'011101 };
+        constexpr_test( utf::verify(ic) == invalid_lead);
+      }
+      return {};
+      };
+
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+    };
+
   "length"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result
