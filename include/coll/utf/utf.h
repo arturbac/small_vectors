@@ -98,13 +98,25 @@ namespace coll::utf
     inline constexpr utf_input_view_t( iterator b, sentinel e) noexcept 
         : begin_{b}, end_{e}
       {}
+
+    template<concepts::char_range forward_range>
+    explicit inline constexpr utf_input_view_t( forward_range const & range )
+        : begin_{utf_forward_iterator_t(std::ranges::begin(range))}, end_{utf_forward_iterator_t(std::ranges::end(range))}
+    {}
+
     [[nodiscard]]
     inline constexpr iterator begin() const noexcept { return begin_; }
     
     [[nodiscard]]
     inline constexpr sentinel end() const noexcept { return end_; }
     };
-  
+    
+  template< class T >
+  using const_iterator_t = decltype(std::ranges::begin(std::declval<T const&>()));
+
+  template<concepts::char_range forward_range>
+  utf_input_view_t( forward_range const & r) -> utf_input_view_t<const_iterator_t<forward_range>>;
+   
   ///\brief returns code point length of utf sequence
   struct length_t
     {
