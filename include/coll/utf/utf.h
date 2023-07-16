@@ -152,7 +152,9 @@ namespace coll::utf
     };
   inline constexpr length_t length;
 
-
+  template<concepts::char_type char_type>
+  using code_point_size_t = typename detail::code_point_size_selector_t<sizeof(char_type)>::code_point_size_t;
+  
   template<concepts::char_type char_type>
   struct capacity_t
     {
@@ -163,9 +165,9 @@ namespace coll::utf
     constexpr auto operator()(source_iterator beg, sentinel end)
         small_vector_static_call_operator_const noexcept
       {
-      using code_point_size_t = typename detail::code_point_size_selector_t<sizeof(char_type)>::code_point_size_t;
+      using cpsize_type = code_point_size_t<char_type>;
       return coll::ranges::accumulate(utf_forward_iterator_t{beg}, utf_forward_iterator_t{end},
-                                       std::size_t{}, [code_point_size = code_point_size_t{}]
+                                       std::size_t{}, [code_point_size = cpsize_type{}]
                                        (std::size_t init, char32_t cp) noexcept
                                          { return init + code_point_size(cp);} );
       }
