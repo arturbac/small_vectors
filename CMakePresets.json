@@ -40,6 +40,14 @@
       }
     },
     {
+      "name": "clang-15-libc++release",
+      "inherits": "clang-15-release",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
+        "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
+      }
+    },
+    {
       "name": "gcc-12-release",
       "inherits": "cfg-common",
       "cacheVariables": {
@@ -78,6 +86,10 @@
       "configurePreset": "clang-15-release"
     },
     {
+      "name": "clang-15-libc++release",
+      "configurePreset": "clang-15-libc++release"
+    },
+    {
       "name": "gcc-12-release",
       "configurePreset": "gcc-12-release"
     },
@@ -102,6 +114,12 @@
     {
       "name": "clang-15-release",
       "configurePreset": "clang-15-release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "clang-15-libc++release",
+      "configurePreset": "clang-15-libc++release",
       "output": {"outputOnFailure": true},
       "execution": {"noTestsAction": "error", "stopOnFailure": true}
     },
@@ -167,6 +185,23 @@
         {
           "type": "test",
           "name": "clang-15-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-15-libc++release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-15-libc++release"
+        },
+        {
+          "type": "build",
+          "name": "clang-15-libc++release"
+        },
+        {
+          "type": "test",
+          "name": "clang-15-libc++release"
         }
       ]
     },

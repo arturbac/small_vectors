@@ -67,3 +67,13 @@ constexpr_test( utf::to_u16string(u8test) == u16test );
 std::u16string str2 = utf::stl::to_u16string(u8test);
 constexpr_test( str2 == u16test );
 ```
+### tested compilers
+
+there are predefined cmake workflows to test
+* cmake --workflow --preset="clang-16-release"
+* cmake --workflow --preset="clang-16-libc++release"
+* cmake --workflow --preset="clang-15-release"
+* cmake --workflow --preset="clang-15-libc++release"
+* cmake --workflow --preset="gcc-13-release"
+* cmake --workflow --preset="gcc-12-release"
+* msvc support is planned
