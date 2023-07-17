@@ -9,15 +9,18 @@
     {
       "name": "cfg-common",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "generator": "Kate - Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    },
+	{
+	"name": "cfg-ninja",
+	"generator": "Kate - Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
-    },
+	},
     {
       "name": "clang-15-release",
-      "inherits": "cfg-common",
+      "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++",
         "CMAKE_CXX_STANDARD" : "20"
@@ -25,7 +28,7 @@
     },
     {
       "name": "clang-16-release",
-      "inherits": "cfg-common",
+      "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
         "CMAKE_CXX_COMPILER" : "/usr/lib/llvm/16/bin/clang++",
         "CMAKE_CXX_STANDARD" : "23"
@@ -49,7 +52,7 @@
     },
     {
       "name": "gcc-12-release",
-      "inherits": "cfg-common",
+      "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++-12",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
@@ -57,12 +60,23 @@
     },
     {
       "name": "gcc-13-release",
-      "inherits": "cfg-common",
+      "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++-13",
         "CMAKE_CXX_STANDARD" : "23",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
+    },
+    {
+      "name": "clangcl-release",
+      "inherits": "cfg-common",
+	  "generator": "Visual Studio 17 2022",
+	  "toolset": "ClangCL"
+    },
+    {
+      "name": "msvc-release",
+      "inherits": "cfg-common",
+	  "generator": "Visual Studio 17 2022"
     },
     {
       "name": "clang-15-release-coverage",
