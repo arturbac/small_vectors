@@ -3,9 +3,7 @@
 #include <codecvt>
 #include <cstdint>
 
-#if WCHAR_MAX > 0xffffu
-#define SMALL_VECTOR_WCHAR_4
-#else
+#if WCHAR_MAX <= 0xffffu
 #define SMALL_VECTOR_WCHAR_2
 #endif
 #if defined(__clang__) && !defined(_LIBCPP_STD_VER)
@@ -245,13 +243,15 @@ int main()
     };
 
 #if !defined(SMALL_VECTOR_WCHAR_2)
-    "to_char16_t_w4"_test = [&]
+    "to_char16_t_w4"_test = [&] 
       {
-      std::array<char16_t, u16test.size()> storage;
-      utf::convert(wtest, begin(storage));
-      constexpr_test(view(storage) == u16test);
-      return {};
-      };
+      auto fn_tmpl = [] () -> metatests::test_result
+        {
+        std::array<char16_t, u16test.size()> storage;
+        utf::convert(wtest, begin(storage));
+        constexpr_test(view(storage) == u16test);
+        return {};
+        };
 
       result |= run_constexpr_test(fn_tmpl);
       result |= run_consteval_test(fn_tmpl);
