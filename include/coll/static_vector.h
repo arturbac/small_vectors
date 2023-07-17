@@ -50,7 +50,9 @@ namespace coll
     static constexpr size_type capacity_ = N;
     static constexpr bool support_reallocation() noexcept { return false; }
     
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     detail::static_vector_storage<value_type,capacity_> storage_;
     
     [[nodiscard]]

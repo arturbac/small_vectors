@@ -110,10 +110,13 @@ namespace coll::detail
                          aligned_storage_for_no_trivial<value_type,buffered_capacity>>;
 
     // If the member is not empty, any tail padding in it may be also reused to store other data members. 
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     storage_type data_;
-    
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     size_type size_;
     
     constexpr static_vector_storage() noexcept : size_{} {}
@@ -335,10 +338,13 @@ namespace coll::detail
     {
     using value_type= V;
     using size_type = S;
-    
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     value_type * data;
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     size_type capacity;
     
     //required to overcome Itanium ABI pod intended for standard layout compatibile causing padding
@@ -506,21 +512,29 @@ namespace coll::detail
     using storage_context_type = storage_context_t<value_type, size_type>;
     
     //https://eel.is/c++draft/class.union#5
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     union storage_type 
       {
       buffered_storage_type buffered;
+#if !defined(WIN32)
       [[no_unique_address]]
+#endif
       dynamic_storage_type dynamic;
       
       constexpr storage_type() noexcept : buffered() {}
       constexpr storage_type( dynamic_storage_type ds ) noexcept : dynamic{ds} {}
       } data_;
       
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     small_vector_storage_type active_;
     
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     size_type size_;
     
     inline constexpr small_vector_storage_type
@@ -807,10 +821,14 @@ namespace coll::detail
     
     static constexpr size_type buffered_capacity = 0;
     
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     storage_context_type dynamic;
     
+#if !defined(WIN32)
     [[no_unique_address]]
+#endif
     size_type size_;
     
     static inline constexpr small_vector_storage_type
