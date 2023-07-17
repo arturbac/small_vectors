@@ -1,7 +1,13 @@
 #include <unit_test_core.h>
 #include <coll/utf/utf.h>
 #include <codecvt>
+#include <cstdint>
 
+#if WCHAR_MAX > 0xffffu
+#define SMALL_VECTOR_WCHAR_4
+#else
+#define SMALL_VECTOR_WCHAR_2
+#endif
 #if defined(__clang__) && !defined(_LIBCPP_STD_VER)
 //gnu libstdc++ violates union member access rules accessing not activated member in union in std::basic_string
 // UB in consteval code is not allowed (gcc ignores that and allows UB in consteval union access)
@@ -230,37 +236,58 @@ int main()
       clear(storage);
       utf::convert( u32test, begin(storage));
       constexpr_test( view(storage) == u16test );
-      
-      clear(storage);
-      utf::convert( wtest, begin(storage));
-      constexpr_test( view(storage) == u16test );
+
       return {};
       };
     
       result |= run_constexpr_test(fn_tmpl);
       result |= run_consteval_test(fn_tmpl);
     };
-    
+
+#if !defined(SMALL_VECTOR_WCHAR_2)
+    "to_char16_t_w4"_test = [&]
+      {
+      std::array<char16_t, u16test.size()> storage;
+      utf::convert(wtest, begin(storage));
+      constexpr_test(view(storage) == u16test);
+      return {};
+      };
+
+      result |= run_constexpr_test(fn_tmpl);
+      result |= run_consteval_test(fn_tmpl);
+      };
+#endif
+
   "to_u16string"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result
       {
       constexpr_test( utf::to_u16string(u8test) == u16test );
       constexpr_test( utf::to_u16string(u32test) == u16test );
-      constexpr_test( utf::to_u16string(wtest) == u16test );
-      
       if (!std::is_constant_evaluated() || enable_consteval_string_testing )
         {
         constexpr_test( utf::stl::to_u16string(u8test) == u16test );
         constexpr_test( utf::stl::to_u16string(u32test) == u16test );
-        constexpr_test( utf::stl::to_u16string(wtest) == u16test );
         }
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
       result |= run_consteval_test(fn_tmpl);
     };
-    
+#if !defined(SMALL_VECTOR_WCHAR_2)
+  "to_u16string_w4"_test = [&]
+    {
+    auto fn_tmpl = [] () -> metatests::test_result
+      {
+      constexpr_test( utf::to_u16string(wtest) == u16test );
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        constexpr_test( utf::stl::to_u16string(wtest) == u16test );
+      return {};
+      };
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+    };
+#endif
   "to_char32_t"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result
@@ -287,7 +314,7 @@ int main()
       {
       constexpr_test( utf::to_u32string(u8test) == u32test );
       constexpr_test( utf::to_u32string(u16test) == u32test );
-      
+
       if (!std::is_constant_evaluated() || enable_consteval_string_testing )
         {
         constexpr_test( utf::stl::to_u32string(u8test) == u32test );
@@ -307,35 +334,91 @@ int main()
       // to wchar_t
       utf::convert( u8test, begin(storage));
       constexpr_test( view(storage) == wtest );
-      
-      clear(storage);
-      utf::convert( u16test, begin(storage));
-      constexpr_test( view(storage) == wtest );
+
+      if constexpr( sizeof(wchar_t) != 4 )
+        {
+
+        }
       return {};
       };
     
       result |= run_constexpr_test(fn_tmpl);
       result |= run_consteval_test(fn_tmpl);
     };
+#if !defined(SMALL_VECTOR_WCHAR_2)
+  "to_wchar_t_w4"_test = [&]
+  {
+    auto fn_tmpl = [] () -> metatests::test_result
+    {
+      std::array<wchar_t, wtest.size()> storage;
+      utf::convert( u16test, begin(storage));
+      constexpr_test( view(storage) == wtest );
+      return {};
+    };
 
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+  };
+#else
+  "to_wchar_t_w2"_test = [&]
+  {
+    auto fn_tmpl = [] () -> metatests::test_result
+    {
+      std::array<wchar_t, wtest.size()> storage;
+      utf::convert( u32test, begin(storage));
+      constexpr_test( view(storage) == wtest );
+      return {};
+    };
+
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+  };
+#endif
   "to_wstring"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result
       {
       constexpr_test( utf::to_wstring(u8test) == wtest );
-      constexpr_test( utf::to_wstring(u16test) == wtest );
       
       if (!std::is_constant_evaluated() || enable_consteval_string_testing )
-        {
         constexpr_test( utf::stl::to_wstring(u8test) == wtest );
-        constexpr_test( utf::stl::to_wstring(u16test) == wtest );
-        }
+
       return {};
       };
       result |= run_constexpr_test(fn_tmpl);
       result |= run_consteval_test(fn_tmpl);
     };
-    
+#if !defined(SMALL_VECTOR_WCHAR_2)
+  "to_wstring"_test = [&]
+    {
+    auto fn_tmpl = [] () -> metatests::test_result
+      {
+      constexpr_test( utf::to_wstring(u16test) == wtest );
+
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        constexpr_test( utf::stl::to_wstring(u16test) == wtest );
+
+      return {};
+      };
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+  };
+#else
+  "to_wstring"_test = [&]
+    {
+    auto fn_tmpl = [] () -> metatests::test_result
+      {
+      constexpr_test( utf::to_wstring(u32test) == wtest );
+
+      if (!std::is_constant_evaluated() || enable_consteval_string_testing )
+        constexpr_test( utf::stl::to_wstring(u32test) == wtest );
+
+      return {};
+      };
+    result |= run_constexpr_test(fn_tmpl);
+    result |= run_consteval_test(fn_tmpl);
+    };
+#endif
   "to_char8_t"_test = [&]
     {
     auto fn_tmpl = [] () -> metatests::test_result
