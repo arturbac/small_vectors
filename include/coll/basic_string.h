@@ -53,8 +53,13 @@ namespace detail
   template<>
   struct buffer_traits<char32_t>{ static constexpr uint64_t capacity = 8u; };
   
+#if !defined(WIN32)
   template<>
   struct buffer_traits<wchar_t>{ static constexpr uint64_t capacity = 8u; };
+#else
+  template<>
+  struct buffer_traits<wchar_t>{ static constexpr uint64_t capacity = 16u; };
+#endif
 };
 
 template<typename char_type>
