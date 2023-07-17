@@ -4,6 +4,7 @@
 #include "vector_storage.h"
 #include <utils/enum_support.h>
 #include <memory>
+#include <stdexcept>
 
 namespace coll::detail
 {
