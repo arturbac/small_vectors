@@ -322,6 +322,10 @@ namespace coll
     erase(const_iterator first, const_iterator last ) 
         noexcept(noexcept(detail::erase(*this, first, last))) -> iterator
       { return detail::erase(*this, first, last); }
+
+    inline constexpr auto
+    erase_at_end( const_iterator pos ) noexcept -> iterator
+      { return detail::erase_at_end(*this, pos); }
       
     inline constexpr void
     pop_back() noexcept 
@@ -374,6 +378,10 @@ namespace coll
       {
       return storage_.switch_static_priv_();
       }
+    
+    inline constexpr auto shrink_to_fit()
+        -> vector_outcome_e
+      { return detail::shrink_to_fit(*this); }
     };
     
   template<typename V, std::unsigned_integral S, uint64_t N>
@@ -403,16 +411,56 @@ namespace coll
             >;
         };
     }
+
   using detail::at_least;
-  using detail::size;
-  using detail::empty;
-  using detail::at;
-  using detail::capacity;
-  using detail::max_size;
-  using detail::free_space;
-  using detail::data;
   
-  //explicit definition solves problem with ambuguity with std::begin
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  size( small_vector<V,S,N> const & vec ) noexcept
+      -> typename small_vector<V,S,N>::size_type
+    { return vec.size(); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  empty( small_vector<V,S,N> const & vec ) noexcept
+      -> bool
+    { return vec.empty(); }
+
+  template<concepts::same_as_small_vector small_vector_type, concepts::unsigned_arithmetic_integral arg_size_type>
+  [[nodiscard]]
+  inline constexpr auto &
+  at( small_vector_type & vec, arg_size_type index ) noexcept
+    { return vec.at(index); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  capacity( small_vector<V,S,N> const & vec ) noexcept
+      -> typename small_vector<V,S,N>::size_type
+    { return vec.capacity(); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  max_size( small_vector<V,S,N> const & ) noexcept
+      -> typename small_vector<V,S,N>::size_type
+    { return small_vector<V,S,N>::max_size(); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  free_space( small_vector<V,S,N> const & vec ) noexcept
+      -> typename small_vector<V,S,N>::size_type
+    { return vec.free_space(); }
+
+  template<concepts::same_as_small_vector small_vector_type>
+  [[nodiscard]]
+  inline constexpr auto
+  data( small_vector_type & vec ) noexcept
+    { return vec.data(); }
+
   template<concepts::same_as_small_vector small_vector_type>
   [[nodiscard]]
   inline constexpr auto
@@ -430,18 +478,87 @@ namespace coll
   inline constexpr auto
   end( small_vector_type & vec ) noexcept
     { return vec.end(); }
-  
-  using detail::front;
-  using detail::back;
-  using detail::erase_at_end;
-  using detail::clear;
-  using detail::erase;
-  using detail::pop_back;
-  using detail::insert;
-  using detail::emplace;
-  using detail::emplace_back;
-  using detail::push_back;
-  using detail::reserve;
-  using detail::resize;
-  using detail::shrink_to_fit;
+
+  template<concepts::same_as_small_vector small_vector_type>
+  [[nodiscard]]
+  inline constexpr auto &
+  front( small_vector_type & vec ) noexcept
+    { return vec.front(); }
+
+  template<concepts::same_as_small_vector small_vector_type>
+  [[nodiscard]]
+  inline constexpr auto &
+  back( small_vector_type & vec ) noexcept
+    { return vec.back(); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  erase_at_end( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::const_iterator pos ) noexcept
+      -> typename small_vector<V,S,N>::iterator
+    { return vec.erase_at_end(pos); }
+
+  template<typename V, typename S, uint64_t N>
+  inline constexpr void
+  clear( small_vector<V,S,N> & vec ) noexcept
+    { vec.clear(); }
+
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  erase( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::const_iterator pos )
+      -> typename small_vector<V,S,N>::iterator
+    { return vec.erase(pos); }
+    
+  template<typename V, typename S, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  erase( small_vector<V,S,N> & vec,
+        typename small_vector<V,S,N>::const_iterator first, typename small_vector<V,S,N>::const_iterator last )
+      -> typename small_vector<V,S,N>::iterator
+    { return vec.erase(first,last); }
+
+  template<typename V, typename S, uint64_t N>
+  inline constexpr void
+  pop_back( small_vector<V,S,N> & vec ) noexcept
+    { vec.pop_back(); }
+
+  template<typename V, typename S, uint64_t N, concepts::random_access_iterator source_iterator>
+  inline constexpr void
+  insert(small_vector<V,S,N> & vec,
+         typename small_vector<V,S,N>::const_iterator itpos, typename small_vector<V,S,N>::source_iterator itbeg,
+         source_iterator itend )
+    { return vec.insert(itpos, itbeg, itend); }
+
+  template<typename V, typename S, uint64_t N, typename ...Args>
+  inline constexpr auto
+  emplace(small_vector<V,S,N> & vec, typename small_vector<V,S,N>::const_iterator itpos, Args &&... args)
+      -> typename small_vector<V,S,N>::iterator
+    { return vec.emplace(itpos, std::forward<Args>(args)...); }
+
+  template<typename V, typename S, uint64_t N, typename ...Args>
+  inline constexpr auto
+  emplace_back( small_vector<V,S,N> & vec, Args &&... args )
+      -> typename small_vector<V,S,N>::value_type &
+    { return vec.emplace_back(std::forward<Args>(args)...); }
+
+  template<typename V, typename S, uint64_t N, typename T>
+  inline constexpr void
+  push_back(small_vector<V,S,N> & vec, T && value )
+    { vec.push_back(std::forward<T>(value)); }
+
+  template<typename V, typename S, uint64_t N>
+  inline constexpr void
+  reserve( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::size_type new_cap )
+    { vec.reserve(new_cap); }
+
+  template<typename V, typename S, uint64_t N>
+  inline constexpr auto
+  resize( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::size_type new_size )
+    { vec.resize(new_size); }
+
+  template<typename V, typename S, uint64_t N>
+  inline constexpr auto shrink_to_fit( small_vector<V,S,N> & vec )
+      -> vector_outcome_e
+    { return vec.shrink_to_fit(); }
 }

@@ -180,19 +180,19 @@ namespace coll
     crend() const noexcept -> const_reverse_iterator
       { return const_reverse_iterator{begin()}; }
 
-    template<concepts::unsigned_arithmetic_integral arg_size_type>
     [[nodiscard]]
     inline constexpr auto
-    operator[]( arg_size_type index ) const noexcept -> value_type const &
+    operator[]( concepts::unsigned_arithmetic_integral auto index ) const noexcept 
+        -> value_type const &
       {
       assert(index< storage_.size_);
       return data()[index];
       }
-    
-    template<concepts::unsigned_arithmetic_integral arg_size_type>
+
     [[nodiscard]]
     inline constexpr auto
-    operator[]( arg_size_type index ) noexcept -> value_type &
+    operator[]( concepts::unsigned_arithmetic_integral auto index ) noexcept 
+        -> value_type &
       {
       assert(index< storage_.size_);
       return data()[index];
@@ -298,13 +298,50 @@ namespace coll
         };
     }
     
-  using detail::size;
-  using detail::empty;
-  using detail::at;
-  using detail::capacity;
-  using detail::max_size;
-  using detail::free_space;
-  using detail::data;
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  size( static_vector<V,N> const & vec ) noexcept
+      -> typename static_vector<V,N>::size_type
+    { return vec.size(); }
+
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  empty( static_vector<V,N> const & vec ) noexcept -> bool
+    { return vec.empty(); }
+    
+  template<concepts::same_as_static_vector static_vector_type, concepts::unsigned_arithmetic_integral index_type>
+  inline constexpr auto &
+  at( static_vector_type & vec, index_type index ) noexcept
+    { return vec[index]; }
+
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  capacity( static_vector<V,N> const & ) noexcept
+      -> typename static_vector<V,N>::size_type
+    { return static_vector<V,N>::capacity(); }
+
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  max_size( static_vector<V,N> const & ) noexcept
+      -> typename static_vector<V,N>::size_type
+    { return static_vector<V,N>::max_size(); }
+
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  free_space( static_vector<V,N> const & vec ) noexcept
+      -> typename static_vector<V,N>::size_type
+    { return detail::free_space(vec); }
+  
+  template<concepts::same_as_static_vector static_vector_type>
+  [[nodiscard]]
+  inline constexpr auto
+  data( static_vector_type & vec ) noexcept
+    { return vec.data(); }
 
   template<concepts::same_as_static_vector static_vector_type>
   [[nodiscard]]
@@ -324,14 +361,61 @@ namespace coll
   end( static_vector_type & vec ) noexcept
     { return vec.end(); }
   
-  using detail::front;
-  using detail::back;
-  using detail::erase_at_end;
-  using detail::clear;
-  using detail::erase;
-  using detail::pop_back;
-  using detail::insert;
-  using detail::resize;
+  template<concepts::same_as_static_vector static_vector_type>
+  [[nodiscard]]
+  inline constexpr auto &
+  front( static_vector_type & vec ) noexcept
+    { return vec.front(); }
+    
+  template<concepts::same_as_static_vector static_vector_type>
+  [[nodiscard]]
+  inline constexpr auto &
+  back( static_vector_type & vec ) noexcept
+    { return vec.back(); }
+
+  template<typename V, uint64_t N>
+  inline constexpr auto
+  erase_at_end( static_vector<V,N> & vec, typename static_vector<V,N>::const_iterator pos ) noexcept
+      -> typename static_vector<V,N>::iterator
+    { return vec.erase_at_end(pos); }
+
+  template<typename V, uint64_t N>
+  inline constexpr void
+  clear( static_vector<V,N> & vec) noexcept
+    { vec.clear(); }
+
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  erase(static_vector<V,N> & vec, typename static_vector<V,N>::const_iterator pos )
+      -> typename static_vector<V,N>::iterator
+    { return vec.erase(pos); }
+    
+  template<typename V, uint64_t N>
+  [[nodiscard]]
+  inline constexpr auto
+  erase(static_vector<V,N> & vec,
+        typename static_vector<V,N>::const_iterator first, typename static_vector<V,N>::const_iterator last )
+      -> typename static_vector<V,N>::iterator
+    { return vec.erase(first,last); }
+  
+  template<typename V, uint64_t N>
+  inline constexpr void
+  pop_back( static_vector<V,N> & vec) noexcept
+    { vec.pop_back(); }
+
+  template<typename V, uint64_t N, concepts::random_access_iterator source_iterator>
+  inline constexpr auto
+  insert( static_vector<V,N> & vec, 
+         typename static_vector<V,N>::iterator itpos, source_iterator itbeg, source_iterator itend )
+      -> vector_outcome_e
+    { return vec.insert(itpos, itbeg, itend); }
+    
+  template<typename V, uint64_t N>
+  inline constexpr auto
+  resize( static_vector<V,N> & vec, typename static_vector<V,N>::size_type sz)
+    -> vector_outcome_e
+    { return vec.resize(sz); }
   
   ///\brief Appends a new element to the end of the container
   ///\warning this is unchecked version, insertion into full container is undefined behavior

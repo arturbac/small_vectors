@@ -153,7 +153,7 @@ using boost::ut::neq;
       constexpr_test(coll::detail::growth(uint16_t(3), uint16_t(1)) == 7 );
 
       auto res = emplace_back( v, 0xf5u );
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0xf5u )
         | constexpr_test(size(v) == 1u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -164,7 +164,7 @@ using boost::ut::neq;
       res = emplace_back( v, 0x15u );
       {
       std::array<value_type,2> expected{0xf5u,0x15u };
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x15u )
         | constexpr_test(size(v) == 2u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -175,7 +175,7 @@ using boost::ut::neq;
       res = emplace_back( v, 0x25u );
       {
       std::array<value_type,3> expected{0xf5u,0x15u,0x25u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x25u )
         | constexpr_test(size(v) == 3u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -186,7 +186,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 0x35u );
       std::array<value_type,4> expected{0xf5u,0x15u,0x25u,0x35u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x35u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == 4u)
         | constexpr_test(!empty(v))
@@ -196,7 +196,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 0x45u );
       std::array<value_type,5> expected{0xf5u,0x15u,0x25u,0x35u,0x45u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x45u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == 5u)
         | constexpr_test(!empty(v))
@@ -206,7 +206,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 0x55u );
       std::array<value_type,6> expected{0xf5u,0x15u,0x25u,0x35u,0x45u,0x55u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x55u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == 6u)
         | constexpr_test(!empty(v))
@@ -216,7 +216,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 1u );
       std::array<value_type,7> expected{0xf5u,0x15u,0x25u,0x35u,0x45u,0x55u,1u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 1u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == expected.size())
         | constexpr_test(!empty(v))
@@ -226,7 +226,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 2u );
       std::array<value_type,8> expected{0xf5u,0x15u,0x25u,0x35u,0x45u,0x55u,1u,2u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 2u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == expected.size())
         | constexpr_test(!empty(v))
@@ -236,7 +236,7 @@ using boost::ut::neq;
       {
       res = emplace_back( v, 3u );
       std::array<value_type,9> expected{0xf5u,0x15u,0x25u,0x35u,0x45u,0x55u,1u,2u,3u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 3u )
         | constexpr_test(v.active_storage() == dynamic )
         | constexpr_test(size(v) == expected.size())
         | constexpr_test(!empty(v))
@@ -293,7 +293,7 @@ using boost::ut::neq;
       st v;
       test_result tr;
       auto res = emplace_back( v, 0xf5u );
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0xf5u )
         | constexpr_test(size(v) == 1u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -304,7 +304,7 @@ using boost::ut::neq;
       res = emplace_back( v, 0x15u );
       {
       std::array<value_type,2> expected{0xf5u,0x15u };
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x15u  )
         | constexpr_test(size(v) == 2u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -315,7 +315,7 @@ using boost::ut::neq;
       res = emplace_back( v, 0x25u );
       {
       std::array<value_type,3> expected{0xf5u,0x15u,0x25u};
-      tr |= constexpr_test( res == no_error )
+      tr |= constexpr_test( res == 0x25u )
         | constexpr_test(size(v) == 3u)
         | constexpr_test(!empty(v))
         | constexpr_test(begin(v) != end(v))
@@ -383,7 +383,7 @@ using boost::ut::neq;
       for( size_type s{}; s != capacity_req; ++s)
         {
         auto res = emplace_back( v, test_values[s] );
-        tr |= constexpr_test( res == no_error )
+        tr |= constexpr_test( res == test_values[s] )
           | constexpr_test(v.active_storage() == expected_istorage(capacity_req) )
           | constexpr_test(size(v) == s+1)
           | constexpr_test(!empty(v));
@@ -394,7 +394,7 @@ using boost::ut::neq;
       for( size_type s{capacity_req}; s != first_growth; ++s)
         {
         auto res = emplace_back( v, test_values[s] );
-        tr |= constexpr_test( res == no_error )
+        tr |= constexpr_test( res == test_values[s] )
           | constexpr_test(v.active_storage() == dynamic )
           | constexpr_test(size(v) == s+1)
           | constexpr_test(!empty(v));
@@ -406,7 +406,7 @@ using boost::ut::neq;
       for( size_type s{first_growth}; s != (second_growth+1u); ++s)
         {
         auto res = emplace_back( v, test_values[s] );
-        tr |= constexpr_test( res == no_error )
+        tr |= constexpr_test( res == test_values[s] )
           | constexpr_test(v.active_storage() == dynamic )
           | constexpr_test(size(v) == s+1)
           | constexpr_test(!empty(v));
@@ -897,7 +897,7 @@ using boost::ut::neq;
 
         auto res = emplace(v, begin(v), value_type(0x1f) );
 
-        tr |= constexpr_test(res == no_error );
+        tr |= constexpr_test( *res == value_type(0x1f) );
         std::array<value_type,second_growth+1> expected;
         std::iota( std::next(begin(expected),1), end(expected), value_type(1) );
         expected[0] = value_type(0x1f);
@@ -911,7 +911,7 @@ using boost::ut::neq;
 
         auto res = emplace(v, std::next(begin(v),1), value_type(0x1f) );
 
-        tr |= constexpr_test(res == no_error );
+        tr |= constexpr_test( *res == value_type(0x1f) );
         std::array<value_type,second_growth+1> expected;
         std::iota( begin(expected), end(expected), value_type(0) );
         expected[0] = value_type(1);
@@ -926,7 +926,7 @@ using boost::ut::neq;
 
         auto res = emplace(v, end(v), value_type(0x1f) );
 
-        tr |= constexpr_test(res == no_error );
+        tr |= constexpr_test( *res == value_type(0x1f) );
         std::array<value_type,second_growth+1> expected;
         std::iota( begin(expected), std::prev(end(expected),1), value_type(1) );
         expected[expected.size()-1] = value_type(0x1f);

@@ -111,7 +111,7 @@ namespace coll::detail
   inline constexpr auto &
   at( vector_type & vec, size_type index ) noexcept
     {
-    assert(index < size(vec));
+    assert(index < detail::size(vec));
     return vec[index];
     }
   //-------------------------------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ namespace coll::detail
   [[nodiscard]]
   inline constexpr auto
   free_space( auto const & vec ) noexcept
-    { return nic_sub(capacity(vec),size(vec)); }
+    { return nic_sub(detail::capacity(vec), detail::size(vec)); }
     
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
@@ -157,6 +157,10 @@ namespace coll::detail
       typename vector_type::value_type;
       { vec.data() } noexcept -> const_or_nonconst_pointer<typename vector_type::value_type>;
       };
+
+  template<typename vector_type>
+  concept has_data_and_size_member_function 
+    = has_data_member_function<vector_type> && has_size_member_function<vector_type>;
   //-------------------------------------------------------------------------------------------------------------------
   [[nodiscard]]
   inline constexpr auto
@@ -197,29 +201,29 @@ namespace coll::detail
   //-------------------------------------------------------------------------------------------------------------------
   [[nodiscard]]
   inline constexpr auto
-  begin( auto & vec ) noexcept
+  begin( has_data_member_function auto & vec ) noexcept
     { return detail::data(vec); }
   //-------------------------------------------------------------------------------------------------------------------
   [[nodiscard]]
   inline constexpr auto
-  cbegin( auto const & vec ) noexcept
+  cbegin( has_data_member_function auto const & vec ) noexcept
     { return detail::begin(vec); }
   //-------------------------------------------------------------------------------------------------------------------
   [[nodiscard]]
   inline constexpr auto
-  end( auto & vec ) noexcept
+  end( has_data_and_size_member_function auto & vec ) noexcept
     { return unext(detail::begin(vec), detail::size(vec)); }
   //-------------------------------------------------------------------------------------------------------------------
   inline constexpr auto &
-  front(auto & vec) noexcept
+  front(has_data_member_function auto & vec) noexcept
     { return *detail::data(vec); }
     
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief Returns a reference to the last element in the container.
   ///\warning Calling back on an empty container causes undefined behavior.
   inline constexpr auto &
-  back(auto & vec) noexcept
-    { return at(vec, nic_sub(size(vec),1u)); }
+  back(has_data_and_size_member_function auto & vec) noexcept
+    { return detail::at(vec, nic_sub(detail::size(vec),1u)); }
 
   //-------------------------------------------------------------------------------------------------------------------
     
@@ -249,7 +253,7 @@ namespace coll::detail
   inline constexpr void
   erase_at_end_impl( vector_type & vec, size_type pos_ix ) noexcept
     {
-    erase_at_end_impl(vec, internal_data_context_t{vec}, pos_ix );
+    detail::erase_at_end_impl(vec, internal_data_context_t{vec}, pos_ix );
     }
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief erases all elements starting at \param pos till end of vector
@@ -290,7 +294,7 @@ namespace coll::detail
       -> typename vector_type::iterator
     {
     internal_data_context_t const my{vec};
-    return erase_at_end( vec, my, pos );
+    return detail::erase_at_end( vec, my, pos );
     }
   ///\brief Erases all elements from the container. After this call, size() returns zero.
   ///       Invalidates any references, pointers, or iterators referring to contained elements.
@@ -305,7 +309,7 @@ namespace coll::detail
   clear( vector_type & vec ) noexcept
     {
     using size_type = typename vector_type::size_type;
-    erase_at_end_impl(vec, size_type(0u) );
+    detail::erase_at_end_impl(vec, size_type(0u) );
     }
   //-------------------------------------------------------------------------------------------------------------------
   template<typename vector_type>
@@ -394,7 +398,7 @@ namespace coll::detail
   pop_back( vector_type & vec ) noexcept
     {
     internal_data_context_t const my{vec};
-    erase_at_end(vec, my, std::prev(my.end(),1));
+    detail::erase_at_end(vec, my, std::prev(my.end(),1));
     }
   //-------------------------------------------------------------------------------------------------------------------
 
@@ -458,7 +462,7 @@ namespace coll::detail
       noexcept(std::is_nothrow_constructible_v<typename vector_type::value_type,Args...>)
     {
     internal_data_context_t const my{ vec };
-    emplace_back_unchecked(vec,my, std::forward<Args>(args)...);
+    detail::emplace_back_unchecked(vec,my, std::forward<Args>(args)...);
     }
   
   //-------------------------------------------------------------------------------------------------------------------
@@ -541,7 +545,7 @@ namespace coll::detail
   push_back( vector_type & vec, T && value )
       noexcept(noexcept( emplace_back(vec,std::forward<T>(value)) ))
     {
-    return emplace_back(vec,std::forward<T>(value));
+    return detail::emplace_back(vec,std::forward<T>(value));
     }
   //-------------------------------------------------------------------------------------------------------------------
   ///\brief Inserts elements at the specified location in the container. 
@@ -995,7 +999,7 @@ namespace coll::detail
           return default_append(vec, my, nic_sub(new_size, my.size()) );
         else
           {
-          erase_at_end( vec, unext(my.begin(), new_size) );
+          detail::erase_at_end( vec, unext(my.begin(), new_size) );
           return vector_outcome_e::no_error;
           }
         }
