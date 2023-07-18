@@ -738,13 +738,7 @@ struct basic_string_t
     detail::string::swap(storage_, other.storage_);
     }
   };
-  
-  using detail::size;
-  using detail::empty;
-  using detail::at;
-  using detail::capacity;
-  using detail::data;
-  
+
   namespace concepts
     {
     ///\brief constraint requiring type to be a basic_string_type or const basic_string_type
@@ -762,6 +756,33 @@ struct basic_string_t
             >;
         };
     }
+  template<typename V, uint64_t N, typename T>
+  [[nodiscard]]
+  inline constexpr auto
+  size( basic_string_t<V,N,T> const & str ) noexcept
+      -> typename basic_string_t<V,N,T>::size_type
+    { return str.size(); }
+
+  template<typename V, uint64_t N, typename T>
+  [[nodiscard]]
+  inline constexpr auto
+  empty( basic_string_t<V,N,T> const & str ) noexcept
+      -> bool
+    { return str.empty(); }
+
+  template<typename V, uint64_t N, typename T>
+  [[nodiscard]]
+  inline constexpr auto
+  capacity( basic_string_t<V,N,T> const & str ) noexcept
+      -> typename basic_string_t<V,N,T>::size_type
+    { return str.capacity(); }
+    
+  template<concepts::same_as_basic_string basic_string_type, concepts::unsigned_arithmetic_integral index_type>
+  [[nodiscard]]
+  inline constexpr auto
+  at( basic_string_type & str, index_type index ) noexcept
+    { return str.at(index); }
+    
   template<concepts::same_as_basic_string basic_string_type>
   [[nodiscard]]
   inline constexpr auto
@@ -774,12 +795,17 @@ struct basic_string_t
   cbegin( basic_string_t<V,N,T> const & str ) noexcept
     { return str.begin(); }
 
-    
   template<concepts::same_as_basic_string basic_string_type>
   [[nodiscard]]
   inline constexpr auto
   end( basic_string_type & str ) noexcept
     { return str.end(); }
+
+  template<concepts::same_as_basic_string basic_string_type>
+  [[nodiscard]]
+  inline constexpr auto
+  data( basic_string_type & str ) noexcept
+    { return str.data(); }
     
   template<typename V, uint64_t N, typename T>
   constexpr auto operator ==( basic_string_t<V,N,T> const & l, basic_string_t<V,N,T> const & r ) noexcept
