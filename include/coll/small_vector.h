@@ -492,7 +492,6 @@ namespace coll
     { return vec.back(); }
 
   template<typename V, typename S, uint64_t N>
-  [[nodiscard]]
   inline constexpr auto
   erase_at_end( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::const_iterator pos ) noexcept
       -> typename small_vector<V,S,N>::iterator
@@ -504,14 +503,12 @@ namespace coll
     { vec.clear(); }
 
   template<typename V, typename S, uint64_t N>
-  [[nodiscard]]
   inline constexpr auto
   erase( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::const_iterator pos )
       -> typename small_vector<V,S,N>::iterator
     { return vec.erase(pos); }
     
   template<typename V, typename S, uint64_t N>
-  [[nodiscard]]
   inline constexpr auto
   erase( small_vector<V,S,N> & vec,
         typename small_vector<V,S,N>::const_iterator first, typename small_vector<V,S,N>::const_iterator last )
@@ -553,7 +550,7 @@ namespace coll
     { vec.reserve(new_cap); }
 
   template<typename V, typename S, uint64_t N>
-  inline constexpr auto
+  inline constexpr void
   resize( small_vector<V,S,N> & vec, typename small_vector<V,S,N>::size_type new_size )
     { vec.resize(new_size); }
 
