@@ -7,6 +7,13 @@ project(small_vectors
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
 
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+  message(
+    FATAL_ERROR
+      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+  )
+endif()
+
 set(CMAKE_MODULE_PATH
   ${PROJECT_SOURCE_DIR}/cmake
   )
@@ -17,14 +24,14 @@ option(SMALL_VECTORS_ENABLE_CPM_PACKAGING "cmake packaging by cpm" ON)
 if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
   include(cmake/CPM.cmake)
 
-# ---- Add dependencies via CPM ----
-# see https://github.com/cpm-cmake/CPM.cmake for more info
+  # ---- Add dependencies via CPM ----
+  # see https://github.com/cpm-cmake/CPM.cmake for more info
 
-CPMAddPackage(
-  NAME PackageProject.cmake
-  GITHUB_REPOSITORY TheLartians/PackageProject.cmake
-  VERSION 1.10.0
-)
+  CPMAddPackage(
+    NAME PackageProject.cmake
+    GITHUB_REPOSITORY TheLartians/PackageProject.cmake
+    VERSION 1.11.0
+  )
 endif()
 #-----------------------------------------------------------------------------
 # options
