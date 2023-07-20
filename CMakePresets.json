@@ -13,7 +13,7 @@
     },
 	{
 	"name": "cfg-ninja",
-	"generator": "Kate - Ninja",
+	"generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
