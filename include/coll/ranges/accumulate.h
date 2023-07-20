@@ -2,10 +2,10 @@
 #include <concepts>
 #include <iterator>
 #include <ranges>
+#include <utils/static_call_operator.h>
 
 namespace coll::ranges
 {
-  
   struct accumulate_t
     {
     template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>

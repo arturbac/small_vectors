@@ -3,20 +3,13 @@
 #include <concepts>
 #include <iterator>
 #include <ranges>
+#include <utils/static_call_operator.h>
 
 #if !defined(__cpp_unicode_characters)
 #error "missing __cpp_unicode_characters support"
 #endif
 #if !defined(__cpp_char8_t)
 #error "missing __cpp_char8_t support"
-#endif
-
-#if defined(__cpp_static_call_operator)
-  #define small_vector_cpp_static_call_operator static
-  #define small_vector_static_call_operator_const
-#else
-  #define small_vector_cpp_static_call_operator
-  #define small_vector_static_call_operator_const const
 #endif
 
 namespace coll::utf
