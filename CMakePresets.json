@@ -11,20 +11,32 @@
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}"
     },
-	{
-	"name": "cfg-ninja",
-	"generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-	},
     {
-      "name": "clang-15-release",
+    "name": "cfg-ninja",
+    "generator": "Ninja",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release"
+        }
+    },
+    {
+    "name": "cfg-libc++",
+    "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
+        "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
+      }
+    },
+    {
+      "name": "clang-17-release",
       "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++",
-        "CMAKE_CXX_STANDARD" : "20"
+        "CMAKE_CXX_COMPILER" : "/usr/lib/llvm/17/bin/clang++",
+        "CMAKE_CXX_STANDARD" : "23"
       }
+    },
+    {
+      "name": "clang-17-libc++release",
+      "inherits": ["clang-17-release", "cfg-libc++"]
     },
     {
       "name": "clang-16-release",
@@ -36,19 +48,19 @@
     },
     {
       "name": "clang-16-libc++release",
-      "inherits": "clang-16-release",
+      "inherits": ["clang-16-release", "cfg-libc++"]
+    },
+    {
+      "name": "clang-15-release",
+      "inherits": [ "cfg-common", "cfg-ninja" ],
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
-        "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
+        "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++",
+        "CMAKE_CXX_STANDARD" : "20"
       }
     },
     {
       "name": "clang-15-libc++release",
-      "inherits": "clang-15-release",
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
-        "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
-      }
+      "inherits": ["clang-15-release", "cfg-libc++"]
     },
     {
       "name": "gcc-12-release",
@@ -88,6 +100,14 @@
   ],
   "buildPresets": [
     {
+      "name": "clang-17-release",
+      "configurePreset": "clang-17-release"
+    },
+    {
+      "name": "clang-17-libc++release",
+      "configurePreset": "clang-17-libc++release"
+    },
+    {
       "name": "clang-16-release",
       "configurePreset": "clang-16-release"
     },
@@ -113,6 +133,18 @@
     }
   ],
   "testPresets": [
+    {
+      "name": "clang-17-release",
+      "configurePreset": "clang-17-release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "clang-17-libc++release",
+      "configurePreset": "clang-17-libc++release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
     {
       "name": "clang-16-release",
       "configurePreset": "clang-16-release",
@@ -151,6 +183,40 @@
     }
   ],
   "workflowPresets": [
+    {
+      "name": "clang-17-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-17-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-17-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-17-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-17-libc++release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-17-libc++release"
+        },
+        {
+          "type": "build",
+          "name": "clang-17-libc++release"
+        },
+        {
+          "type": "test",
+          "name": "clang-17-libc++release"
+        }
+      ]
+    },
     {
       "name": "clang-16-release",
       "steps": [
