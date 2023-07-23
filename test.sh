@@ -1,3 +1,5 @@
+cmake --workflow --preset="clang-17-release"
+cmake --workflow --preset="clang-17-libc++release"
 cmake --workflow --preset="clang-16-release"
 cmake --workflow --preset="clang-16-libc++release"
 cmake --workflow --preset="clang-15-release"
