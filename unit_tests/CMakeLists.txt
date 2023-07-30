@@ -35,7 +35,6 @@ add_unittest(composed_pointer_with_data_ut)
 add_unittest(meta_packed_struct_ut)
 add_unittest(strong_type_ut)
 add_unittest(string_ut)
-add_unittest(utf_ut)
 
 # github ubuntu latest is very old
 find_package( Boost 1.74 COMPONENTS system )

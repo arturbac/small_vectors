@@ -10,7 +10,6 @@ C++20,23 utilities library
 * static vector fully constant evaluated for trivial element types
 * basic_string - with in class buffers fully constant evaluated, with dynamic and static storage ( static storage variant is address independant and may be used in interprocess data exchange)
 * basic_fixed_string - for manipulating constant evaluated string literals
-* coll::utf - fully constant evaluated utf8,16,32 string manupulation
 
 ## minor utility features
 
@@ -41,32 +40,6 @@ coll::small_vector<int32_t,size_t,0> vec10;
 
 ```
 
-#### coll:utf convertion namespace
-
-* utf_input_view_t - utf view over range
-* length - number of code points in range
-* capacity_t<char_type> - number of bytes required to encode range into given char type, ie char8_t, char16_t, char32_t, wchar_t ...
-* convert - convert range into output iterator with other utf encoding
-* to_string_t<char_type> - convert utf range into coll::basic_string<> or std::basic_string<> with other utf encoding
-* verify - verification of utf range
-```C++
-// any range (string string_view, array, vector ...) to output iterator with tpe deduction
-constexpr auto view( auto const & a ) noexcept
-  { return std::basic_string_view{ std::begin(a), std::end(a)}; }
-
-constexpr std::basic_string_view u8test{u8"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
-constexpr std::basic_string_view u16test{u16"𐃆𐃇𐃈𐃉𐃊𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒𐃓𐃔"};
-std::array<char16_t, u16test.size()> storage;
-utf::convert( u8test, std::begin(storage));
-constexpr_test( view(storage) == u16test );
-
-//any range to own string
-constexpr_test( utf::to_u16string(u8test) == u16test );
-
-//any range to std string
-std::u16string str2 = utf::stl::to_u16string(u8test);
-constexpr_test( str2 == u16test );
-```
 ### tested compilers
 
 there are predefined cmake workflows to test
