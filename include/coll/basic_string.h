@@ -25,6 +25,7 @@
 #include "detail/vector_func.h"
 #include "detail/string_func.h"
 #include "detail/iterator.h"
+#include "ranges/accumulate.h"
 #include <numeric>
 #include <compare>
 
@@ -843,8 +844,8 @@ struct basic_string_t
     {
     using char_type = V;
     if (std::is_constant_evaluated())
-      return std::accumulate(begin(str), end(str), std::size_t{5381},
-                      [](std::size_t init, char_type c)
+      return coll::ranges::accumulate(str, std::size_t{5381},
+                      [](std::size_t init, char_type c) noexcept
                       { return init * (c ? static_cast<std::size_t>(c) + 33 : 5381); });
     else
       return std::hash<std::basic_string_view<V>>()(str.view());
