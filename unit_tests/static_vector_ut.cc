@@ -8,6 +8,7 @@
 
 namespace coll
 {
+
 // struct non_trivial
 //   {
 //   int value_;
@@ -137,6 +138,8 @@ static_assert( same_as_static_vector<static_vector<uint8_t,7>>);
 static_assert( same_as_static_vector<const static_vector<uint8_t,7>>);
 static_assert( not same_as_static_vector<std::vector<uint8_t>>);
 static_assert( not same_as_static_vector<invalid_static_vector>);
+
+static_assert( detail::detail_concepts::vector_storage<detail::static_vector_storage<uint8_t,7>>);
 
 namespace method_tests
 {

@@ -88,7 +88,25 @@ namespace coll::detail
     constexpr value_type const * data() const noexcept { return &(u.object[0]); }
 #endif
     };
-    
+  namespace detail_concepts
+    {
+    template<typename T>
+    concept vector_storage =
+      requires (T & obj )
+        {
+        typename T::value_type;
+        typename T::size_type;
+        typename T::storage_type;
+        typename T::storage_context_type;
+        
+        { obj.size_ } -> std::same_as<typename T::size_type &>;
+        { obj.capacity() } -> std::same_as<typename T::size_type>;
+        { T::supports_reallocation } -> std::same_as<bool const &>;
+        { obj.data() } -> std::same_as<typename T::value_type *>;
+        { obj.context() } -> std::same_as<typename T::storage_context_type>;
+        };
+    }
+
   template<concepts::vector_constraints V, uint64_t N>
   struct static_vector_storage
     {

@@ -16,23 +16,19 @@ namespace coll::concepts
   
   template<typename iterator>
   concept forward_iterator = std::forward_iterator<iterator>;
-  //convertible_to<iterator_category_t<iterator>, std::forward_iterator_tag>;
   
   template<typename iterator>
   concept input_iterator = std::input_iterator<iterator>;
-  //convertible_to<iterator_category_t<iterator>, std::input_iterator_tag> ;
 
   template<typename iterator>
   concept output_iterator = convertible_to<iterator_category_t<iterator>, std::input_iterator_tag>;
   
   template<typename iterator_type>
   concept iterator = std::input_or_output_iterator<iterator_type>;
-  //input_iterator<iterator_type> || output_iterator<iterator_type>;
   
   
   template<typename iterator>
   concept random_access_iterator = convertible_to<iterator_category_t<iterator>, std::random_access_iterator_tag>;
-  //std::random_access_iterator<iterator>;
   
   template<typename value_type>
   concept vector_constraints = (std::movable<value_type> or std::copyable<value_type>) 
