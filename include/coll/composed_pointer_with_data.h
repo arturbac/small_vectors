@@ -21,7 +21,7 @@ namespace coll
     using pointer = T *;
     using data_value_type = V;
     
-    static constexpr uintptr_t data_bits = std::bit_width<static_cast<uintptr_t>(alignof(T))>;
+    static constexpr uintptr_t data_bits = std::bit_width<alignof(T)>;
     static constexpr uintptr_t data_mask = alignof(T)-1;
     static constexpr uintptr_t pointer_mask = std::numeric_limits<uintptr_t>::max() ^ data_mask;
     
