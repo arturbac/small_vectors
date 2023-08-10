@@ -44,10 +44,13 @@ else()
 endif()
 
 if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
-  FetchContent_Declare(
+  #----------------------------------------------------------------
+  # boost-ext/ut
+  #----------------------------------------------------------------
+  CPMAddPackage(
     ut
-    GIT_REPOSITORY https://github.com/boost-ext/ut.git
-    GIT_TAG        master
+    GITHUB_REPOSITORY boost-ext/ut
+    GIT_TAG        v1.1.9
   )
 endif()
 
@@ -126,7 +129,6 @@ endif()
 
 if( SMALL_VECTORS_ENABLE_UNIT_TESTS )
   enable_testing( TRUE )
-  FetchContent_MakeAvailable(ut)
   add_subdirectory(unit_tests)
 endif()
 
