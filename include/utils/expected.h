@@ -7,7 +7,19 @@
 #include <memory>
 #include <cassert>
 #include <functional>
-//__cpp_lib_expected 	202211L
+
+#if defined(__cpp_lib_expected) && __cpp_lib_expected >= 202211L
+#include <expected>
+
+namespace cxx23
+{
+  using std::unexpected;
+  using std::expected;
+  using std::unexpect_t;
+  using std::unexpect;
+  using std::bad_expected_access;
+}
+#else
 
 namespace cxx23
 {
@@ -645,3 +657,4 @@ namespace detail
   }
 
 }
+#endif
