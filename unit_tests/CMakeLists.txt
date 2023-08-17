@@ -18,6 +18,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       -Wno-global-constructors
       -Wno-exit-time-destructors
       -Wno-ctad-maybe-unsupported
+      -Wno-weak-vtables
       )
 endif()
 
@@ -36,6 +37,7 @@ add_unittest(meta_packed_struct_ut)
 add_unittest(strong_type_ut)
 add_unittest(string_ut)
 add_unittest(ranges_ut)
+add_unittest(expected_ut)
 
 # github ubuntu latest is very old
 find_package( Boost 1.74 COMPONENTS system )
