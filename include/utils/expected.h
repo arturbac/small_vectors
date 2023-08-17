@@ -235,16 +235,16 @@ public:
 
 namespace detail
   {
-  template<typename EX, typename F>
+  template<concepts::is_expected EX, typename F>
   constexpr auto and_then( EX && ex, F && f );
   
-  template<typename EX, typename F >
+  template<concepts::is_expected EX, typename F >
   constexpr auto transform( EX && ex, F && f );
   
-  template<typename EX, typename F >
+  template<concepts::is_expected EX, typename F >
   constexpr auto or_else( EX && ex, F&& f );
   
-  template<typename EX, typename F>
+  template<concepts::is_expected EX, typename F>
   constexpr auto transform_error( EX && ex, F && f );
   
   template<concepts::is_expected EX>
@@ -698,7 +698,11 @@ public:
     }
 
   template<typename T2>
-  requires std::equality_comparable_with<value_type,T2>
+  requires requires
+    {
+    requires concepts::not_expected<T2>;
+    requires std::equality_comparable_with<value_type,T2>;
+    }
   friend constexpr bool operator==( expected const & x, T2 const & val )
     noexcept( noexcept(x.value() == val))
     {
@@ -977,7 +981,7 @@ public:
     requires std::equality_comparable_with<error_type,E2>;
     }
   friend constexpr bool operator==( expected const & lhs, expected<T2, E2> const & rhs )
-    noexcept( noexcept(lhs.value() == rhs.value()) && noexcept(lhs.error() == rhs.error()))
+    noexcept( noexcept(lhs.error() == rhs.error()))
     {
     if(lhs.has_value() == rhs.has_value())
       return lhs.has_value() || lhs.error() == rhs.error();
@@ -999,7 +1003,7 @@ public:
   
 namespace detail
   {
-  template<typename EX, typename F>
+  template<concepts::is_expected EX, typename F>
   constexpr auto and_then( EX && ex, F && f )
     {
     using U = std::conditional_t<EX::value_is_void,
@@ -1017,7 +1021,7 @@ namespace detail
       return U(unexpect, std::forward<EX>(ex).error());
     }
     
-  template<typename EX, typename F >
+  template<concepts::is_expected EX, typename F >
   constexpr auto transform( EX && ex, F && f )
     {
     using U = std::conditional_t<EX::value_is_void,
@@ -1036,7 +1040,7 @@ namespace detail
       return expected<U,error_type>(unexpect, std::forward<EX>(ex).error());
     }
     
-  template<typename EX, typename F >
+  template<concepts::is_expected EX, typename F >
   constexpr auto or_else( EX && ex, F&& f )
     {
     using G = std::remove_cvref_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).error())>>;
@@ -1052,7 +1056,7 @@ namespace detail
       return std::invoke(std::forward<F>(f), std::forward<EX>(ex).error());
     }
     
-  template<typename EX, typename F>
+  template<concepts::is_expected EX, typename F>
   constexpr auto transform_error( EX && ex, F && f )
     {
     using G = std::remove_cv_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).error())>>;

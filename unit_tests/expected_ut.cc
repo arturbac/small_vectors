@@ -647,6 +647,59 @@ static void do_test(test_result &result)
     result |= run_consteval_test<error_type_list>(fn_tmpl);
     result |= run_consteval_test<error_type_list>(fn_tmpl);
     };
+  "expected_operator=="_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename value_type, typename error_type>
+        ( value_type const *, error_type const *) -> metatests::test_result
+      {
+        using expected_type = expected<value_type,error_type>;
+          {
+          expected_type ex1{ in_place, value_type{2}};
+          expected_type ex2{ in_place, value_type{4}};
+          expected_type ex3{ unexpect, error_type{2}};
+          expected_type ex4{ unexpect, error_type{4}};
+          unexpected ux { error_type{4} };
+          constexpr_test(ex1 == value_type{2});
+          constexpr_test(ex2 == value_type{4});
+          constexpr_test(ex2 != ex1);
+          constexpr_test(ex2 != ex3);
+          constexpr_test(ex3 != ex4);
+          constexpr_test(ex3 == ex3);
+          constexpr_test(ex3 != ux);
+          constexpr_test(ex4 == ux);
+          }
+      return {};
+      };
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    };
+    
+  "expected_operator== void"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename error_type>
+        (error_type const *) -> metatests::test_result
+      {
+        using expected_type = expected<void,error_type>;
+          {
+          expected_type ex1{ in_place};
+          expected_type ex2{ in_place};
+          expected_type ex3{ unexpect, error_type{2}};
+          expected_type ex4{ unexpect, error_type{4}};
+          unexpected ux { error_type{4} };
+          constexpr_test(ex1 == ex2);
+          constexpr_test(ex2 != ex3);
+          constexpr_test(ex3 != ex4);
+          constexpr_test(ex3 == ex3);
+          constexpr_test(ex3 != ux);
+          constexpr_test(ex4 == ux);
+          }
+      return {};
+      };
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    };
   }
 }
 
