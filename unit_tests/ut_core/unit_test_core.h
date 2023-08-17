@@ -328,6 +328,11 @@ struct non_trivial
   constexpr ~non_trivial() {}
   constexpr bool operator ==( non_trivial const & r ) const noexcept = default;
   constexpr bool operator ==( int r ) const noexcept { return value_ == r; }
+  
+  void swap( non_trivial & r ) noexcept
+    {
+    std::swap(value_, r.value_);
+    }
   };
   
 
@@ -397,6 +402,11 @@ struct non_trivial_ptr
       return *value_ == r; 
     return false;
     }
+  constexpr int value() const noexcept { return *value_; }
+  constexpr void swap( non_trivial_ptr & r ) noexcept
+    {
+    std::swap(value_, r.value_);
+    }
   };
 
 struct non_trivial_ptr_except
@@ -412,6 +422,12 @@ struct non_trivial_ptr_except
   
   constexpr non_trivial_ptr_except & operator ++() noexcept { ++obj; return *this; }
   constexpr bool operator ==( non_trivial_ptr_except const & ) const noexcept = default;
+  
+  constexpr int value() const noexcept(false) { return obj.value(); }
+  constexpr void swap( non_trivial_ptr_except & r )
+    {
+    std::swap(obj, r.obj);
+    }
   };
   
 struct non_trivial_ptr_except_copy

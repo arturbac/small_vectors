@@ -7,6 +7,7 @@
 #include <memory>
 #include <cassert>
 #include <functional>
+#include <utils/static_call_operator.h>
 
 #if !defined(SMALL_VECTORS_ENABLE_CUSTOM_EXCPECTED) \
       && defined(__cpp_lib_expected) && __cpp_lib_expected >= 202211L
@@ -19,6 +20,8 @@ namespace cxx23
   using std::unexpect_t;
   using std::unexpect;
   using std::bad_expected_access;
+  using std::in_place_t;
+  using std::in_place;
 }
 #else
 
@@ -31,6 +34,9 @@ class unexpected;
 
 struct unexpect_t { explicit unexpect_t() noexcept = default; };
 inline constexpr unexpect_t unexpect;
+
+using std::in_place_t;
+using std::in_place;
 
 namespace concepts
   {
@@ -88,7 +94,7 @@ namespace concepts
          {
          requires std::is_swappable_v<T> || std::is_void_v<T>;
          requires std::is_swappable_v<E>;
-         requires std::is_move_constructible_v<T>;
+         requires std::is_move_constructible_v<T> || std::is_void_v<T>;
          requires std::is_move_constructible_v<E>;
          requires std::is_nothrow_move_constructible_v<T> || std::is_void_v<T> || std::is_nothrow_move_constructible_v<E>;
         };
@@ -241,6 +247,9 @@ namespace detail
   template<typename EX, typename F>
   constexpr auto transform_error( EX && ex, F && f );
   
+  template<concepts::is_expected EX>
+  inline constexpr void swap_dispatch( EX & l, EX & r );
+  
   template<typename E,typename T>
   struct expected_storage_t
     {
@@ -259,6 +268,8 @@ namespace detail
       E error;
       };
     };
+    
+  struct swap_expected_t;
   }
   
 template<typename T, typename E>
@@ -272,6 +283,8 @@ public:
   using unexpected_type = unexpected<E>;
   template<typename U >
   using rebind = expected<U, error_type>;
+  friend struct detail::swap_expected_t;
+  
 private:
   using bad_access_exception = bad_expected_access<std::decay_t<error_type>>;
 
@@ -658,7 +671,10 @@ public:
 
   constexpr void swap( expected & other )
       noexcept( detail::swap_no_throw<T,E> )
-      requires concepts::swap_constraints<T,E>;
+      requires concepts::swap_constraints<T,E>
+    {
+    detail::swap_dispatch(*this, other);
+    }
     
   template<typename T2, typename E2>
   requires requires
@@ -711,6 +727,7 @@ public:
   using unexpected_type = unexpected<E>;
   template<typename U >
   using rebind = expected<U, error_type>;
+  friend struct detail::swap_expected_t;
   
 private:
   using bad_access_exception = bad_expected_access<std::decay_t<error_type>>;
@@ -797,6 +814,14 @@ public:
       
   constexpr void operator*() const noexcept
     { assert(has_value_); }
+
+  [[nodiscard]]
+  constexpr explicit operator bool() const noexcept
+    { return has_value_; }
+  
+  [[nodiscard]]
+  constexpr bool has_value() const noexcept
+    { return has_value_; }
     
   constexpr void value() const &
       requires error_copy_constructible
@@ -940,7 +965,10 @@ public:
   
   constexpr void swap( expected & other )
       noexcept( detail::swap_no_throw<void,E> )
-      requires concepts::swap_constraints<void,E>;
+      requires concepts::swap_constraints<void,E>
+    {
+    detail::swap_dispatch(*this, other);
+    }
       
   template<typename T2, typename E2>
   requires requires
@@ -1043,8 +1071,9 @@ namespace detail
   template<bool use_noexcept, typename T>
   struct revert_if_except_t
     {
+    struct empty_t {};
     T value;
-    std::conditional_t<use_noexcept,void, T *> release_address;
+    std::conditional_t<use_noexcept,empty_t, T *> release_address;
     
     constexpr explicit revert_if_except_t( T && v, T * release_addr ) 
       : value{ std::move(v) }
@@ -1070,10 +1099,12 @@ namespace detail
       }
     };
 
-  struct swap_t
+  struct swap_expected_t
     {
     template<typename T, typename E>
+    small_vector_static_call_operator
     constexpr void operator()( expected<T,E> & l, expected<T,E> & r )
+        small_vector_static_call_operator_const
         noexcept( detail::swap_no_throw<T,E> )
         requires concepts::swap_constraints<T,E>
       {
@@ -1092,40 +1123,41 @@ namespace detail
         {
         if constexpr( std::is_void_v<T>)
           {
-          std::construct_at(std::addressof(l.error()), std::move(r.error()));
-          std::destroy_at(std::addressof(r.error()));
+          std::construct_at(std::addressof(l.error_), std::move(r.error()));
+          std::destroy_at(std::addressof(r.error_));
+          std::swap(l.has_value_, r.has_value_);
           }
         else if constexpr (std::is_nothrow_move_constructible_v<E>) 
           {
           using revert = revert_if_except_t<std::is_nothrow_move_constructible_v<T>,E>;
-          revert temp{std::move(r.error(), std::addressof(r.error()))};
-          std::destroy_at(std::addressof(r.error()));
-          std::construct_at(std::addressof(r.value()), std::move(l.value()));
-          std::destroy_at(std::addressof(l.value()));
-          std::construct_at(std::addressof(l.error()), temp.release());
+          revert temp{std::move(r.error()), std::addressof(r.error_)};
+          std::destroy_at(std::addressof(r.error_));
+          std::construct_at(std::addressof(r.value_), std::move(l.value()));
+          std::destroy_at(std::addressof(l.value_));
+          std::construct_at(std::addressof(l.error_), temp.release());
+          std::swap(l.has_value_, r.has_value_);
           }
         else 
           {
           using revert = revert_if_except_t<false,T>;
-          revert temp{std::move(l.value()),std::addressof(l.value())};
-          std::destroy_at(std::addressof(l.value()));
-          std::construct_at(std::addressof(l.error()), std::move(r.error()));
-          std::destroy_at(std::addressof(r.error()));
-          std::construct_at(std::addressof(r.value()), temp.release());
+          revert temp{std::move(l.value()),std::addressof(l.value_)};
+          std::destroy_at(std::addressof(l.value_));
+          std::construct_at(std::addressof(l.error_), std::move(r.error()));
+          std::destroy_at(std::addressof(r.error_));
+          std::construct_at(std::addressof(r.value_), temp.release());
+          std::swap(l.has_value_, r.has_value_);
           }
         }
       }
     };
-  inline constexpr swap_t swap;
+
+  template<concepts::is_expected EX>
+  inline constexpr void swap_dispatch( EX & l, EX & r )
+    {
+    swap_expected_t{}(l,r);
+    }
   }
-  
-template<typename T, typename E>
-constexpr void expected<T,E>::swap( expected & other )
-    noexcept( detail::swap_no_throw<T,E> )
-    requires concepts::swap_constraints<T,E>
-  {
-  detail::swap(*this,other);
-  }
+
 
 }
 #endif
