@@ -353,7 +353,14 @@ public:
     else
       std::construct_at(std::addressof(error_), std::move(rh.error_));
     }
-      
+
+  template<typename U = T>
+  constexpr explicit(!std::is_convertible_v<U, T>)
+    expected( U && v )
+        noexcept( std::is_nothrow_constructible_v<decltype(std::forward<U>(v))> )
+      : value_{ std::forward<U>(v) }, has_value_{true}
+    {}
+    
   template<typename ... Args >
     requires std::constructible_from<value_type, Args...>
   constexpr explicit expected( std::in_place_t, Args&&... args )

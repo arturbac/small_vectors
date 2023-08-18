@@ -190,6 +190,17 @@ static void do_test(test_result &result)
         constexpr_test(ex.value() == value_type{});
         }
         {
+        expected_type ex{value_type{2}};
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        }
+        {
+        expected_type const sr{value_type{2}};
+        expected_type ex{ sr };
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        }
+        {
         expected_type ex{ in_place, value_type{2}};
         constexpr_test(ex.has_value());
         constexpr_test(ex.value() == value_type{2});
