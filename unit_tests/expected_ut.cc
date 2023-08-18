@@ -18,6 +18,10 @@ using value_type_list = metatests::type_list<int32_t,uint32_t,void,non_trivial,n
 using value_type_non_void_list = metatests::type_list<int32_t,uint32_t,non_trivial,non_trivial_ptr,non_trivial_ptr_except>;
 using value_type_non_void_noexcept_list = metatests::type_list<int32_t,uint32_t,non_trivial,non_trivial_ptr>;
 enum struct test_error { no_error, error1, error2 };
+constexpr test_error operator++( test_error v) noexcept
+  {
+  return static_cast<test_error>( static_cast<int>(v) + 1 );
+  }
 using error_type_list = metatests::type_list<int32_t,test_error,non_trivial,non_trivial_ptr,non_trivial_ptr_except>;
 using namespace cxx23;
 
@@ -653,22 +657,22 @@ static void do_test(test_result &result)
       []<typename value_type, typename error_type>
         ( value_type const *, error_type const *) -> metatests::test_result
       {
-        using expected_type = expected<value_type,error_type>;
-          {
-          expected_type ex1{ in_place, value_type{2}};
-          expected_type ex2{ in_place, value_type{4}};
-          expected_type ex3{ unexpect, error_type{2}};
-          expected_type ex4{ unexpect, error_type{4}};
-          unexpected ux { error_type{4} };
-          constexpr_test(ex1 == value_type{2});
-          constexpr_test(ex2 == value_type{4});
-          constexpr_test(ex2 != ex1);
-          constexpr_test(ex2 != ex3);
-          constexpr_test(ex3 != ex4);
-          constexpr_test(ex3 == ex3);
-          constexpr_test(ex3 != ux);
-          constexpr_test(ex4 == ux);
-          }
+      using expected_type = expected<value_type,error_type>;
+
+      expected_type ex1{ in_place, value_type{2}};
+      expected_type ex2{ in_place, value_type{4}};
+      expected_type ex3{ unexpect, error_type{2}};
+      expected_type ex4{ unexpect, error_type{4}};
+      unexpected ux { error_type{4} };
+      constexpr_test(ex1 == value_type{2});
+      constexpr_test(ex2 == value_type{4});
+      constexpr_test(ex2 != ex1);
+      constexpr_test(ex2 != ex3);
+      constexpr_test(ex3 != ex4);
+      constexpr_test(ex3 == ex3);
+      constexpr_test(ex3 != ux);
+      constexpr_test(ex4 == ux);
+
       return {};
       };
     result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
@@ -699,6 +703,209 @@ static void do_test(test_result &result)
       };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
     result |= run_consteval_test<error_type_list>(fn_tmpl);
+    };
+    
+  "expected and_then"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename value_type, typename error_type>
+        ( value_type const *, error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<value_type,error_type>;
+      auto f = [](value_type v) noexcept { return expected_type{ in_place, ++v}; };
+        {
+        expected_type const ex{ in_place, value_type{2} };
+        auto res { ex.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{3});
+        }
+        {
+        auto res { expected_type{ in_place, value_type{2} }.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{3});
+        }
+        {
+        expected_type const ex{ unexpect, error_type{2} };
+        auto res { ex.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+      return {};
+      };
+      
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    };
+    
+  "expected and_then void"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename error_type>
+        (error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<void,error_type>;
+      auto f = []() noexcept { return expected_type{in_place}; };
+        {
+        expected_type const ex{ in_place };
+        auto res { ex.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res.has_value() );
+        }
+        {
+        auto res { expected_type{ in_place }.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res.has_value() );
+        }
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.and_then(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+      return {};
+      };
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    };
+    
+  "expected or_else"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename value_type, typename error_type>
+        ( value_type const *, error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<value_type,error_type>;
+      auto f = [](error_type v) noexcept { return expected_type{ unexpect, ++v}; };
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.or_else(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected(error_type{3}));
+        }
+        {
+        auto res { expected_type{ in_place, value_type{2} }.or_else(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type(2) );
+        }
+      return {};
+      };
+      
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    };
+    
+  "expected transform"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename value_type, typename error_type>
+        ( value_type const *, error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<value_type,error_type>;
+      auto f = [](auto && v) noexcept { value_type vx{v}; return ++vx; };
+        {
+        expected_type const ex{ in_place, value_type{2} };
+        auto res { ex.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{3});
+        }
+        {
+        auto res { expected_type{ in_place, value_type{2} }.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{3});
+        }
+        {
+        expected_type const ex{ unexpect, error_type{2} };
+        auto res { ex.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+      return {};
+      };
+      
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    };
+    
+  "expected transform void"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename error_type>
+        (error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<void,error_type>;
+      auto f = []() noexcept {};
+        {
+        expected_type const ex{ in_place };
+        auto res { ex.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res.has_value());
+        }
+        {
+        auto res { expected_type{ in_place }.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res.has_value() );
+        }
+        {
+        expected_type const ex{ unexpect, error_type{2} };
+        auto res { ex.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.transform(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(2)});
+        }
+      return {};
+      };
+      
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    };
+    
+  "expected transform_error"_test = [&]
+    {
+    auto fn_tmpl =
+      []<typename value_type, typename error_type>
+        ( value_type const *, error_type const *) -> metatests::test_result
+      {
+      using expected_type = expected<value_type,error_type>;
+      auto f = [](auto v) noexcept { return ++v; };
+        {
+        expected_type const ex{ in_place, value_type{2} };
+        auto res { ex.transform_error(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{2});
+        }
+        {
+        auto res { expected_type{ in_place, value_type{2} }.transform_error(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{2});
+        }
+        {
+        expected_type const ex{ unexpect, error_type{2} };
+        auto res { ex.transform_error(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(3)});
+        }
+        {
+        auto res { expected_type{ unexpect, error_type{2} }.transform_error(f) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == unexpected{error_type(3)});
+        }
+      return {};
+      };
+      
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
+    result |= run_consteval_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
     };
   }
 }

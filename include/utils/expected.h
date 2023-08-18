@@ -235,16 +235,16 @@ public:
 
 namespace detail
   {
-  template<concepts::is_expected EX, typename F>
+  template<typename EX, typename F>
   constexpr auto and_then( EX && ex, F && f );
   
-  template<concepts::is_expected EX, typename F >
+  template<typename EX, typename F >
   constexpr auto transform( EX && ex, F && f );
   
-  template<concepts::is_expected EX, typename F >
+  template<typename EX, typename F >
   constexpr auto or_else( EX && ex, F&& f );
   
-  template<concepts::is_expected EX, typename F>
+  template<typename EX, typename F>
   constexpr auto transform_error( EX && ex, F && f );
   
   template<concepts::is_expected EX>
@@ -554,12 +554,12 @@ public:
   template<typename F>
   constexpr auto and_then( F && f ) &&
       requires error_move_constructible
-    { return detail::and_then(*this,std::forward<F>(f)); }
+    { return detail::and_then( std::move(*this),std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto and_then( F && f ) const &&
       requires error_move_constructible
-    { return detail::and_then(*this,std::forward<F>(f)); }
+    { return detail::and_then(std::move(*this),std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto transform( F&& f ) &
@@ -579,14 +579,14 @@ public:
   constexpr auto transform( F&& f ) &&
       requires error_move_constructible
     {
-    return detail::transform(*this, std::forward<F>(f));
+    return detail::transform(std::move(*this), std::forward<F>(f));
     }
     
   template<typename F>
   constexpr auto transform( F&& f ) const &&
       requires error_move_constructible
     {
-    return detail::transform(*this, std::forward<F>(f));
+    return detail::transform(std::move(*this), std::forward<F>(f));
     }
   
   template<typename F>
@@ -607,14 +607,14 @@ public:
   constexpr auto or_else( F&& f ) &&
       requires value_move_constructible
     {
-    return detail::or_else(*this,std::forward<F>(f));
+    return detail::or_else(std::move(*this),std::forward<F>(f));
     }
     
   template<typename F>
   constexpr auto or_else( F&& f ) const &&
       requires value_move_constructible
     {
-    return detail::or_else(*this,std::forward<F>(f));
+    return detail::or_else(std::move(*this),std::forward<F>(f));
     }
     
   template<typename F>
@@ -627,11 +627,11 @@ public:
     
   template<typename F>
   constexpr auto transform_error( F&& f ) &&
-    { return detail::transform_error(*this, std::forward<F>(f)); }
+    { return detail::transform_error(std::move(*this), std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto transform_error( F&& f ) const &&
-    { return detail::transform_error(*this, std::forward<F>(f)); }
+    { return detail::transform_error(std::move(*this), std::forward<F>(f)); }
     
   template<typename ... Args>
   constexpr auto /*value_type &*/ emplace( Args&&... args ) noexcept
@@ -882,12 +882,12 @@ public:
   template<typename F>
   constexpr auto and_then( F && f ) &&
       requires error_move_constructible
-    { return detail::and_then(*this,std::forward<F>(f)); }
+    { return detail::and_then( std::move(*this),std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto and_then( F && f ) const &&
       requires error_move_constructible
-    { return detail::and_then(*this,std::forward<F>(f)); }
+    { return detail::and_then(std::move(*this),std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto transform( F&& f ) &
@@ -907,14 +907,14 @@ public:
   constexpr auto transform( F&& f ) &&
       requires error_move_constructible
     {
-    return detail::transform(*this, std::forward<F>(f));
+    return detail::transform(std::move(*this), std::forward<F>(f));
     }
     
   template<typename F>
   constexpr auto transform( F&& f ) const &&
       requires error_move_constructible
     {
-    return detail::transform(*this, std::forward<F>(f));
+    return detail::transform(std::move(*this), std::forward<F>(f));
     }
   
   template<typename F>
@@ -932,13 +932,13 @@ public:
   template<typename F>
   constexpr auto or_else( F&& f ) &&
     {
-    return detail::or_else(*this,std::forward<F>(f));
+    return detail::or_else(std::move(*this),std::forward<F>(f));
     }
     
   template<typename F>
   constexpr auto or_else( F&& f ) const &&
     {
-    return detail::or_else(*this,std::forward<F>(f));
+    return detail::or_else(std::move(*this),std::forward<F>(f));
     }
     
   template<typename F>
@@ -951,11 +951,11 @@ public:
     
   template<typename F>
   constexpr auto transform_error( F&& f ) &&
-    { return detail::transform_error(*this, std::forward<F>(f)); }
+    { return detail::transform_error(std::move(*this), std::forward<F>(f)); }
     
   template<typename F>
   constexpr auto transform_error( F&& f ) const &&
-    { return detail::transform_error(*this, std::forward<F>(f)); }
+    { return detail::transform_error(std::move(*this), std::forward<F>(f)); }
   
   constexpr void emplace() noexcept
     {
@@ -1003,16 +1003,28 @@ public:
   
 namespace detail
   {
-  template<concepts::is_expected EX, typename F>
+  template<typename F, typename T>
+  struct and_then_invoke_result
+    {
+    using type = std::remove_cvref_t<std::invoke_result_t<F, decltype(std::declval<T>())>>;
+    };
+  template<typename F>
+  struct and_then_invoke_result<F,void>
+    {
+    using type = std::remove_cvref_t<std::invoke_result_t<F>>;
+    };
+    
+  template<typename F, typename T>
+  using and_then_invoke_result_t = typename and_then_invoke_result<F,T>::type;
+  
+  template<typename EX, typename F>
   constexpr auto and_then( EX && ex, F && f )
     {
-    using U = std::conditional_t<EX::value_is_void,
-        std::remove_cvref_t<std::invoke_result_t<F>>,
-        std::remove_cvref_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).value())>>>;
-      
+    using expected_type = std::remove_cvref_t<EX>;
+    using U = and_then_invoke_result_t<F, decltype(std::forward<EX>(ex).value())>;
     if(ex.has_value())
       {
-      if constexpr(EX::value_is_void)
+      if constexpr(std::is_void_v<typename expected_type::value_type>)
         return std::invoke(std::forward<F>(f));
       else
         return std::invoke(std::forward<F>(f), std::forward<EX>(ex).value());
@@ -1021,18 +1033,33 @@ namespace detail
       return U(unexpect, std::forward<EX>(ex).error());
     }
     
-  template<concepts::is_expected EX, typename F >
+  template<typename F, typename T>
+  struct transform_invoke_result
+    {
+    using type = std::remove_cv_t<std::invoke_result_t<F, decltype(std::declval<T>())>>;
+    };
+  template<typename F>
+  struct transform_invoke_result<F,void>
+    {
+    using type = std::remove_cv_t<std::invoke_result_t<F>>;
+    };
+  template<typename F, typename T>
+  using transform_invoke_result_t = typename transform_invoke_result<F,T>::type;
+  
+  template<typename EX, typename F >
   constexpr auto transform( EX && ex, F && f )
     {
-    using U = std::conditional_t<EX::value_is_void,
-        std::remove_cv_t<std::invoke_result_t<F>>,
-        std::remove_cv_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).value())>>>;
+    using expected_type = std::remove_cvref_t<EX>;
+    using U = transform_invoke_result_t<F, decltype(std::forward<EX>(ex).value())>;
 
-    using error_type = typename EX::error_type;
+    using error_type = typename expected_type::error_type;
     if(ex.has_value())
       {
-      if constexpr(EX::value_is_void)
-        return expected<U,error_type>{std::in_place, std::invoke(std::forward<F>(f))};
+      if constexpr(std::is_void_v<typename expected_type::value_type>)
+        {
+        std::invoke(std::forward<F>(f));
+        return expected<U,error_type>{std::in_place};
+        }
       else
         return expected<U,error_type>{std::in_place, std::invoke(std::forward<F>(f), std::forward<EX>(ex).value())};
       }
@@ -1040,14 +1067,14 @@ namespace detail
       return expected<U,error_type>(unexpect, std::forward<EX>(ex).error());
     }
     
-  template<concepts::is_expected EX, typename F >
+  template<typename EX, typename F >
   constexpr auto or_else( EX && ex, F&& f )
     {
     using G = std::remove_cvref_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).error())>>;
     static_assert(std::is_same_v<typename G::value_type, typename EX::value_type>);
     if (ex.has_value())
       {
-      if constexpr(EX::value_is_void)
+      if constexpr(std::is_void_v<typename EX::value_type>)
         return G();
       else
         return G(std::in_place, std::forward<EX>(ex).value());
@@ -1056,14 +1083,15 @@ namespace detail
       return std::invoke(std::forward<F>(f), std::forward<EX>(ex).error());
     }
     
-  template<concepts::is_expected EX, typename F>
+  template<typename EX, typename F>
   constexpr auto transform_error( EX && ex, F && f )
     {
+    using expected_type = std::remove_cvref_t<EX>;
     using G = std::remove_cv_t<std::invoke_result_t<F, decltype(std::forward<EX>(ex).error())>>;
-    using value_type = typename EX::value_type;
+    using value_type = typename expected_type::value_type;
     if(ex.has_value())
       {
-      if constexpr(EX::value_is_void)
+      if constexpr(std::is_void_v<typename expected_type::value_type>)
         return expected<value_type, G>();
       else
         return expected<value_type, G>(std::in_place, std::forward<EX>(ex).value());
