@@ -52,7 +52,7 @@ namespace concepts
     };
 
   template<typename E>
-  concept unexpected_constaint = 
+  concept unexpected_constraint = 
     requires 
       {
       requires !std::is_array_v<E>;
@@ -76,7 +76,7 @@ namespace concepts
   concept not_expected = !is_expected<T>;
   
   template<typename T>
-  concept expected_constaint = 
+  concept expected_constraint = 
     requires 
       {
       requires !std::is_array_v<T>;
@@ -113,7 +113,7 @@ template<typename E>
 class unexpected
   {
 public:
-  static_assert(concepts::unexpected_constaint<E>, "not a valid type for unexpected error type");
+  static_assert(concepts::unexpected_constraint<E>, "not a valid type for unexpected error type");
   using error_type = E;
   
 private:
@@ -296,8 +296,8 @@ template<typename T, typename E>
 class expected
   {
 public:
-  static_assert(concepts::unexpected_constaint<E>, "not a valid type for expected error type");
-  static_assert(concepts::expected_constaint<T>, "not a valid type for expected value type");
+  static_assert(concepts::unexpected_constraint<E>, "not a valid type for expected error type");
+  static_assert(concepts::expected_constraint<T>, "not a valid type for expected value type");
   using value_type = T;
   using error_type = E;
   using unexpected_type = unexpected<E>;
