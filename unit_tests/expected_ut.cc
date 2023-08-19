@@ -32,6 +32,19 @@ static_assert(!concepts::not_expected<expected<void,int>>);
 static_assert(!concepts::not_expected<expected<int,int>>);
 static_assert(!concepts::not_expected<expected<non_trivial,int>>);
 
+template<typename expected_return_type>
+struct implicit_test_t
+  {
+  template<typename I>
+  constexpr auto operator()(I && i) const noexcept
+      -> expected_return_type
+    {
+    return std::forward<I>(i);
+    }
+  };
+template<typename expected_return_type>
+inline constexpr implicit_test_t<expected_return_type> implicit_test;
+
 namespace expected_value_return_type_check
 {
   consteval bool test_ref()
@@ -136,6 +149,7 @@ static void do_test(test_result &result)
         {
         constexpr_test(std::add_const_t<unexpected_type>{ static_cast<error_type>(2)}.error() == static_cast<error_type>(2) );
         }
+
       return {};
       };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
@@ -249,11 +263,13 @@ static void do_test(test_result &result)
         expected<int,int> ex2(ex1);
         constexpr_test(ex2.has_value());
         constexpr_test(ex2.value() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(ex1) == 2);
         }
         {
         expected<int,int> ex2(expected<uint8_t,uint16_t>{uint8_t{2}});
         constexpr_test(ex2.has_value());
         constexpr_test(ex2.value() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(expected<uint8_t,uint16_t>{uint8_t{2}}) == 2);
         }
         {
         unexpected const un{uint8_t(2)};
@@ -261,23 +277,27 @@ static void do_test(test_result &result)
         expected<int,int> ex2(ex1);
         constexpr_test(!ex2.has_value());
         constexpr_test(ex2.error() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(un).error() == 2);
         }
         {
         expected<uint8_t,uint16_t> ex1{ unexpected(uint8_t(2))};
         expected<int,int> ex2(ex1);
         constexpr_test(!ex2.has_value());
         constexpr_test(ex2.error() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(unexpected(uint8_t(2))).error() == 2);
         }
         {
         uint8_t const val{2};
         expected<int,int> ex2(val);
         constexpr_test(ex2.has_value());
         constexpr_test(ex2.value() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(val) == 2);
         }
         {
         expected<int,int> ex2(uint8_t{2});
         constexpr_test(ex2.has_value());
         constexpr_test(ex2.value() == 2);
+        constexpr_test(implicit_test<expected<int,int>>(uint8_t{2}) == 2);
         }
       return {};
       };
