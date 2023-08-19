@@ -245,16 +245,39 @@ static void do_test(test_result &result)
     auto fn_tmpl = []() -> metatests::test_result
       {
         {
-        expected<uint8_t,uint16_t> ex1{uint8_t{2}};
+        expected<uint8_t,uint16_t> const ex1{uint8_t{2}};
         expected<int,int> ex2(ex1);
         constexpr_test(ex2.has_value());
         constexpr_test(ex2.value() == 2);
+        }
+        {
+        expected<int,int> ex2(expected<uint8_t,uint16_t>{uint8_t{2}});
+        constexpr_test(ex2.has_value());
+        constexpr_test(ex2.value() == 2);
+        }
+        {
+        unexpected const un{uint8_t(2)};
+        expected<uint8_t,uint16_t> ex1{ un };
+        expected<int,int> ex2(ex1);
+        constexpr_test(!ex2.has_value());
+        constexpr_test(ex2.error() == 2);
         }
         {
         expected<uint8_t,uint16_t> ex1{ unexpected(uint8_t(2))};
         expected<int,int> ex2(ex1);
         constexpr_test(!ex2.has_value());
         constexpr_test(ex2.error() == 2);
+        }
+        {
+        uint8_t const val{2};
+        expected<int,int> ex2(val);
+        constexpr_test(ex2.has_value());
+        constexpr_test(ex2.value() == 2);
+        }
+        {
+        expected<int,int> ex2(uint8_t{2});
+        constexpr_test(ex2.has_value());
+        constexpr_test(ex2.value() == 2);
         }
       return {};
       };

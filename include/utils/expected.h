@@ -462,8 +462,10 @@ public:
   template<typename U, typename ... Args >
     requires std::constructible_from<error_type, std::initializer_list<U> &, Args...>
   constexpr explicit expected( unexpect_t, std::initializer_list<U> il, Args&&... args )
-      : error_{ error_type{il, std::forward<Args>(args)...}}, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), il, std::forward<Args>(args)... );
+    }
 
   template<typename G >
   requires std::is_constructible_v<E, G const &>
