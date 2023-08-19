@@ -342,8 +342,10 @@ public:
   constexpr expected()
       noexcept(std::is_nothrow_default_constructible_v<value_type>)
       requires std::is_default_constructible_v<value_type>
-        : value_{}, has_value_{true}
-    {}
+        : has_value_{true}
+    {
+    std::construct_at(std::addressof(value_));
+    }
 
   constexpr expected(expected const&) noexcept
       requires value_trivially_copy_constructible && error_trivially_copy_constructible = default;
@@ -426,28 +428,36 @@ public:
   constexpr explicit(!std::is_convertible_v<U, T>)
     expected( U && v )
         noexcept( std::is_nothrow_constructible_v<value_type,decltype(std::forward<U>(v))> )
-      : value_{ std::forward<U>(v) }, has_value_{true}
-    {}
+      : has_value_{true}
+    {
+    std::construct_at(std::addressof(value_), std::forward<U>(v) );
+    }
     
   template<typename ... Args >
     requires std::constructible_from<value_type, Args...>
   constexpr explicit expected( std::in_place_t, Args&&... args )
       noexcept(noexcept(std::forward<Args...>(args...)))
-      : value_{ std::forward<Args>(args)...}, has_value_{true}
-    {}
+      : has_value_{true}
+    {
+    std::construct_at(std::addressof(value_), std::forward<Args>(args)... );
+    }
     
   template<typename U, typename ... Args >
     requires std::constructible_from<value_type, std::initializer_list<U> &, Args...>
   constexpr explicit expected( std::in_place_t, std::initializer_list<U> il, Args&&... args )
-      : value_{ value_type{il, std::forward<Args>(args)...} }, has_value_{true}
-    {}
+      : has_value_{true}
+    {
+    std::construct_at(std::addressof(value_), il, std::forward<Args>(args)... );
+    }
 
   template<typename ... Args >
     requires std::constructible_from<error_type, Args...>
   constexpr explicit expected( unexpect_t, Args&&... args )
       noexcept(noexcept(std::forward<Args...>(args...)))
-      : error_{ std::forward<Args>(args)...}, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), std::forward<Args>(args)... );
+    }
   
   template<typename U, typename ... Args >
     requires std::constructible_from<error_type, std::initializer_list<U> &, Args...>
@@ -455,17 +465,23 @@ public:
       : error_{ error_type{il, std::forward<Args>(args)...}}, has_value_{}
     {}
 
-  template<std::convertible_to<error_type> G >
+  template<typename G >
+  requires std::is_constructible_v<E, G const &>
   constexpr explicit(!std::is_convertible_v<G const&, error_type>)
     expected( unexpected<G> const & e )
-      : error_{ e.error() }, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), e.error() );
+    }
   
-  template<std::convertible_to<error_type> G >
+  template<typename G>
+  requires std::is_constructible_v<E, G>
   constexpr explicit(!std::is_convertible_v<G, E>)
     expected( unexpected<G> && e )
-      : error_{ std::forward<G>(e.error()) }, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), std::forward<G>(e.error()) );
+    }
     
   constexpr ~expected() 
     requires std::is_trivially_destructible_v<value_type>
@@ -475,9 +491,15 @@ public:
     requires (!std::is_trivially_destructible_v<value_type> || !std::is_trivially_destructible_v<error_type>)
       {
       if(has_value_) [[likely]]
-        std::destroy_at(std::addressof( value_ ));
+        {
+        if constexpr(!std::is_trivially_destructible_v<value_type>)
+          std::destroy_at(std::addressof( value_ ));
+        }
       else
-        std::destroy_at(std::addressof( error_ ));
+        {
+        if constexpr(!std::is_trivially_destructible_v<error_type>)
+          std::destroy_at(std::addressof( error_ ));
+        }
       }
   
   [[nodiscard]]
@@ -851,6 +873,40 @@ public:
       std::construct_at(std::addressof(error_), std::move(rh.error_));
     }
   
+  template<typename U, typename G>
+  requires requires
+    {
+    requires std::same_as<U,void>;
+    requires std::is_constructible_v<E, G const &>;
+    requires concepts::expected_conv_constr<void,E,U,G>;
+    }
+  constexpr 
+    explicit (!std::is_convertible_v<G const &, E> )
+  expected( expected<U, G> const & rh )
+      noexcept( std::is_nothrow_constructible_v<error_type,decltype(std::forward<G const &>(rh.error()))>
+      )
+      : has_value_{rh.has_value()}
+    {
+    if(!has_value_) [[unlikely]]
+      std::construct_at(std::addressof(error_), std::forward<G const &>(rh.error()) );
+    }
+
+  template<typename U, typename G>
+  requires requires 
+    {
+    requires std::same_as<U,void>;
+    requires std::is_constructible_v<E, G>;
+    requires concepts::expected_conv_constr<void,E,U,G>;
+    }
+  constexpr explicit ( !std::is_convertible_v<G, E> )
+  expected( expected<U, G> && rh )
+      noexcept( std::is_nothrow_constructible_v<error_type,decltype(std::forward<G>(rh.error()))>)
+      : has_value_{rh.has_value()}
+    {
+    if(!has_value_) [[unlikely]]
+      std::construct_at(std::addressof(error_), std::forward<G>(rh.error()) );
+    }
+    
   template< class... Args >
   constexpr explicit expected( std::in_place_t ) noexcept
       : has_value_{true}
@@ -860,26 +916,36 @@ public:
     requires std::constructible_from<error_type, Args...>
   constexpr explicit expected( unexpect_t, Args&&... args )
       noexcept(noexcept(std::forward<Args...>(args...)))
-      : error_{ std::forward<Args>(args)...}, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_),std::forward<Args>(args)... );
+    }
   
   template<typename U, typename ... Args >
     requires std::constructible_from<error_type, std::initializer_list<U> &, Args...>
   constexpr explicit expected( unexpect_t, std::initializer_list<U> il, Args&&... args )
-      : error_{ error_type{il, std::forward<Args>(args)...}}, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), il, std::forward<Args>(args)... );
+    }
 
-  template<std::convertible_to<error_type> G >
+  template<typename G >
+  requires std::is_constructible_v<E, G const &>
   constexpr explicit(!std::is_convertible_v<G const&, error_type>)
     expected( unexpected<G> const & e )
-      : error_{ e.error() }, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), e.error() );
+    }
   
-  template<std::convertible_to<error_type> G >
+  template<typename G >
+  requires std::is_constructible_v<E, G>
   constexpr explicit(!std::is_convertible_v<G, E>)
     expected( unexpected<G> && e )
-      : error_{ std::forward<G>(e.error()) }, has_value_{}
-    {}
+      : has_value_{}
+    {
+    std::construct_at(std::addressof(error_), std::forward<G>(e.error()) );
+    }
     
   constexpr ~expected() 
     requires std::is_trivially_destructible_v<error_type> = default;
