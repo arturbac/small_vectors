@@ -240,6 +240,27 @@ static void do_test(test_result &result)
     result |= run_constexpr_test_dual<value_type_non_void_list,error_type_list>(fn_tmpl);
     };
     
+  "expected_constr_convert"_test = [&]
+    {
+    auto fn_tmpl = []() -> metatests::test_result
+      {
+        {
+        expected<uint8_t,uint16_t> ex1{uint8_t{2}};
+        expected<int,int> ex2(ex1);
+        constexpr_test(ex2.has_value());
+        constexpr_test(ex2.value() == 2);
+        }
+        {
+        expected<uint8_t,uint16_t> ex1{ unexpected(uint8_t(2))};
+        expected<int,int> ex2(ex1);
+        constexpr_test(!ex2.has_value());
+        constexpr_test(ex2.error() == 2);
+        }
+      return {};
+      };
+    result |= run_consteval_test(fn_tmpl);
+    result |= run_constexpr_test(fn_tmpl);
+    };
   "expected_constr_void"_test = [&]
     {
     auto fn_tmpl =

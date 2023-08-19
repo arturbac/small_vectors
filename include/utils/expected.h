@@ -270,8 +270,28 @@ namespace detail
     };
     
   struct swap_expected_t;
-  }
   
+  }
+namespace concepts
+{
+  template<typename T, typename E, typename U, typename G>
+  concept expected_conv_constr =  requires
+    {
+    requires !std::is_same_v<T,bool>;
+    requires !std::is_constructible_v<T, expected<U, G> &>;
+    requires !std::is_constructible_v<T, expected<U, G>>;
+    requires !std::is_constructible_v<T, expected<U, G> const &>;
+    requires !std::is_constructible_v<T, expected<U, G> const >;
+    requires !std::is_convertible_v<expected<U, G> &, T>;
+    requires !std::is_convertible_v<expected<U, G>, T>;
+    requires !std::is_convertible_v<expected<U, G> const &, T>;
+    requires !std::is_convertible_v<expected<U, G> const , T>;
+    requires !std::is_constructible_v<unexpected<E>, expected<U, G> &>;
+    requires !std::is_constructible_v<unexpected<E>, expected<U, G>>;
+    requires !std::is_constructible_v<unexpected<E>, expected<U, G> const &>;
+    requires !std::is_constructible_v<unexpected<E>, expected<U, G> const >;
+    };
+}
 template<typename T, typename E>
 class expected
   {
@@ -348,16 +368,64 @@ public:
       requires value_move_constructible && error_move_constructible && (!both_are_trivially_move_constructible)
           : has_value_( rh.has_value_)
     {
-    if(has_value_) [[unlikely]]
+    if(has_value_) [[likely]]
       std::construct_at(std::addressof(value_), std::move(rh.value_));
     else
       std::construct_at(std::addressof(error_), std::move(rh.error_));
     }
+  
+  template<typename U, typename G>
+  requires requires
+    {
+    requires std::is_constructible_v<T, std::add_lvalue_reference_t<U const>>;
+    requires std::is_constructible_v<E, G const &>;
+    requires concepts::expected_conv_constr<T,E,U,G>;
+    }
+  constexpr 
+    explicit (!std::is_convertible_v<std::add_lvalue_reference_t<U const>, T> || !std::is_convertible_v<G const &, E> )
+  expected( expected<U, G> const & rh )
+      noexcept( std::is_nothrow_constructible_v<value_type,decltype(std::forward<std::add_lvalue_reference_t<U const>>(rh.value()))>
+        && std::is_nothrow_constructible_v<error_type,decltype(std::forward<G const &>(rh.error()))>
+      )
+      : has_value_{rh.has_value()}
+    {
+    if(has_value_) [[likely]]
+      std::construct_at(std::addressof(value_), std::forward<std::add_lvalue_reference_t<U const>>(rh.value()) );
+    else
+      std::construct_at(std::addressof(error_), std::forward<G const &>(rh.error()) );
+    }
 
+  template<typename U, typename G>
+  requires requires 
+    {
+    requires std::is_constructible_v<T, U>;
+    requires std::is_constructible_v<E, G>;
+    requires concepts::expected_conv_constr<T,E,U,G>;
+    }
+  constexpr explicit ( !std::is_convertible_v<U, T> || !std::is_convertible_v<G, E> )
+  expected( expected<U, G> && rh )
+      noexcept( std::is_nothrow_constructible_v<value_type,decltype(std::forward<U>(rh.value()))>
+        && std::is_nothrow_constructible_v<error_type,decltype(std::forward<G>(rh.error()))>)
+      : has_value_{rh.has_value()}
+    {
+    if(has_value_) [[likely]]
+      std::construct_at(std::addressof(value_), std::forward<U>(rh.value()) );
+    else
+      std::construct_at(std::addressof(error_), std::forward<G>(rh.error()) );
+    }
+  
   template<typename U = T>
+    requires requires
+      {
+      requires !std::same_as<std::remove_cvref_t<U>, std::in_place_t>;
+      requires !std::same_as<expected, std::remove_cvref_t<U>>;
+      requires std::is_constructible_v<T, U>;
+      requires !concepts::is_unexpected<std::remove_cvref_t<U>>;
+      requires !std::same_as<bool,T> || !concepts::is_expected<std::remove_cvref_t<U>>;
+      }
   constexpr explicit(!std::is_convertible_v<U, T>)
     expected( U && v )
-        noexcept( std::is_nothrow_constructible_v<decltype(std::forward<U>(v))> )
+        noexcept( std::is_nothrow_constructible_v<value_type,decltype(std::forward<U>(v))> )
       : value_{ std::forward<U>(v) }, has_value_{true}
     {}
     
