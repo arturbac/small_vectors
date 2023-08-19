@@ -733,7 +733,7 @@ public:
     { return detail::transform_error(std::move(*this), std::forward<F>(f)); }
     
   template<typename ... Args>
-  constexpr auto /*value_type &*/ emplace( Args&&... args ) noexcept
+  constexpr value_type & emplace( Args&&... args ) noexcept
       requires std::is_nothrow_constructible_v<value_type, Args...>
     {
     if(has_value_) [[likely]]
@@ -751,7 +751,7 @@ public:
     }
   
   template<typename U, typename ... Args>
-  constexpr auto /*value_type &*/ emplace( std::initializer_list<U> & il, Args &&... args ) noexcept
+  constexpr value_type & emplace( std::initializer_list<U> & il, Args &&... args ) noexcept
     requires std::is_nothrow_constructible_v<value_type, std::initializer_list<U> &, Args...>
     {
     if(has_value_) [[likely]]
@@ -810,6 +810,7 @@ public:
     
   template<std::equality_comparable_with<error_type> E2 >
   friend constexpr bool operator==( expected const & x, unexpected<E2> const & e )
+      noexcept( noexcept(x.error() == e.error()))
     {
     if(!x.has_value())
       return x.error() == e.error();
@@ -1296,31 +1297,38 @@ namespace detail
         operator()(r,l);
       else
         {
+        auto const r_addr_error{std::addressof(r.error_)};
+        auto const l_addr_error{std::addressof(l.error_)};
         if constexpr( std::is_void_v<T>)
           {
-          std::construct_at(std::addressof(l.error_), std::move(r.error()));
-          std::destroy_at(std::addressof(r.error_));
+          std::construct_at(l_addr_error, std::move(r.error()));
+          std::destroy_at(r_addr_error);
           std::swap(l.has_value_, r.has_value_);
           }
-        else if constexpr (std::is_nothrow_move_constructible_v<E>) 
+        else
           {
-          using revert = revert_if_except_t<std::is_nothrow_move_constructible_v<T>,E>;
-          revert temp{std::move(r.error()), std::addressof(r.error_)};
-          std::destroy_at(std::addressof(r.error_));
-          std::construct_at(std::addressof(r.value_), std::move(l.value()));
-          std::destroy_at(std::addressof(l.value_));
-          std::construct_at(std::addressof(l.error_), temp.release());
-          std::swap(l.has_value_, r.has_value_);
-          }
-        else 
-          {
-          using revert = revert_if_except_t<false,T>;
-          revert temp{std::move(l.value()),std::addressof(l.value_)};
-          std::destroy_at(std::addressof(l.value_));
-          std::construct_at(std::addressof(l.error_), std::move(r.error()));
-          std::destroy_at(std::addressof(r.error_));
-          std::construct_at(std::addressof(r.value_), temp.release());
-          std::swap(l.has_value_, r.has_value_);
+          auto const r_addr_val{std::addressof(r.value_)};
+          auto const l_addr_val{std::addressof(l.value_)};
+          if constexpr (std::is_nothrow_move_constructible_v<E>) 
+            {
+            using revert = revert_if_except_t<std::is_nothrow_move_constructible_v<T>,E>;
+            revert temp{std::move(r.error()), r_addr_error};
+            std::destroy_at(r_addr_error);
+            std::construct_at(r_addr_val, std::move(l.value()));
+            std::destroy_at(l_addr_val);
+            std::construct_at(l_addr_error, temp.release());
+            std::swap(l.has_value_, r.has_value_);
+            }
+          else 
+            {
+            using revert = revert_if_except_t<false,T>;
+            revert temp{std::move(l.value()),l_addr_val};
+            std::destroy_at(l_addr_val);
+            std::construct_at(l_addr_error, std::move(r.error()));
+            std::destroy_at(r_addr_error);
+            std::construct_at(r_addr_val, temp.release());
+            std::swap(l.has_value_, r.has_value_);
+            }
           }
         }
       }
