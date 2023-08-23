@@ -4,6 +4,7 @@
 #include <utility>
 #include <cassert>
 #include <concepts>
+#include "utility_cxx20.h"
 
 namespace utils
 {
@@ -14,21 +15,22 @@ namespace utils
     concept enum_struct = std::is_enum_v<T> == true;
     
     template<typename T>
-    concept underlaying_unsigned = 
-      std::unsigned_integral<T>
-      || (enum_struct<T> && std::unsigned_integral<std::underlying_type_t<T>>);
+    concept underlaying_integral = 
+      std::integral<T>
+      || (enum_struct<T> && std::integral<std::underlying_type_t<T>>);
 
-    template<auto tag_value, underlaying_unsigned T>
+    template<auto tag_value, underlaying_integral T>
       requires enum_struct<decltype(tag_value)>
     struct tag_with_value { T value; };
     
-    template<underlaying_unsigned value_type, auto tag_value, uint8_t BitWidth>
+    template<underlaying_integral value_type, auto tag_value, uint8_t BitWidth>
       requires enum_struct<decltype(tag_value)>
              && ((sizeof(value_type)*8) >= BitWidth )
     struct member
       {
       using value_t = value_type;
       using tag_type = decltype(tag_value);
+      
       static constexpr tag_type tag() noexcept { return tag_value; }
       static constexpr uint8_t bit_width() noexcept { return BitWidth; }
       
@@ -72,7 +74,7 @@ namespace utils
       requires enum_struct<decltype(tag_value)>
     struct arg_type
       {
-      template<underlaying_unsigned T>
+      template<underlaying_integral T>
       constexpr auto operator=(T value) const noexcept
         {
         return tag_with_value<tag_value,T>{ value };
@@ -143,43 +145,97 @@ namespace utils
     
   namespace detail
     {
+    template<unsigned bit_width, std::unsigned_integral value_type>
+    constexpr auto compress_value( value_type value ) noexcept
+        -> value_type
+      {
+      constexpr value_type smask { bitmask_v<value_type,bit_width> };
+      return static_cast<value_type>(static_cast<value_type>(value) & smask);
+      }
+      
+    template<unsigned bit_width, std::signed_integral value_type>
+    constexpr auto compress_value( value_type value ) noexcept
+        -> std::make_unsigned_t<value_type>
+      {
+      return compress_value<bit_width>( static_cast<std::make_unsigned_t<value_type>>(value));
+      }
+      
+    template<unsigned bit_width, enum_struct value_type>
+    constexpr auto compress_value( value_type value ) noexcept
+        -> std::make_unsigned_t<std::underlying_type_t<value_type>>
+      {
+      return compress_value<bit_width>(cxx23::to_underlying(value));
+      }
+      
     template<std::unsigned_integral pack_type, typename sub_member_type, typename meta_packed_struct>
     constexpr auto pack_value(unsigned offset,  meta_packed_struct const & ms )
         -> pack_type
       {
       using next_member_t = typename sub_member_type::next_member_t;
       using member_type = typename sub_member_type::member_type;
+      
       //cast meta to exactly my self inherited type
       member_type const & self = static_cast<member_type const &>(ms);
-      
       constexpr unsigned bit_width = member_type::bit_width();
-      pack_type value { static_cast<pack_type>(self.value) };
-      pack_type mask { bitmask_v<pack_type,bit_width> };
-      if(std::is_constant_evaluated() )
-        { if((mask & value) != value) throw "value outisde declared bit_width"; }
-      else
-        assert( (mask & value) == value );
-      
-      auto my_value_packed = value << offset;
+      auto value(compress_value<bit_width>(self.value));
+      static_assert( sizeof(decltype(value)) <= sizeof(pack_type));
+      auto my_value_packed = static_cast<pack_type>(value) << offset;
       if constexpr( std::is_same_v<void,next_member_t>)
         return static_cast<pack_type>(my_value_packed);
       else
         return static_cast<pack_type>(pack_value<pack_type,next_member_t>(offset+bit_width,ms) | my_value_packed);
       }
 
+    template<unsigned bit_width, std::unsigned_integral value_type, std::unsigned_integral pack_type>
+    constexpr auto uncompress_value( pack_type value ) noexcept
+        -> value_type
+      {
+      return static_cast<value_type>( value & bitmask_v<pack_type,bit_width> );
+      }
+      
+    template<unsigned bit_width, std::signed_integral value_type, std::unsigned_integral pack_type>
+    constexpr auto uncompress_value( pack_type value ) noexcept
+        -> value_type
+      {
+      using U = std::make_unsigned_t<value_type>;
+      U v { uncompress_value<bit_width,U>(value)};
+      
+      constexpr auto neg_fill_mask {static_cast<U>(~bitmask_v<U, bit_width>)};
+
+      if constexpr ( neg_fill_mask == 0)
+        return static_cast<value_type>(v);
+      else
+        {
+        bool const sign_bit { (v & ( 1u<<(bit_width-1))) != 0 };
+        if(!sign_bit)
+          return static_cast<value_type>(v);
+        else
+          return static_cast<value_type>(neg_fill_mask | v);
+        }
+      }
+      
+    template<unsigned bit_width, enum_struct value_type, std::unsigned_integral pack_type>
+    constexpr auto uncompress_value( pack_type value ) noexcept
+        -> value_type
+      {
+      using U = std::underlying_type_t<value_type>;
+      return static_cast<value_type>( uncompress_value<bit_width,U>(value) );
+      }
+      
     template<typename meta_packed_struct, typename sub_member_type, std::unsigned_integral pack_type>
     constexpr void unpack_value(meta_packed_struct& mps, unsigned offset, pack_type pack)
       {
       using next_member_t = typename sub_member_type::next_member_t;
       using member_type = typename sub_member_type::member_type;
       using value_type = typename member_type::value_t;
-
+      
       constexpr unsigned bit_width = member_type::bit_width();
+      constexpr auto mask{ bitmask_v<pack_type, bit_width> };
 
       pack = pack >> offset;
       auto& value{ detail::get<member_type::tag()>(mps) };
-      constexpr auto mask{ bitmask_v<pack_type, bit_width> };
-      value = static_cast<value_type>(pack & mask);
+      
+      value = uncompress_value<bit_width,value_type>(pack & mask);
 
       if constexpr( !std::is_same_v<void, next_member_t>)
         return unpack_value<meta_packed_struct, next_member_t>(mps, bit_width, pack);

@@ -13,7 +13,7 @@ C++20,23 utilities library
 
 ## minor utility features
 
-* meta_packed_struct - allows bit packing data with strong typing
+* meta_packed_struct - allows bit packing data with strong typing, v2.3.0 added signed type support
 * strong_type - strong type wrapping for primitive types
 * unaligned_load and unaligned_store - for memory unaligned access
 

@@ -4,6 +4,86 @@
 using namespace utils;
 using boost::ut::operator""_test;
 
+using utils::detail::compress_value;
+using utils::detail::uncompress_value;
+
+static_assert( static_cast<uint8_t>(~bitmask_v<uint8_t, 8>) == 0u);
+
+static_assert( static_cast<int8_t>((~uint8_t(74))+1) == -74 );
+static_assert( static_cast<int8_t>((~uint8_t(-74))+1) == 74 );
+
+static_assert( compress_value<4>( int8_t(-7)) == 0b1001u );
+static_assert( uncompress_value<4,int8_t>(0b1001u) == -7 );
+
+static_assert( compress_value<8>( int8_t(-1)) == 0xffu);
+static_assert( uncompress_value<8,int8_t>(0xffu) == -1 );
+static_assert( compress_value<8>( int64_t(-1)) == 0xffu);
+static_assert( uncompress_value<8,int64_t>(0xffu) == -1 );
+
+static_assert( compress_value<8>( int8_t(-65)) == 0xbfu);
+static_assert( uncompress_value<8,int8_t>(0xbfu) == -65 );
+
+static_assert( compress_value<8>( int8_t(65)) == 0x41u);
+static_assert( uncompress_value<8,int8_t>(0x41u) == 65 );
+
+static_assert( compress_value<8>( int8_t(-126)) == 0x82u);
+static_assert( uncompress_value<8,int8_t>(0x82u) == -126 );
+
+static_assert( compress_value<8>( int8_t(-127)) == 0x81u);
+static_assert( uncompress_value<8,int8_t>(0x81u) == -127 );
+
+static_assert( compress_value<8>( int8_t(127)) == 0x7fu);
+static_assert( uncompress_value<8,int8_t>(0x7fu) == 127 );
+
+static_assert( compress_value<8>( int8_t(-128)) == 0x80u);
+static_assert( uncompress_value<8,int8_t>(0x80u) == -128 );
+static_assert( compress_value<8>( int64_t(-128)) == 0x80u);
+static_assert( uncompress_value<8,int64_t>(0x80u) == -128 );
+
+static_assert( compress_value<7>( int8_t(-1)) == 0x7fu);
+static_assert( uncompress_value<7,int8_t>(0x7fu) == -1 );
+
+static_assert( compress_value<7>( int8_t(1)) == 0x1u);
+static_assert( uncompress_value<7,int8_t>(0x1u) == 1 );
+
+static_assert( compress_value<7>( int8_t(32)) == 32u);
+static_assert( uncompress_value<7,int8_t>(32u) == 32 );
+
+static_assert( compress_value<7>( int8_t(-32)) == 0b1100000u);
+static_assert( uncompress_value<7,int8_t>(0b1100000u) == -32 );
+
+static_assert( compress_value<5>( int8_t(15)) == 15u);
+static_assert( uncompress_value<5,int8_t>(15u) == 15 );
+
+static_assert( compress_value<5>( int8_t(-15)) == 0b10001u);
+static_assert( uncompress_value<5,int8_t>(0b10001u) == -15 );
+
+static_assert( compress_value<2>( int8_t(-1)) == 0b11u);
+static_assert( uncompress_value<2,int8_t>(0b11u) == -1 );
+
+static_assert( compress_value<3>( int8_t(-2)) == 0b110u);
+static_assert( uncompress_value<3,int8_t>(0b110u) == -2 );
+
+static_assert( compress_value<3>( int8_t(2)) == 2u);
+static_assert( uncompress_value<3,int8_t>(2u) == 2 );
+
+static_assert( compress_value<3>( int8_t(0)) == 0u);
+static_assert( uncompress_value<3,int8_t>(0u) == 0 );
+
+static_assert( compress_value<32>( 0x7fffffff) == 0x7fffffffu);
+static_assert( uncompress_value<32,int32_t>(0x7fffffffu) == 0x7fffffff );
+
+template<typename T>
+using nl = std::numeric_limits<T>;
+
+static_assert( compress_value<8>( nl<int8_t>::max()) == unsigned(nl<int8_t>::max()));
+static_assert( compress_value<16>( nl<int16_t>::max()) == unsigned(nl<int16_t>::max()));
+static_assert( compress_value<32>( nl<int32_t>::max()) == unsigned(nl<int32_t>::max()));
+static_assert( compress_value<64>( nl<int64_t>::max()) == uint64_t(nl<int64_t>::max()));
+
+static_assert( compress_value<8>( nl<int8_t>::min()) ==  (1u<<7));
+static_assert( compress_value<16>( nl<int16_t>::min()) ==  (1u<<15));
+
 enum struct acs_fields 
   {
     field_1, field_2, field_3
@@ -23,6 +103,7 @@ int main()
 {
   
 metatests::test_result result;
+
 "test_bitmask"_test = [&result]
   {
   auto fn_test = []()
@@ -395,7 +476,7 @@ using mixed_bitfiled_struct =
 
     return true;
     };
-  result |= metatests::run_constexpr_test(fn_test);
+  result |= metatests::run_consteval_test(fn_test);
   result |= metatests::run_constexpr_test(fn_test);
   };
 
@@ -423,8 +504,77 @@ using mixed_bitfiled_struct =
 
     return true;
     };
-  result |= metatests::run_constexpr_test(fn_test);
+  result |= metatests::run_consteval_test(fn_test);
   result |= metatests::run_constexpr_test(fn_test);
   };
+  
+using mixed_signed_struct = 
+  meta_packed_struct<
+    member<int8_t,mbs_fields::field_1,4>,
+    member<int64_t,mbs_fields::field_2,20>,
+    member<int32_t ,mbs_fields::field_3,24>,
+    member<int16_t, mbs_fields::field_4,16>
+    >;
+
+"test_metabitstruct_mixed_signed_unpack"_test = [&result]
+  {
+  auto fn_test = []()
+    {
+    metatests::test_result tr;
+    using enum mbs_fields;
+    using enum example_enum_value;
+      {
+      mixed_signed_struct mbs;
+      get<field_1>(mbs) = -7;
+      get<field_2>(mbs) = -128;
+      get<field_3>(mbs) = -128;
+      get<field_4>(mbs) = -128;
+
+      tr |= constexpr_test(get<field_1>(mbs) == -7);
+      tr |= constexpr_test(get<field_3>(mbs) == -128);
+      tr |= constexpr_test(get<field_3>(mbs) == -128);
+      tr |= constexpr_test(get<field_4>(mbs) == -128);
+      
+      auto packed_value{ pack_value<uint64_t>(mbs) };
+      auto mbs_unpacked{ unpack_value<decltype(mbs)>(packed_value) };
+      
+      tr |= constexpr_test(get<field_1>(mbs) == get<field_1>(mbs_unpacked));
+      tr |= constexpr_test(get<field_2>(mbs) == get<field_2>(mbs_unpacked));
+      tr |= constexpr_test(get<field_3>(mbs) == get<field_3>(mbs_unpacked));
+      tr |= constexpr_test(get<field_4>(mbs) == get<field_4>(mbs_unpacked));
+      }
+      {
+      mixed_signed_struct mbs;
+      get<field_1>(mbs) = -8;
+      get<field_2>(mbs) = -0x7FFFF;
+      get<field_3>(mbs) = -0x7FFFFF;
+      get<field_4>(mbs) = -32768;
+      auto packed_value{ pack_value<uint64_t>(mbs) };
+      auto mbs_unpacked{ unpack_value<decltype(mbs)>(packed_value) };
+      tr |= constexpr_test(-8 == get<field_1>(mbs_unpacked));
+      tr |= constexpr_test(-0x7FFFF == get<field_2>(mbs_unpacked));
+      tr |= constexpr_test(-0x7FFFFF == get<field_3>(mbs_unpacked));
+      tr |= constexpr_test(-32768 == get<field_4>(mbs_unpacked));
+      }
+      {
+      mixed_signed_struct mbs;
+      get<field_1>(mbs) = 7;
+      get<field_2>(mbs) = 0x7FFFF;
+      get<field_3>(mbs) = 0x7FFFFF;
+      get<field_4>(mbs) = 32767;
+      auto packed_value{ pack_value<uint64_t>(mbs) };
+      auto mbs_unpacked{ unpack_value<decltype(mbs)>(packed_value) };
+      tr |= constexpr_test(7 == get<field_1>(mbs_unpacked));
+      tr |= constexpr_test(0x7FFFF == get<field_2>(mbs_unpacked));
+      tr |= constexpr_test(0x7FFFFF == get<field_3>(mbs_unpacked));
+      tr |= constexpr_test(32767 == get<field_4>(mbs_unpacked));
+      }
+    return true;
+    };
+  result |= metatests::run_consteval_test(fn_test);
+  result |= metatests::run_constexpr_test(fn_test);
+  };
+
 return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
+
