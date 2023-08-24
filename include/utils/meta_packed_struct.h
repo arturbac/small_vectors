@@ -12,12 +12,10 @@ namespace utils
   namespace detail
     {
     template<typename T>
-    concept enum_struct = std::is_enum_v<T> == true;
+    concept enum_struct = std::is_enum_v<T>;
     
     template<typename T>
-    concept underlaying_integral = 
-      std::integral<T>
-      || (enum_struct<T> && std::integral<std::underlying_type_t<T>>);
+    concept underlaying_integral = std::integral<T> || enum_struct<T>;
 
     template<auto tag_value, underlaying_integral T>
       requires enum_struct<decltype(tag_value)>
@@ -235,7 +233,7 @@ namespace utils
       pack = pack >> offset;
       auto& value{ detail::get<member_type::tag()>(mps) };
       
-      value = uncompress_value<bit_width,value_type>(pack & mask);
+      value = uncompress_value<bit_width,value_type>(static_cast<pack_type>(pack & mask));
 
       if constexpr( !std::is_same_v<void, next_member_t>)
         return unpack_value<meta_packed_struct, next_member_t>(mps, bit_width, pack);

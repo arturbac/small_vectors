@@ -575,6 +575,36 @@ using mixed_signed_struct =
   result |= metatests::run_constexpr_test(fn_test);
   };
 
+using mixed_small_struct = 
+  meta_packed_struct<
+    member<uint8_t,mbs_fields::field_1,5>,
+    member<bool,mbs_fields::field_2,1>,
+    member<example_enum_value,mbs_fields::field_3,2>
+    >;
+    
+"test_metabitstruct_mixed_signed_unpack"_test = [&result]
+  {
+  auto fn_test = []()
+    {
+    metatests::test_result tr;
+    using enum mbs_fields;
+    using enum example_enum_value;
+      {
+      mixed_small_struct mbs;
+      get<field_1>(mbs) = 7;
+      get<field_2>(mbs) = true;
+      get<field_3>(mbs) = example_enum_value::value2;
+      auto packed_value{ pack_value<uint8_t>(mbs) };
+      auto mbs_unpacked{ unpack_value<mixed_small_struct>(packed_value) };
+      tr |= constexpr_test(7 == get<field_1>(mbs_unpacked));
+      tr |= constexpr_test(true == get<field_2>(mbs_unpacked));
+      tr |= constexpr_test(example_enum_value::value2 == get<field_3>(mbs_unpacked));
+      }
+    return true;
+    };
+  result |= metatests::run_consteval_test(fn_test);
+  result |= metatests::run_constexpr_test(fn_test);
+  };
 return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
