@@ -12,5 +12,5 @@ Below are listed maintained and actively developed versions.
 
 Report a vulnerability as issue or discussion.
 
-https://github.com/arturbac/small_vectors/issues
-https://github.com/arturbac/small_vectors/discussions
+* https://github.com/arturbac/small_vectors/issues
+* https://github.com/arturbac/small_vectors/discussions
