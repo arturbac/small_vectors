@@ -49,7 +49,7 @@ auto res { std::move(ex).and_then(f) };
 constexpr_test( std::same_as<decltype(res), expected_type>);
 constexpr_test( res == value_type{3});
 ```
-#### expected/unexpected
+#### meta_packed_struct
 ```C++
 enum struct mbs_fields 
   {
