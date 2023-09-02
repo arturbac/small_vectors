@@ -68,11 +68,11 @@ using mixed_bitfiled_struct3 =
       member<example_enum_value, mbs_fields::field_4,3>
       >;
 mixed_bitfiled_struct3 mbs;
-        get<field_3>(mbs) = (0x1llu<<56)-1;
-        tr |= constexpr_test(get<field_1>(mbs) == 0 );
-        tr |= constexpr_test(get<field_2>(mbs) == false );
-        tr |= constexpr_test(get<field_3>(mbs) == (0x1llu<<56)-1 );
-        tr |= constexpr_test(get<field_4>(mbs) == example_enum_value{} );
+get<field_3>(mbs) = (0x1llu<<56)-1;
+constexpr_test(get<field_1>(mbs) == 0 );
+constexpr_test(get<field_2>(mbs) == false );
+constexpr_test(get<field_3>(mbs) == (0x1llu<<56)-1 );
+constexpr_test(get<field_4>(mbs) == example_enum_value{} );
 
 auto packed_value = pack_value<uint64_t>(mbs);
 constexpr_test(packed_value == 0b00'11111111111111111111111111111111111111111111111111111111'0'0000 );
@@ -92,10 +92,10 @@ constexpr_test(s_bit_width == 24);
 uint32_t packed_value{ 0b011000011111111000010010 };
 auto mbs{ unpack_value<mixed_bitfiled_struct2>(packed_value) };
 
-tr |= constexpr_test(get<field_1>(mbs) == 0x02 );
-tr |= constexpr_test(get<field_2>(mbs) == true );
-tr |= constexpr_test(get<field_3>(mbs) == 0x0ff0 );
-tr |= constexpr_test(get<field_4>(mbs) == value3 );
+constexpr_test(get<field_1>(mbs) == 0x02 );
+constexpr_test(get<field_2>(mbs) == true );
+constexpr_test(get<field_3>(mbs) == 0x0ff0 );
+constexpr_test(get<field_4>(mbs) == value3 );
 ```
 ### tested compilers
 
