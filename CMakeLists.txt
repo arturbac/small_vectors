@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 include(CheckCXXCompilerFlag)
 
 project(small_vectors
-        VERSION 2.3.1
+        VERSION 2.3.2
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 

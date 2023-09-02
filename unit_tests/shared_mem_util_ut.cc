@@ -3,6 +3,7 @@
 #include <interprocess/shared_mem_utils.h>
 #include <interprocess/atomic_mutex.h>
 #include <coll/static_vector.h>
+#include <coll/basic_string.h>
 
 #include <chrono>
 #include <iostream>
@@ -200,80 +201,80 @@ int main()
   
 "test_multiple_data"_test = [&]
   {
+  //used types between processes
   struct foo
     {
     int a,a_;
     double b;
     int64_t c;
-    void * p;
     };
-  struct message
-    {
-    using string_type = coll::static_vector<char, 512>;
-    string_type string_;
-    
-    constexpr explicit message( std::string_view value ) noexcept
-      { assign(value); }
-      
-    constexpr auto view() const noexcept 
-      { return std::string_view{string_.begin(), string_.end() }; }
-    
-    constexpr void assign( std::string_view value ) noexcept
-      {
-      auto const sz{ static_cast<string_type::size_type>(
-          std::min<size_t>( string_type::capacity(), value.size()))};
-      resize(string_,sz);
-      std::copy_n(value.begin(), sz, begin(string_));
-      }
-      
-    constexpr message & operator=(std::string_view value) noexcept
-      {
-      assign(value);
-      return *this;
-      }
-    };
+
+  using message = coll::static_u8string<512>;
+  using vector_type = coll::static_vector<uint32_t,128u>;
+  
+  // memory offset table
   using foo_obj_decl = ip::shared_type_decl<foo>;
-  using ref_obj_decl = ip::shared_type_decl<int,foo_obj_decl>;
+  using shared_vector_decl = ip::shared_type_decl<vector_type,foo_obj_decl>;
+  using ref_obj_decl = ip::shared_type_decl<int,shared_vector_decl>;
   using message_decl = ip::shared_type_decl<message,ref_obj_decl>;
   
   bip::mapped_region region ( shm, bip::read_write );
   
-  foo & foo_obj{*ip::construct_at<foo_obj_decl>(region, foo{.a=1,.a_=0,.b=0.5, .c=0xffffffff, .p= {} })};
+  // construct objects in main process
+  foo & foo_obj{*ip::construct_at<foo_obj_decl>(region, foo{.a=1,.a_=0,.b=0.5, .c=0xffffffff })};
   auto & ref_obj{*ip::construct_at<ref_obj_decl>(region, 2u)};
-  auto & ref_string { *ip::construct_at<message_decl>(region, "message hello world") };
+  auto & ref_string { *ip::construct_at<message_decl>(region, u8"message hello world"sv) };
+  vector_type & vector_obj{ *ip::construct_at<shared_vector_decl>(region) };
+  resize(vector_obj,1);
+  front(vector_obj) = 2;
   
+  //alter data at forked process
   auto child = ip::fork([](std::string_view shared_mem_name )
     {
     bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
     bip::mapped_region cregion{ shm_obj, bip::read_write };
+    
+    //reference shared objects
     foo & cfoo_obj{ ip::ref<foo_obj_decl>(cregion) };
+    vector_type & vector { ip::ref<shared_vector_decl>(cregion) };
+    auto & cref_string { ip::ref<message_decl>(cregion) };
+    auto & cref_obj{ip::ref<ref_obj_decl>(cregion)};
+
+    //read write data
     ut::expect( cfoo_obj.a == 1 );
     ut::expect( cfoo_obj.b == 0.5 );
     ut::expect( cfoo_obj.c == 0xffffffff );
     cfoo_obj.a = 2;
     cfoo_obj.b = 1.5;
     cfoo_obj.c = -0x1ffffffff;
-    cfoo_obj.p = std::addressof(cfoo_obj);
-    auto & cref_string { ip::ref<message_decl>(cregion) };
-    ut::expect( cref_string.view() == "message hello world" );
-    cref_string = "hello world from child";
-    auto & cref_obj{ip::ref<ref_obj_decl>(cregion)};
+    
+    ut::expect(size(vector) == 1u );
+    ut::expect(front(vector) == 2u );
+    ut::expect(resize(vector,128) == coll::vector_outcome_e::no_error ) >> ut::fatal;
+    pop_back(vector);
+    std::iota(begin(vector), end(vector), 2);
+    
+    ut::expect( cref_string.view() == u8"message hello world"sv );
+    cref_string = u8"hello world from child"sv;
     cref_obj += 2;
 
     return true;
     },
     shmem_name );
 
+  // check modified data at forked process
   ut::expect(child->join()) >> ut::fatal;
   ut::expect( foo_obj.a == 2 );
   ut::expect( foo_obj.b == 1.5 );
   ut::expect( foo_obj.c == -0x1ffffffff );
-  ut::expect( foo_obj.p != std::addressof(foo_obj) );
   
-  ut::expect( ref_string.view() == "hello world from child" );
+  ut::expect( ref_string.view() == u8"hello world from child"sv );
   
   ut::expect(ref_obj == 4 );
 
+  ut::expect(size(vector_obj) == 127u );
+  ut::expect(front(vector_obj) == 2 );
+  ut::expect(back(vector_obj) == 128 );
   };
   
 

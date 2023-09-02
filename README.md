@@ -40,6 +40,7 @@ coll::small_vector<int32_t,uint8_t> vec10;
 coll::small_vector<int32_t,size_t,0> vec10;
 
 ```
+
 #### expected/unexpected
 ```C++
 using expected_type = expected<value_type,error_type>;
@@ -49,6 +50,86 @@ auto res { std::move(ex).and_then(f) };
 constexpr_test( std::same_as<decltype(res), expected_type>);
 constexpr_test( res == value_type{3});
 ```
+
+#### shared mem utils
+example using static vector, basic_static_string between processes with memory offset table declaration
+```C++
+//used types between processes
+struct foo
+  {
+  int a,a_;
+  double b;
+  int64_t c;
+  };
+
+using message = coll::static_u8string<512>;
+using vector_type = coll::static_vector<uint32_t,128u>;
+
+// memory offset table
+using foo_obj_decl = ip::shared_type_decl<foo>;
+using shared_vector_decl = ip::shared_type_decl<vector_type,foo_obj_decl>;
+using ref_obj_decl = ip::shared_type_decl<int,shared_vector_decl>;
+using message_decl = ip::shared_type_decl<message,ref_obj_decl>;
+
+bip::mapped_region region ( shm, bip::read_write );
+
+// construct objects in main process
+foo & foo_obj{*ip::construct_at<foo_obj_decl>(region, foo{.a=1,.a_=0,.b=0.5, .c=0xffffffff })};
+auto & ref_obj{*ip::construct_at<ref_obj_decl>(region, 2u)};
+auto & ref_string { *ip::construct_at<message_decl>(region, u8"message hello world"sv) };
+vector_type & vector_obj{ *ip::construct_at<shared_vector_decl>(region) };
+resize(vector_obj,1);
+front(vector_obj) = 2;
+
+//alter data at forked process
+auto child = ip::fork([](std::string_view shared_mem_name )
+  {
+  bip::shared_memory_object shm_obj{ bip::open_only, shared_mem_name.data() , bip::read_write };
+  bip::mapped_region cregion{ shm_obj, bip::read_write };
+  
+  //reference shared objects
+  foo & cfoo_obj{ ip::ref<foo_obj_decl>(cregion) };
+  vector_type & vector { ip::ref<shared_vector_decl>(cregion) };
+  auto & cref_string { ip::ref<message_decl>(cregion) };
+  auto & cref_obj{ip::ref<ref_obj_decl>(cregion)};
+
+  //read write data
+  ut::expect( cfoo_obj.a == 1 );
+  ut::expect( cfoo_obj.b == 0.5 );
+  ut::expect( cfoo_obj.c == 0xffffffff );
+  cfoo_obj.a = 2;
+  cfoo_obj.b = 1.5;
+  cfoo_obj.c = -0x1ffffffff;
+  
+  ut::expect(size(vector) == 1u );
+  ut::expect(front(vector) == 2u );
+  ut::expect(resize(vector,128) == coll::vector_outcome_e::no_error ) >> ut::fatal;
+  pop_back(vector);
+  std::iota(begin(vector), end(vector), 2);
+  
+  ut::expect( cref_string.view() == u8"message hello world"sv );
+  cref_string = u8"hello world from child"sv;
+  cref_obj += 2;
+
+  return true;
+  },
+  shmem_name );
+
+// check modified data at forked process
+ut::expect(child->join()) >> ut::fatal;
+ut::expect( foo_obj.a == 2 );
+ut::expect( foo_obj.b == 1.5 );
+ut::expect( foo_obj.c == -0x1ffffffff );
+
+ut::expect( ref_string.view() == u8"hello world from child"sv );
+
+ut::expect(ref_obj == 4 );
+
+ut::expect(size(vector_obj) == 127u );
+ut::expect(front(vector_obj) == 2 );
+ut::expect(back(vector_obj) == 128 );
+```
+
 #### meta_packed_struct
 ```C++
 enum struct mbs_fields 
