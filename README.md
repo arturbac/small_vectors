@@ -5,7 +5,7 @@
 C++20,23 utilities library
 
 ## features
-* static vectors with in class storage ( static storage variant is address independant and may be used in interprocess data exchange)
+* static vectors with in class storage ( static_vector is address independant and may be used in interprocess data exchange)
 * small vectors with in class storage and/or dynamic allocated memory with custom size type for small_vector and adjusted minimal size type for static_vector depending on number of elements
 * static vector fully constant evaluated for trivial element types
 * basic_string - with in class buffers fully constant evaluated, with dynamic and static storage ( static storage variant is address independant and may be used in interprocess data exchange)
