@@ -47,4 +47,7 @@ if(Boost_FOUND)
   
   # add_unittest(ring_queue_ut)
   # target_link_libraries(ring_queue_ut PRIVATE Boost::system )
+  
+  add_unittest(stack_buffer_ut)
+  target_link_libraries(stack_buffer_ut PRIVATE Boost::system )
 endif()

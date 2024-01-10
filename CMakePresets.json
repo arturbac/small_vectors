@@ -56,7 +56,7 @@
     },
     {
       "name": "clang-15-release",
-      "inherits": [ "cfg-common", "cfg-ninja", "cfg-c++23" ],
+      "inherits": [ "cfg-common", "cfg-ninja", "cfg-c++20" ],
       "cacheVariables": { "CMAKE_CXX_COMPILER": "/usr/lib/llvm/15/bin/clang++" }
     },
     {
