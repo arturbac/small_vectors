@@ -38,10 +38,13 @@ add_unittest(strong_type_ut)
 add_unittest(string_ut)
 add_unittest(ranges_ut)
 add_unittest(expected_ut)
-add_unittest(bwt_ut)
+
 # github ubuntu latest is very old
 find_package( Boost 1.74 COMPONENTS system )
 if(Boost_FOUND)
+  add_unittest(bwt_ut)
+  target_link_libraries(bwt_ut PRIVATE Boost::system )
+  
   add_unittest(shared_mem_util_ut)
   target_link_libraries(shared_mem_util_ut PRIVATE Boost::system )
   
