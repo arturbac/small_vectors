@@ -56,7 +56,7 @@ namespace detail
 
   template<>
   struct buffer_traits<wchar_t>{ static constexpr uint64_t capacity = 32/sizeof(wchar_t); };
-};
+}
 
 template<typename char_type>
 using basic_string = basic_string_t<char_type, detail::buffer_traits<char_type>::capacity,buffered_string_tag>;
