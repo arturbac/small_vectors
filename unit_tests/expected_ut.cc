@@ -790,6 +790,13 @@ static void do_test(test_result &result)
       auto f = [](value_type v) noexcept { return expected_type{ in_place, ++v}; };
         {
         expected_type const ex{ in_place, value_type{2} };
+        auto res { ex.and_then([](value_type v)
+          {return expected_type{ in_place, ++v};}) };
+        constexpr_test( std::same_as<decltype(res), expected_type>);
+        constexpr_test( res == value_type{3});
+        }
+        {
+        expected_type const ex{ in_place, value_type{2} };
         auto res { ex.and_then(f) };
         constexpr_test( std::same_as<decltype(res), expected_type>);
         constexpr_test( res == value_type{3});

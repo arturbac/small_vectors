@@ -198,12 +198,17 @@ class bad_expected_access<void> : public std::exception
   bad_expected_access & operator=( bad_expected_access const & r) noexcept = default;
   bad_expected_access & operator=( bad_expected_access && r) noexcept = default;
 public:
+  
   [[nodiscard]]
   char const * what() const noexcept override
+#ifdef SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION
+  ;
+#else
     { return "access to expected value without value"; }
-    
+#endif
   };
 
+    
 template<typename E>
 class bad_expected_access : public bad_expected_access<void>
   {

@@ -40,7 +40,7 @@ namespace algo::bwt
         size_type sz{ size_type(ranges::distance(beg,end)+1u)};
         string_type table;
         table.resize_and_overwrite( sz+sz,
-                                   [sz,beg,end](char_type * data, size_type cap)
+                                   [sz,beg,end](char_type * data, size_type /*cap*/)
                                    {
                                    auto it{ data };
                                    it = ranges::copy( beg, end, it ).out;

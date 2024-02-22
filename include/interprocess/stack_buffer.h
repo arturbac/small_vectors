@@ -37,9 +37,9 @@ struct constexpr_index
   using enum std::memory_order;
   stack_index_t value{};
   
-  constexpr stack_index_t load(std::memory_order m = seq_cst) const noexcept { return value; }
-  constexpr void store(stack_index_t v, std::memory_order m = seq_cst ) noexcept { value = v; }
-  constexpr bool compare_exchange_strong(stack_index_t & e, stack_index_t i, std::memory_order m = seq_cst) noexcept
+  constexpr stack_index_t load([[maybe_unused]] std::memory_order m = seq_cst) const noexcept { return value; }
+  constexpr void store(stack_index_t v, [[maybe_unused]] std::memory_order m = seq_cst ) noexcept { value = v; }
+  constexpr bool compare_exchange_strong(stack_index_t & e, stack_index_t i, [[maybe_unused]] std::memory_order m = seq_cst) noexcept
     {
     if(e == value) [[likely]]
       {

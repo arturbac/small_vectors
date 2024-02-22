@@ -150,7 +150,7 @@ shm.truncate(8192);
       std::array<uint8_t,24> value{ 'a','b','c','d','e','f','g','h','i','j','k'};
       auto delay{4us};
       for( auto i =1000; i !=0; --i)
-        for( auto j = 1; j != value.size(); ++j)
+        for( auto j = 1u; j != value.size(); ++j)
           {
           ip::push_status push_res{};
           do 

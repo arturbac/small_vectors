@@ -19,6 +19,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       -Wno-exit-time-destructors
       -Wno-ctad-maybe-unsupported
       -Wno-weak-vtables
+      -fconstexpr-backtrace-limit=0
       )
 endif()
 
