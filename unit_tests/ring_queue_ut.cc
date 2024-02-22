@@ -15,7 +15,7 @@ namespace bip = boost::interprocess;
 using namespace std::string_view_literals;
 
 // constexpr auto shmem_name {"ring buffer shmem test"};
-// struct message 
+// struct message
 // {
 //   std::array<char,4> value;
 // };
@@ -32,29 +32,28 @@ using namespace std::string_view_literals;
 //   "quis nostrud exercitation"sv
 //   };
 int main()
-{
-metatests::test_result result;
-"ring_queue_impl_basic"_test = [&]
   {
-  
-  auto fn_test = [] -> metatests::test_result
+  metatests::test_result result;
+  "ring_queue_impl_basic"_test = [&]
+  {
+    auto fn_test = [] -> metatests::test_result
     {
-    using queue_type = ip::detail::ring_queue_impl_t<16, ip::detail::constexpr_index>;
-    queue_type queue;
-    constexpr_test(queue.empty());
-      {
-      std::array<uint8_t,4> value{ 'a','b','c','d'};
-      queue.push( value.begin(), value.end() );
-      }
-    constexpr_test(!queue.empty());
-      {
-      std::array<uint8_t,11> value{ 'a','b','c','d','e','f','g','h','i','j','k'};
-      queue.push( value.begin(), value.end() );
-      }
-    return {};
+      using queue_type = ip::detail::ring_queue_impl_t<16, ip::detail::constexpr_index>;
+      queue_type queue;
+      constexpr_test(queue.empty());
+        {
+        std::array<uint8_t, 4> value{'a', 'b', 'c', 'd'};
+        queue.push(value.begin(), value.end());
+        }
+      constexpr_test(!queue.empty());
+        {
+        std::array<uint8_t, 11> value{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'};
+        queue.push(value.begin(), value.end());
+        }
+      return {};
     };
-  result |= metatests::run_constexpr_test(fn_test);
-  result |= metatests::run_consteval_test(fn_test);
+    result |= metatests::run_constexpr_test(fn_test);
+    result |= metatests::run_consteval_test(fn_test);
   };
-}
+  }
 
