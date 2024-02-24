@@ -16,7 +16,7 @@ C++20,23 utilities library
 
 * meta_packed_struct - allows bit packing data with strong typing, v2.3.0 added signed type support
 * strong_type - strong type wrapping for primitive types
-* unaligned_load and unaligned_store - for memory unaligned access
+* unaligned_load and unaligned_store - for memory unaligned access, starting with v2.4.2 fully able to execute at compile time
 
 ## interprocess features
 * fork - wrapper for easy process spawning with std::async like interface
@@ -50,7 +50,27 @@ auto res { std::move(ex).and_then(f) };
 constexpr_test( std::same_as<decltype(res), expected_type>);
 constexpr_test( res == value_type{3});
 ```
-
+#### memutil::unaligned
+```C++
+consteval auto make_version_data(string_view sub_ver, string_view data_ver, uint16_t ver_minor, uint16_t comp_minor)
+  {
+  constexpr auto converter = [](char c) noexcept -> std::byte { return static_cast<std::byte>(c); };
+  std::array<std::byte, map_version_t::map_version_raw_size> res{};
+  auto it{ranges::transform(sub_ver, res.begin(), converter).out};
+  *it = std::byte(' ');  // make space
+  ++it;
+  it = ranges::transform(data_ver, it, converter).out;
+  *it = std::byte{};
+  it = ranges::next(res.begin(), map_version_t::map_version_name_chars);
+  it = memutil::unaligned_store<uint16_t>(it, expected_version_major);
+  it = memutil::unaligned_store<uint16_t>(it, expected_version_minor);
+  it = memutil::unaligned_store<uint16_t>(it, expected_version_major);
+  memutil::unaligned_store<uint16_t>(it, expected_cmp_minor);
+  return res;
+  }
+static constexpr std::array<std::byte, map_version_t::map_version_raw_size> 
+  polska_6_1451_6_18{ make_version_data("Polska", "2403", 1451, 18)};
+```
 #### shared mem utils
 example using static vector, basic_static_string between processes with memory offset table declaration
 ```C++
@@ -178,13 +198,12 @@ constexpr_test(get<field_2>(mbs) == true );
 constexpr_test(get<field_3>(mbs) == 0x0ff0 );
 constexpr_test(get<field_4>(mbs) == value3 );
 ```
-### tested compilers
+### tested compilers as of v2.4.2
 
-there are predefined cmake workflows to test
-* cmake --workflow --preset="clang-16-release"
+make workflows tested
 * cmake --workflow --preset="clang-16-libc++release"
-* cmake --workflow --preset="clang-15-release"
-* cmake --workflow --preset="clang-15-libc++release"
+* cmake --workflow --preset="clang-17-release" using gnu libstdc++ on linux
+* cmake --workflow --preset="clang-17-libc++release"
 * cmake --workflow --preset="gcc-13-release"
 * cmake --workflow --preset="gcc-12-release"
-* msvc support is planned
+* msvc tested from time to time
