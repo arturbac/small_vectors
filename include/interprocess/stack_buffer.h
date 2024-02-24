@@ -1,4 +1,6 @@
 #pragma once
+
+#include <utils/static_call_operator.h>
 #include <type_traits>
 #include <concepts>
 #include <atomic>
@@ -87,8 +89,8 @@ struct capacity_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  static constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> const &) noexcept
+  small_vector_static_call_operator constexpr auto
+    operator()(stack_buffer_t<buffer_size, index_type> const &) small_vector_static_call_operator_const noexcept
     {
     return buffer_size;
     }
@@ -100,8 +102,8 @@ struct empty_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  static constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> const & buff) noexcept
+  small_vector_static_call_operator constexpr auto
+    operator()(stack_buffer_t<buffer_size, index_type> const & buff) small_vector_static_call_operator_const noexcept
     {
     auto const b = buff.stack_index_.load(acquire);
     return b.index == 0;
@@ -129,9 +131,9 @@ struct push_t
   {
   template<std::size_t buffer_size, typename index_type, std::forward_iterator iterator>
   [[nodiscard]]
-  static constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> & buff, iterator data_beg, iterator data_end) noexcept
-    -> push_status
+  small_vector_static_call_operator constexpr auto
+    operator()(stack_buffer_t<buffer_size, index_type> & buff, iterator data_beg, iterator data_end)
+      small_vector_static_call_operator_const noexcept -> push_status
     {
     // calculate space required
     stack_index_t stack_index{buff.stack_index_.load(acquire)};
@@ -176,8 +178,8 @@ struct top_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  static constexpr std::pair<std::span<uint8_t const>, stack_index_t>
-    operator()(stack_buffer_t<buffer_size, index_type> & buff) noexcept
+  small_vector_static_call_operator constexpr std::pair<std::span<uint8_t const>, stack_index_t>
+    operator()(stack_buffer_t<buffer_size, index_type> & buff) small_vector_static_call_operator_const noexcept
     {
     stack_index_t stack_during_copy_top{buff.stack_index_.load(acquire)};
     if(stack_during_copy_top.index != 0) [[likely]]
@@ -198,8 +200,9 @@ struct pop_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  static constexpr pop_status
-    operator()(stack_buffer_t<buffer_size, index_type> & buff, stack_index_t stack_during_copy_top) noexcept
+  small_vector_static_call_operator constexpr pop_status
+    operator()(stack_buffer_t<buffer_size, index_type> & buff, stack_index_t stack_during_copy_top)
+      small_vector_static_call_operator_const noexcept
     {
     auto [footer, _]{detail::footer_from_index(buff, stack_during_copy_top)};
     stack_index_t next_index{stack_during_copy_top.index - footer.size - sizeof(footer_data_t)};
