@@ -13,7 +13,7 @@ int main()
 
   metatests::test_result result;
 
-  "test int"_test = [&]
+  "test_int"_test = [&]
   {
     auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
@@ -27,6 +27,7 @@ int main()
       return {};
     };
     result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<traits_list>(fn_tmpl);
   };
 
   "test double"_test = [&]
@@ -38,10 +39,11 @@ int main()
       type testv = 0.45671974353;
       unaligned_store<type>(&store[1], testv);
       type r = unaligned_load<type>(&store[1]);
-      expect(r == testv);
+      constexpr_test(r == testv);
       return {};
     };
     result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<traits_list>(fn_tmpl);
   };
 
   "test int64_t"_test = [&]
@@ -54,30 +56,41 @@ int main()
 
       unaligned_store<type>(&store[1], testv);
       type r = unaligned_load<type>(&store[1]);
-      expect(r == testv);
+      constexpr_test(r == testv);
       return {};
     };
     result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<traits_list>(fn_tmpl);
   };
 
   "test enum"_test = [&]
   {
+    enum struct test_enum : uint16_t
+      {
+      one,
+      two,
+      three
+      };
     auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
       value_type store[128];
-      enum struct test_enum : uint16_t
-        {
-        one,
-        two,
-        three
-        };
+
       using type = test_enum;
-      type testv = test_enum::two;
-      unaligned_store<type, 2>(&store[3], testv);
-      type r = unaligned_load<type, 2>(&store[3]);
-      expect(r == testv);
+        {
+        type testv = test_enum::three;
+        unaligned_store<type>(&store[3], testv);
+        type r = unaligned_load<type>(&store[3]);
+        constexpr_test(r == testv);
+        }
+        {
+        type testv = test_enum::two;
+        unaligned_store<type, 2>(&store[3], testv);
+        type r = unaligned_load<type, 2>(&store[3]);
+        constexpr_test(r == testv);
+        }
       return {};
     };
     result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<traits_list>(fn_tmpl);
   };
   }

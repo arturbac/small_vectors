@@ -62,12 +62,17 @@ namespace detail
   [[nodiscard, gnu::always_inline]]
   inline constexpr output_type unaligned_load(iterator it) noexcept
     {
-    using tmp_value_type = iterator_value_type_t<iterator>;
-    static_assert(sizeof(tmp_value_type) == 1);
+    using input_value_type = std::iter_value_t<iterator>;
+    static_assert(sizeof(input_value_type) == 1);
 
-    std::aligned_storage_t<sizeof(output_type), alignof(output_type)> tmp_store;
-    std::copy_n(it, sizeof(output_type), std::launder(reinterpret_cast<tmp_value_type *>(&tmp_store)));
-    return *std::launder(reinterpret_cast<output_type *>(&tmp_store));
+    struct value_buffer_type
+      {
+      std::array<input_value_type, sizeof(output_type)> buffer;
+      };
+
+    value_buffer_type store;
+    std::copy_n(it, sizeof(output_type), store.buffer.begin());
+    return cxx20::bit_cast<output_type>(store);
     }
 
   ///\brief loads value from any untyped pointer memory location
@@ -81,7 +86,7 @@ namespace detail
 
 //---------------------------------------------------------------------------------------------------
 ///\brief loads value from any forward iterator or unaligned memory location
-template<detail::arithmetic_or_bool output_type, typename iterator>
+template<detail::trivially_copyable output_type, typename iterator>
 [[nodiscard, gnu::always_inline]]
 inline constexpr output_type unaligned_load(iterator it) noexcept
   {
@@ -92,7 +97,7 @@ inline constexpr output_type unaligned_load(iterator it) noexcept
 ///\details specifing expected_storage_size prevents unintended breaking changes with IO to trivially_copyable
 /// underlaing type
 template<detail::trivially_copyable output_type, std::size_t expected_storage_size, typename iterator>
-  requires(!detail::arithmetic_or_bool<output_type> && expected_storage_size == sizeof(output_type))
+  requires(expected_storage_size == sizeof(output_type))
 [[nodiscard, gnu::always_inline]]
 inline constexpr output_type unaligned_load(iterator it) noexcept
   {
@@ -104,7 +109,7 @@ inline constexpr output_type unaligned_load(iterator it) noexcept
 /// size of output_type and forwards the \ref it by the size was read \warning be aware that this function is prone to
 /// bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors
 /// because \ref it is modified when evaluated
-template<detail::arithmetic_or_bool output_type, typename iterator>
+template<detail::trivially_copyable output_type, typename iterator>
 [[nodiscard, gnu::always_inline]]
 inline constexpr output_type unaligned_load_fwd(iterator & it) noexcept
   {
@@ -128,17 +133,38 @@ inline constexpr output_type unaligned_load_fwd(iterator & it) noexcept
   }
 
 //---------------------------------------------------------------------------------------------------
+namespace detail
+  {
+  template<
+    detail::trivially_copyable store_type,
+    detail::output_iterator_to_byte iterator,
+    detail::trivially_copyable input_type>
+    requires(std::same_as<store_type, input_type>)
+  [[gnu::always_inline]]
+  inline constexpr iterator unaligned_store(iterator it, input_type value) noexcept
+    {
+    using output_range_type = std::iter_value_t<iterator>;
+
+    struct value_buffer_type
+      {
+      std::array<output_range_type, sizeof(value)> buffer;
+      };
+
+    value_buffer_type store = cxx20::bit_cast<value_buffer_type>(value);
+    return std::copy(store.buffer.begin(), store.buffer.end(), it);
+    }
+  }  // namespace detail
+
 ///\brief stores \param value at \param it location, input value type must match requested storage type
 template<
-  detail::arithmetic_or_bool store_type,
+  detail::trivially_copyable store_type,
   detail::output_iterator_to_byte iterator,
-  detail::arithmetic_or_bool input_type>
+  detail::trivially_copyable input_type>
   requires(std::same_as<store_type, input_type>)
 [[gnu::always_inline]]
 inline constexpr iterator unaligned_store(iterator it, input_type value) noexcept
   {
-  using output_range_type = std::iter_value_t<iterator>;
-  return std::copy_n(std::launder(reinterpret_cast<output_range_type const *>(&value)), sizeof(store_type), it);
+  return detail::unaligned_store<store_type>(it, value);
   }
 
 ///\brief stores \param value at \param it location, input value type must match requested storage type
@@ -147,12 +173,11 @@ template<
   std::size_t expected_storage_size,
   detail::output_iterator_to_byte iterator,
   detail::trivially_copyable input_type>
-  requires(std::same_as<store_type, input_type> && expected_storage_size == sizeof(store_type) && !detail::arithmetic_or_bool<store_type>)
+  requires(std::same_as<store_type, input_type> && expected_storage_size == sizeof(store_type))
 [[gnu::always_inline]]
 inline constexpr iterator unaligned_store(iterator it, input_type value) noexcept
   {
-  using output_range_type = std::iter_value_t<iterator>;
-  return std::copy_n(std::launder(reinterpret_cast<output_range_type const *>(&value)), sizeof(store_type), it);
+  return detail::unaligned_store<store_type>(it, value);
   }
 
 //---------------------------------------------------------------------------------------------------
