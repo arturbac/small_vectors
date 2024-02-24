@@ -24,10 +24,14 @@ namespace detail
   using iterator_value_type_t = typename std::iterator_traits<iterator_type>::value_type;
 
   template<typename iterator>
-  concept forward_iterator_to_byte = (std::forward_iterator<iterator> && sizeof(iterator_value_type_t<iterator>) == 1);
+  concept forward_iterator_to_byte = requires {
+    requires std::forward_iterator<iterator>;
+    requires sizeof(iterator_value_type_t<iterator>) == 1;
+  };
 
   template<typename iterator>
-  concept output_iterator_to_byte = std::output_iterator<iterator, uint8_t>;
+  concept output_iterator_to_byte
+    = requires { requires std::output_iterator<iterator, uint8_t> || std::output_iterator<iterator, std::byte>; };
 
   template<typename iterator>
   concept memory_location = std::same_as<std::remove_cv_t<iterator>, void *>;
@@ -86,7 +90,7 @@ inline constexpr output_type unaligned_load(iterator it) noexcept
 
 ///\brief loads enum value from any forward iterator or unaligned memory location with size restriction check
 ///\details specifing expected_storage_size prevents unintended breaking changes with IO to trivially_copyable
-///underlaing type
+/// underlaing type
 template<detail::trivially_copyable output_type, std::size_t expected_storage_size, typename iterator>
   requires(!detail::arithmetic_or_bool<output_type> && expected_storage_size == sizeof(output_type))
 [[nodiscard, gnu::always_inline]]
@@ -97,9 +101,9 @@ inline constexpr output_type unaligned_load(iterator it) noexcept
 
 //---------------------------------------------------------------------------------------------------
 ///\brief loads value from any forward iterator or unaligned int8_t/uint8_t memory location and forwards iterator by the
-///size of output_type and forwards the \ref it by the size was read \warning be aware that this function is prone to
-///bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors
-///because \ref it is modified when evaluated
+/// size of output_type and forwards the \ref it by the size was read \warning be aware that this function is prone to
+/// bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors
+/// because \ref it is modified when evaluated
 template<detail::arithmetic_or_bool output_type, typename iterator>
 [[nodiscard, gnu::always_inline]]
 inline constexpr output_type unaligned_load_fwd(iterator & it) noexcept
@@ -110,9 +114,9 @@ inline constexpr output_type unaligned_load_fwd(iterator & it) noexcept
   }
 
 ///\brief loads enum value from any forward iterator or unaligned int8_t/uint8_t memory location and forwards iterator
-///by the size of output_type and forwards the \param it by the size was read \details specifing expected_storage_size
-///prevents unintended breaking changes with IO to enum underlaing type \warning be aware that this function is prone to
-///bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors
+/// by the size of output_type and forwards the \param it by the size was read \details specifing expected_storage_size
+/// prevents unintended breaking changes with IO to enum underlaing type \warning be aware that this function is prone
+/// to bugs when used in context of order of evaluation is unspecified, dont use it as function arguments, constructors
 template<detail::trivially_copyable output_type, std::size_t expected_storage_size, typename iterator>
   requires(!detail::arithmetic_or_bool<output_type>)
 [[nodiscard, gnu::always_inline]]
@@ -133,7 +137,8 @@ template<
 [[gnu::always_inline]]
 inline constexpr iterator unaligned_store(iterator it, input_type value) noexcept
   {
-  return std::copy_n(std::launder(reinterpret_cast<uint8_t const *>(&value)), sizeof(store_type), it);
+  using output_range_type = std::iter_value_t<iterator>;
+  return std::copy_n(std::launder(reinterpret_cast<output_range_type const *>(&value)), sizeof(store_type), it);
   }
 
 ///\brief stores \param value at \param it location, input value type must match requested storage type
@@ -146,7 +151,8 @@ template<
 [[gnu::always_inline]]
 inline constexpr iterator unaligned_store(iterator it, input_type value) noexcept
   {
-  return std::copy_n(std::launder(reinterpret_cast<uint8_t const *>(&value)), sizeof(store_type), it);
+  using output_range_type = std::iter_value_t<iterator>;
+  return std::copy_n(std::launder(reinterpret_cast<output_range_type const *>(&value)), sizeof(store_type), it);
   }
 
 //---------------------------------------------------------------------------------------------------
