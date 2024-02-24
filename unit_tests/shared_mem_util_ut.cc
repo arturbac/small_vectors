@@ -50,7 +50,7 @@ struct destruction_only
     }
   };
 
-constexpr auto shmem_name{"shmem test for " SMALL_VECTORS_COMPILER_INFO };
+constexpr auto shmem_name{"shmem test for " SMALL_VECTORS_COMPILER_INFO};
 
 int main()
   {

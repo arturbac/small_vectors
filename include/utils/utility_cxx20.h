@@ -55,7 +55,7 @@ using std::cmp_not_equal;
 #define integer_comparison_functions_defiend
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_equal(T t, U u) noexcept
   {
@@ -70,7 +70,7 @@ constexpr bool cmp_equal(T t, U u) noexcept
   }
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_not_equal(T t, U u) noexcept
   {
@@ -78,7 +78,7 @@ constexpr bool cmp_not_equal(T t, U u) noexcept
   }
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_less(T t, U u) noexcept
   {
@@ -93,7 +93,7 @@ constexpr bool cmp_less(T t, U u) noexcept
   }
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_greater(T t, U u) noexcept
   {
@@ -101,7 +101,7 @@ constexpr bool cmp_greater(T t, U u) noexcept
   }
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_less_equal(T t, U u) noexcept
   {
@@ -109,7 +109,7 @@ constexpr bool cmp_less_equal(T t, U u) noexcept
   }
 
 ///\brief Compare the values. negative signed integers always compare less than (and not equal to) unsigned integers:
-///the comparison is safe against lossy integer conversion.
+/// the comparison is safe against lossy integer conversion.
 template<class T, class U>
 constexpr bool cmp_greater_equal(T t, U u) noexcept
   {

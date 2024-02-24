@@ -5,44 +5,44 @@
 #include <utils/static_call_operator.h>
 
 namespace coll::ranges
-{
-  struct accumulate_t
+  {
+struct accumulate_t
+  {
+  template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
+  [[nodiscard]]
+  small_vector_cpp_static_call_operator constexpr auto
+    operator()(source_iterator beg, sentinel end, auto init, auto binary_op)
+      small_vector_static_call_operator_const noexcept
     {
-    template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
-    [[nodiscard]]
-    small_vector_cpp_static_call_operator
-    constexpr auto operator()( source_iterator beg, sentinel end, auto init, auto binary_op)
-        small_vector_static_call_operator_const noexcept
-      {
-      for (;beg != end; ++beg)
-        init = binary_op(std::move(init), *beg);
-      return init;
-      }
+    for(; beg != end; ++beg)
+      init = binary_op(std::move(init), *beg);
+    return init;
+    }
 
-    template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
-    [[nodiscard]]
-    small_vector_cpp_static_call_operator
-    constexpr auto operator()( source_iterator beg, sentinel end, auto init )
-      {
-      return operator()(beg,end, std::move(init), std::plus<decltype(init)>{} );
-      }
-      
-    template<std::ranges::input_range input_range>
-    [[nodiscard]]
-    small_vector_cpp_static_call_operator
-    constexpr auto operator()( input_range const & range, auto init, auto binary_op )
-        small_vector_static_call_operator_const noexcept
-      {
-      return operator()(std::ranges::begin(range), std::ranges::end(range), std::move(init), binary_op);
-      }
-    template<std::ranges::input_range input_range>
-    [[nodiscard]]
-    small_vector_cpp_static_call_operator
-    constexpr auto operator()( input_range const & range, auto init )
-        small_vector_static_call_operator_const noexcept
-      {
-      return operator()(range, std::move(init), std::plus<decltype(init)>{} );
-      }
-    };
-  inline constexpr accumulate_t accumulate;
-}
+  template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
+  [[nodiscard]]
+  small_vector_cpp_static_call_operator constexpr auto
+    operator()(source_iterator beg, sentinel end, auto init)
+    {
+    return operator()(beg, end, std::move(init), std::plus<decltype(init)>{});
+    }
+
+  template<std::ranges::input_range input_range>
+  [[nodiscard]]
+  small_vector_cpp_static_call_operator constexpr auto
+    operator()(input_range const & range, auto init, auto binary_op) small_vector_static_call_operator_const noexcept
+    {
+    return operator()(std::ranges::begin(range), std::ranges::end(range), std::move(init), binary_op);
+    }
+
+  template<std::ranges::input_range input_range>
+  [[nodiscard]]
+  small_vector_cpp_static_call_operator constexpr auto
+    operator()(input_range const & range, auto init) small_vector_static_call_operator_const noexcept
+    {
+    return operator()(range, std::move(init), std::plus<decltype(init)>{});
+    }
+  };
+
+inline constexpr accumulate_t accumulate;
+  }  // namespace coll::ranges
