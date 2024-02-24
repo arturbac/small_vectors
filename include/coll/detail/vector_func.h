@@ -22,7 +22,7 @@ inline constexpr std::string_view enum_name(vector_outcome_e value) noexcept
     // clang-format off
     decl_enum_name_ns_sv(vector_outcome_e,no_error)
     decl_enum_name_ns_sv(vector_outcome_e,out_of_storage)
-    decl_enum_name_ns_sv(vector_outcome_e,invalid_source_range) 
+    decl_enum_name_ns_sv(vector_outcome_e,invalid_source_range)
     // clang-format on
     }
 #if !defined(__clang__)
@@ -435,7 +435,9 @@ inline constexpr storage_context_t<value_type, size_type> sv_allocate(size_type 
       ),
 #endif
         capacity
-      }
+      // clang-format off
+      };
+    // clang-format on
     }
   }
 
