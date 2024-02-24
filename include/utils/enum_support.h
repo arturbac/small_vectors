@@ -6,8 +6,9 @@
 #include <cstdint>
 #include <type_traits>
 #include <string_view>
-
+#ifdef SMALL_VECTORS_ENABLE_WCHAR_ENUM_MACRO
 #define LT_(a) L##a
+#endif
 #define decl_enum_name_char(a)           \
   case a:                                \
       {                                  \
@@ -27,14 +28,14 @@
       static char const * name_##a = b; \
       return name_##a;                  \
       }
-
+#ifdef SMALL_VECTORS_ENABLE_WCHAR_ENUM_MACRO
 #define decl_enum_name(a)                        \
   case a:                                        \
       {                                          \
       static wchar_t const * a##_name = LT_(#a); \
       return a##_name;                           \
       }
-
+#endif
 #define decl_enum_name_ns(en, a)         \
   case en::a:                            \
       {                                  \
@@ -59,7 +60,7 @@
       {                                \
       return std::string_view{b};      \
       }
-
+#ifdef SMALL_VECTORS_ENABLE_WCHAR_ENUM_MACRO
 #define decl_enum_cmp(a, value_len) \
   if(0 == wcscmp(value, LT_(#a)))   \
   return a
@@ -67,7 +68,7 @@
 #define decl_enum_cmp_custom(src, ret) \
   if(0 == wcscmp(value, LT_(#src)))    \
   return ret
-
+#endif
 #define decl_enum_cmp_char(a, value_len) \
   if(0 == strcmp(value, #a))             \
   return a
