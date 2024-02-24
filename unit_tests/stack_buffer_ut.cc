@@ -121,7 +121,7 @@ int main()
     result |= metatests::run_consteval_test(fn_test);
   };
 
-  constexpr auto shmem_name{"shmem test"};
+  constexpr auto shmem_name{"shmem test for " SMALL_VECTORS_COMPILER_INFO};
   bip::shared_memory_object shm{bip::open_or_create, shmem_name, bip::read_write};
   shm.truncate(8192);
 

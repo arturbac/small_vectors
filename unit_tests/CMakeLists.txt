@@ -31,6 +31,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 include(small_vectors_ut)
+set(COMPILER_ID "${CMAKE_CXX_COMPILER_ID}")
+set(COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
+set(COMPILER_INFO "${COMPILER_ID} ${COMPILER_VERSION}")
+message(STATUS "Compiler Info: ${COMPILER_INFO}")
+
+get_filename_component(LAST_PATH_ELEMENT "${CMAKE_BINARY_DIR}" NAME)
+set(COMPILER_INFO "${COMPILER_INFO}_at_${LAST_PATH_ELEMENT}")
+message(STATUS "Compiler and Standard Library Info: ${COMPILER_INFO}")
+
 
 add_unittest(unaligned_ut)
 target_compile_options(unaligned_ut PRIVATE -Wno-float-equal)
@@ -55,10 +64,11 @@ if(Boost_FOUND)
   
   add_unittest(shared_mem_util_ut)
   target_link_libraries(shared_mem_util_ut PRIVATE Boost::system )
-  
+  target_compile_definitions(shared_mem_util_ut PRIVATE SMALL_VECTORS_COMPILER_INFO="${COMPILER_INFO}")
   # add_unittest(ring_queue_ut)
   # target_link_libraries(ring_queue_ut PRIVATE Boost::system )
   
   add_unittest(stack_buffer_ut)
   target_link_libraries(stack_buffer_ut PRIVATE Boost::system )
+  target_compile_definitions(stack_buffer_ut PRIVATE SMALL_VECTORS_COMPILER_INFO="${COMPILER_INFO}")
 endif()
