@@ -3,45 +3,68 @@
 #include <utils/unaligned.h>
 #include <cmath>
 
+using traits_list = metatests::type_list<uint8_t, std::byte>;
+using namespace metatests;
+
 int main()
   {
   using namespace boost::ut;
   using namespace memutil;
 
-  "[utils_math_unaligned]"_test = []
-  {
-    uint8_t store[128];
+  metatests::test_result result;
 
-    should("test int") = [&store]
+  "test int"_test = [&]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
+      value_type store[128];
       using type = int32_t;
       type testv = 0x5555aaaa;
 
       unaligned_store<type>(&store[1], testv);
-      type result = unaligned_load<type>(&store[1]);
-      expect(result == testv);
+      type r = unaligned_load<type>(&store[1]);
+      constexpr_test(r == testv);
+      return {};
     };
-    should("test double") = [&store]
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
+  };
+
+  "test double"_test = [&]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
+      value_type store[128];
       using type = double;
       type testv = 0.45671974353;
       unaligned_store<type>(&store[1], testv);
-      type result = unaligned_load<type>(&store[1]);
-      expect(result == testv);
+      type r = unaligned_load<type>(&store[1]);
+      expect(r == testv);
+      return {};
     };
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
+  };
 
-    should("test int64_t") = [&store]
+  "test int64_t"_test = [&]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
+      value_type store[128];
       using type = int64_t;
       type testv = 0x111177775555aaaa;
 
       unaligned_store<type>(&store[1], testv);
-      type result = unaligned_load<type>(&store[1]);
-      expect(result == testv);
+      type r = unaligned_load<type>(&store[1]);
+      expect(r == testv);
+      return {};
     };
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
+  };
 
-    should("test enum") = [&store]
+  "test enum"_test = [&]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
     {
+      value_type store[128];
       enum struct test_enum : uint16_t
         {
         one,
@@ -51,8 +74,10 @@ int main()
       using type = test_enum;
       type testv = test_enum::two;
       unaligned_store<type, 2>(&store[3], testv);
-      type result = unaligned_load<type, 2>(&store[3]);
-      expect(result == testv);
+      type r = unaligned_load<type, 2>(&store[3]);
+      expect(r == testv);
+      return {};
     };
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
   };
   }

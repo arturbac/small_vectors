@@ -45,7 +45,7 @@ int main()
 
   "stack_buffer_basic"_test = [&]
   {
-    auto fn_test = [] -> metatests::test_result
+    auto fn_test = []() -> metatests::test_result
     {
       using stack_type = ip::stack_buffer_t<32, ip::constexpr_index>;
       stack_type stack;

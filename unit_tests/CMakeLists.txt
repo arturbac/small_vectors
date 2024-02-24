@@ -10,7 +10,7 @@ target_compile_options(small_vectors_ut_core
   PUBLIC
     ${SMALL_VECTORS_COMPILE_OPTIONS}
     )
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   target_compile_options(small_vectors_ut_core
     PUBLIC
       -Wno-disabled-macro-expansion
@@ -20,6 +20,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       -Wno-ctad-maybe-unsupported
       -Wno-weak-vtables
       -fconstexpr-backtrace-limit=0
+      -Wno-misleading-indentation
+      )
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(small_vectors_ut_core
+    PUBLIC
+      -Wno-misleading-indentation
       )
 endif()
 
