@@ -2,10 +2,13 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 include(CheckCXXCompilerFlag)
 
 project(small_vectors
-        VERSION 2.4.1
+        VERSION 3.0.0
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
+include(GNUInstallDirs) 
+include(FeatureSummary)
+
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   message(
@@ -18,7 +21,6 @@ set(CMAKE_MODULE_PATH
   ${PROJECT_SOURCE_DIR}/cmake
   )
   
-include(FeatureSummary)
 option(SMALL_VECTORS_ENABLE_CPM_PACKAGING "cmake packaging by cpm" ON)
 option(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vtable of bad_expected_access" ON)
 add_feature_info("SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION" SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vtable of bad_expected_access")

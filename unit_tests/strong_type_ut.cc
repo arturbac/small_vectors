@@ -1,81 +1,86 @@
 #include <utils/strong_type.h>
 #include <unit_test_core.h>
+#include <boost_ut.h>
 
+namespace ut = boost::ut;
+using test_types = metatests::type_list<uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t>;
+using namespace metatests;
+using boost::ut::operator""_test;
+using namespace ut::operators::terse;
+using boost::ut::eq;
+using boost::ut::neq;
+
+namespace small_vectors::utils
+  {
 struct test_tag : public strong_type_default_traits
   {
   };
 
-using test_types = metatests::type_list<uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t>;
-using namespace metatests;
-using boost::ut::operator""_test;
-using boost::ut::eq;
-using boost::ut::neq;
-
 //----------------------------------------------------------------------------------------------------------------------
 namespace concepts
   {
-struct tag_with_hash
-  {
-  static constexpr bool enable_hash_specialization = true;
-  };
+  struct tag_with_hash
+    {
+    static constexpr bool enable_hash_specialization = true;
+    };
 
-struct tag_with_hash_neg
-  {
-  static constexpr bool enable_hash_specialization = false;
-  };
+  struct tag_with_hash_neg
+    {
+    static constexpr bool enable_hash_specialization = false;
+    };
 
-struct tag_empty
-  {
-  };
+  struct tag_empty
+    {
+    };
 
-static_assert(tag_hash_specialization<tag_with_hash>);
-static_assert(!tag_hash_specialization<tag_with_hash_neg>);
-static_assert(!tag_hash_specialization<tag_empty>);
+  static_assert(tag_hash_specialization<tag_with_hash>);
+  static_assert(!tag_hash_specialization<tag_with_hash_neg>);
+  static_assert(!tag_hash_specialization<tag_empty>);
 
-struct tag_with_arithemtic
-  {
-  static constexpr bool enable_arithemtic = true;
-  };
+  struct tag_with_arithemtic
+    {
+    static constexpr bool enable_arithemtic = true;
+    };
 
-struct tag_with_arithemtic_neg
-  {
-  static constexpr bool enable_arithemtic = false;
-  };
+  struct tag_with_arithemtic_neg
+    {
+    static constexpr bool enable_arithemtic = false;
+    };
 
-static_assert(tag_arithemtic<tag_with_arithemtic>);
-static_assert(!tag_arithemtic<tag_with_arithemtic_neg>);
-static_assert(!tag_arithemtic<tag_empty>);
+  static_assert(tag_arithemtic<tag_with_arithemtic>);
+  static_assert(!tag_arithemtic<tag_with_arithemtic_neg>);
+  static_assert(!tag_arithemtic<tag_empty>);
 
-struct tag_with_comparison
-  {
-  static constexpr bool enable_comparison = true;
-  };
+  struct tag_with_comparison
+    {
+    static constexpr bool enable_comparison = true;
+    };
 
-struct tag_with_comparison_neg
-  {
-  static constexpr bool enable_comparison = false;
-  };
+  struct tag_with_comparison_neg
+    {
+    static constexpr bool enable_comparison = false;
+    };
 
-static_assert(tag_comparison<tag_with_comparison>);
-static_assert(!tag_comparison<tag_with_comparison_neg>);
-static_assert(!tag_comparison<tag_empty>);
+  static_assert(tag_comparison<tag_with_comparison>);
+  static_assert(!tag_comparison<tag_with_comparison_neg>);
+  static_assert(!tag_comparison<tag_empty>);
 
-struct tag_with_binary_operators
-  {
-  static constexpr bool enable_binary_operators = true;
-  };
+  struct tag_with_binary_operators
+    {
+    static constexpr bool enable_binary_operators = true;
+    };
 
-struct tag_with_binary_operators_neg
-  {
-  static constexpr bool enable_binary_operators = false;
-  };
+  struct tag_with_binary_operators_neg
+    {
+    static constexpr bool enable_binary_operators = false;
+    };
 
-static_assert(tag_binary_operators<tag_with_binary_operators>);
-static_assert(!tag_binary_operators<tag_with_binary_operators_neg>);
-static_assert(!tag_binary_operators<tag_empty>);
+  static_assert(tag_binary_operators<tag_with_binary_operators>);
+  static_assert(!tag_binary_operators<tag_with_binary_operators_neg>);
+  static_assert(!tag_binary_operators<tag_empty>);
   }  // namespace concepts
 
-int main()
+static void strong_type_suite()
   {
   test_result result;
   "test_strong_type_basic"_test = [&result]
@@ -232,6 +237,8 @@ int main()
     result |= run_consteval_test<test_types>(fn_tmpl);
     result |= run_constexpr_test<test_types>(fn_tmpl);
   };
-  return result ? EXIT_SUCCESS : EXIT_FAILURE;
   }
 
+  }  // namespace small_vectors::utils
+
+int main() { small_vectors::utils::strong_type_suite(); }

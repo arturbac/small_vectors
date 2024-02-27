@@ -2,11 +2,11 @@
 #include <utils/strong_type.h>
 #include <unit_test_core.h>
 
-struct test_tag : public strong_type_default_traits
+struct test_tag : public small_vectors::utils::strong_type_default_traits
   {
   };
 
-using test_user_type = strong_type<int64_t, test_tag>;
+using test_user_type = small_vectors::utils::strong_type<int64_t, test_tag>;
 using test_type_list = metatests::type_list<int8_t, uint8_t, uint32_t, int64_t, size_t, test_user_type>;
 using namespace metatests;
 using boost::ut::operator""_test;

@@ -28,6 +28,11 @@
 #include <compare>
 #include <cstdint>
 
+#ifndef DISABLE_SMALL_VECTORS_BACKWARD_COMPAT_STRONG_TYPE_NAMESPACE
+namespace small_vectors::utils
+  {
+#endif
+
 struct strong_type_default_traits
   {
   static constexpr bool enable_arithemtic = true;
@@ -35,7 +40,7 @@ struct strong_type_default_traits
   static constexpr bool enable_hash_specialization = true;
   static constexpr bool enable_binary_operators = true;
   static constexpr bool enable_ostream = true;
-  };
+  };  // namespace small_vectorsstruct strong_type_default_traits
 
 template<typename ValueType, typename Tag>
 class strong_type
@@ -85,21 +90,23 @@ public:
 //--------------------------------------------------------------------------------------------------------------
 namespace concepts
   {
-template<typename tag>
-concept tag_hash_specialization = requires {
-  tag::enable_hash_specialization;
-  requires tag::enable_hash_specialization == true;
-};
+  template<typename tag>
+  concept tag_hash_specialization = requires {
+    tag::enable_hash_specialization;
+    requires tag::enable_hash_specialization == true;
+  };
+  }  // namespace concepts
+#ifndef DISABLE_SMALL_VECTORS_BACKWARD_COMPAT_STRONG_TYPE_NAMESPACE
   }
-
-template<typename value_type, concepts::tag_hash_specialization tag>
-struct std::hash<strong_type<value_type, tag>>
+#endif
+template<typename value_type, small_vectors::utils::concepts::tag_hash_specialization tag>
+struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
   {
 #if defined(__cpp_static_call_operator)
   static
 #endif
     constexpr std::size_t
-    operator()(strong_type<value_type, tag> t)
+    operator()(small_vectors::utils::strong_type<value_type, tag> t)
 #if !defined(__cpp_static_call_operator)
       const
 #endif
@@ -108,14 +115,17 @@ struct std::hash<strong_type<value_type, tag>>
     return std::hash<value_type>{}(*t);
     }
   };
-
+#ifndef DISABLE_SMALL_VECTORS_BACKWARD_COMPAT_STRONG_TYPE_NAMESPACE
+namespace small_vectors::utils
+  {
+#endif
 namespace concepts
   {
-template<typename tag>
-concept tag_ostream = requires {
-  tag::enable_ostream;
-  requires tag::enable_ostream == true;
-};
+  template<typename tag>
+  concept tag_ostream = requires {
+    tag::enable_ostream;
+    requires tag::enable_ostream == true;
+  };
   }
 
 template<typename value_type, concepts::tag_ostream tag>
@@ -132,11 +142,11 @@ inline std::ostream & operator<<(std::ostream & out, strong_type<value_type, tag
 //--------------------------------------------------------------------------------------------------------------
 namespace concepts
   {
-template<typename tag>
-concept tag_arithemtic = requires {
-  tag::enable_arithemtic;
-  requires tag::enable_arithemtic == true;
-};
+  template<typename tag>
+  concept tag_arithemtic = requires {
+    tag::enable_arithemtic;
+    requires tag::enable_arithemtic == true;
+  };
   }
 
 template<typename value_type, concepts::tag_arithemtic tag>
@@ -176,11 +186,11 @@ constexpr strong_type<value_type, tag> operator--(strong_type<value_type, tag> &
 //--------------------------------------------------------------------------------------------------------------
 namespace concepts
   {
-template<typename tag>
-concept tag_comparison = requires {
-  tag::enable_comparison;
-  requires tag::enable_comparison == true;
-};
+  template<typename tag>
+  concept tag_comparison = requires {
+    tag::enable_comparison;
+    requires tag::enable_comparison == true;
+  };
   }
 
 template<typename value_type, concepts::tag_comparison tag>
@@ -283,11 +293,11 @@ inline constexpr strong_type<value_type, tag>
 //--------------------------------------------------------------------------------------------------------------
 namespace concepts
   {
-template<typename tag>
-concept tag_binary_operators = requires {
-  tag::enable_binary_operators;
-  requires tag::enable_binary_operators == true;
-};
+  template<typename tag>
+  concept tag_binary_operators = requires {
+    tag::enable_binary_operators;
+    requires tag::enable_binary_operators == true;
+  };
   }
 
 template<typename value_type, concepts::tag_binary_operators tag>
@@ -452,5 +462,6 @@ constexpr strong_type<value_type, tag> const &
   v.ref_value() |= rhs.value();
   return v;
   }
+  }  // namespace small_vectors::utils
 
 //
