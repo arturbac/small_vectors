@@ -122,13 +122,13 @@ namespace detail_concepts
     typename T::size_type;
     typename T::storage_type;
     typename T::storage_context_type;
-    // clang-format off
+      // clang-format off
     { obj.size_ } -> std::same_as<typename T::size_type &>;
     { obj.capacity() } -> std::same_as<typename T::size_type>;
     { T::supports_reallocation } -> std::same_as<bool const &>;
     { obj.data() } -> std::same_as<typename T::value_type *>;
     { obj.context() } -> std::same_as<typename T::storage_context_type>;
-    // clang-format on
+              // clang-format on
   };
   }
 
@@ -543,7 +543,7 @@ struct noexcept_if
 ///\brief storage for small_vector
 ///       There is no sense making N smaller than counted from \ref union_min_number_of_elements
 template<concepts::vector_constraints V, std::unsigned_integral S, uint64_t N = union_min_number_of_elements<V, S>()>
-  requires(N >= union_min_number_of_elements<V, S>() or N == 0)
+// requires(N >= union_min_number_of_elements<V, S>() or N == 0)
 struct small_vector_storage
   {
   using value_type = V;
@@ -551,6 +551,11 @@ struct small_vector_storage
   using enum small_vector_storage_type;
 
   static constexpr size_type buffered_capacity = N;
+
+  // moved from requires for class as it was preventing storage_type selection in basic_string_t for
+  // static_vector_storage with buffers with smaller number of elements
+  static_assert(N >= union_min_number_of_elements<V, S>() or N == 0);
+
   static constexpr bool value_type_has_trivial_liftime
     = std::is_trivially_default_constructible_v<value_type> && std::is_trivially_destructible_v<value_type>;
 

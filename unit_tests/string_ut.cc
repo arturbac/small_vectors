@@ -29,6 +29,9 @@ using string_type_list = metatests::type_list<
   coll::wstring>;
 
 #endif
+static_assert(std::same_as<uint8_t, coll::static_string<10>::size_type>);
+static_assert(std::same_as<uint16_t, coll::static_string<256>::size_type>);
+
 using metatests::constexpr_test;
 using metatests::run_consteval_test;
 using metatests::run_constexpr_test;
