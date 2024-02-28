@@ -46,6 +46,8 @@ concept allocate_constraint = requires {
   requires sizeof(value_type) != 0;
   requires sizeof(value_type) % alignof(value_type) == 0u;
 };
+template<typename value_type>
+concept trivially_copyable = std::is_trivially_copyable_v<value_type>;
   }  // namespace coll::concepts
 
 namespace coll::detail

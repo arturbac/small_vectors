@@ -90,14 +90,22 @@ struct static_vector
 
   constexpr static_vector() noexcept = default;
 
+  constexpr static_vector(static_vector && rh) noexcept
+    requires coll::concepts::trivially_copyable<value_type>
+  = default;
+
+  constexpr static_vector(static_vector const & rh) noexcept
+    requires coll::concepts::trivially_copyable<value_type>
+  = default;
+
   constexpr static_vector(static_vector && rh) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-    requires std::move_constructible<value_type>
+    requires(std::move_constructible<value_type> && !coll::concepts::trivially_copyable<value_type>)
     {
     storage_.construct_move(std::move(rh.storage_));
     }
 
   constexpr static_vector(static_vector const & rh) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-    requires std::copy_constructible<value_type>
+    requires(std::copy_constructible<value_type> && !coll::concepts::trivially_copyable<value_type>)
     {
     storage_.construct_copy(rh.storage_);
     }
@@ -110,15 +118,24 @@ struct static_vector
     storage_.construct_copy(rh.storage_);
     }
 
+  // static_vector is address independant which means it is trivialy copyable for trivially_copyable<value_type>
+  constexpr static_vector & operator=(static_vector && rh) noexcept
+    requires coll::concepts::trivially_copyable<value_type>
+  = default;
+
+  constexpr static_vector & operator=(static_vector const & rh) noexcept
+    requires coll::concepts::trivially_copyable<value_type>
+  = default;
+
   constexpr static_vector & operator=(static_vector && rh) noexcept(std::is_nothrow_move_assignable_v<value_type>)
-    requires std::movable<value_type>
+    requires(std::movable<value_type> && !coll::concepts::trivially_copyable<value_type>)
     {
     storage_.assign_move(std::move(rh.storage_));
     return *this;
     }
 
   constexpr static_vector & operator=(static_vector const & rh) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
-    requires std::copyable<value_type>
+    requires(std::copyable<value_type> && !coll::concepts::trivially_copyable<value_type>)
     {
     storage_.assign_copy(rh.storage_);
     return *this;

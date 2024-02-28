@@ -5,6 +5,7 @@
 C++20,23 utilities library
 
 ## features
+* static vector is tivialy_copyable for trivialy_copyable element types so it get compiler optimisation with memcpy during copying (since v3.0.3-devel)
 * static vectors with in class storage ( static_vector is address independant and may be used in interprocess data exchange)
 * small vectors with in class storage and/or dynamic allocated memory with custom size type for small_vector and adjusted minimal size type for static_vector depending on number of elements
 * static vector fully constant evaluated for trivial element types

@@ -275,6 +275,17 @@ int main()
     result |= run_constexpr_test<traits_list>(fn_tmpl);
     result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
   };
+  auto fn = []
+  {
+    using vector_type = static_vector<char, 10>;
+    vector_type vec{};
+    emplace_back(vec, 1);
+    emplace_back(vec, 2);
+    vec.emplace_back(3);
+    vector_type vec2{std::move(vec)};
+    return vec2;
+  };
+  static constexpr auto val = fn();
   //---------------------------------------------------------------------------------------------------------
   "test_static_vector_move"_test = [&result]
   {
@@ -282,22 +293,32 @@ int main()
     {
       auto constexpr elements = 10;
       using vector_type = static_vector<value_type, elements>;
-      vector_type vec;
+      // we need to profive {} for vec as with tirvialy copyable internal array would not be initialized
+      // in unoccupied space and current c++ standard treats this as not allowed to happen in consteval
+      vector_type vec{};
       emplace_back(vec, 1);
       emplace_back(vec, 2);
       vec.emplace_back(3);
       auto res = emplace_back(vec, 4);
-      test_result tr;
-      tr = constexpr_test(res == vector_outcome_e::no_error) | constexpr_test(size(vec) == 4)
-           | constexpr_test(std::distance(begin(vec), end(vec)) == size(vec));
+
+      constexpr_test(res == vector_outcome_e::no_error);
+      constexpr_test(size(vec) == 4);
+      constexpr_test(std::distance(begin(vec), end(vec)) == size(vec));
 
       std::array<value_type, 4> tst{1, 2, 3, 4};
-      tr |= constexpr_test(equal(vec, tst));
+      constexpr_test(equal(vec, tst));
 
       vector_type vec2{std::move(vec)};
-      tr |= constexpr_test(size(vec) == 0) | constexpr_test(size(vec2) == 4) | constexpr_test(equal(vec2, tst));
+      if constexpr(coll::concepts::trivially_copyable<value_type>)
+        constexpr_test(
+          size(vec) == 4
+        );  // unchanged as copied by compiler with memcpy, requirement is to leave in valid state
+      else
+        constexpr_test(size(vec) == 0);
+      constexpr_test(size(vec2) == 4);
+      constexpr_test(equal(vec2, tst));
 
-      return tr;
+      return {};
     };
 
     result |= run_constexpr_test<traits_list>(fn_tmpl);
@@ -311,23 +332,28 @@ int main()
     {
       auto constexpr elements = 10;
       using vector_type = static_vector<value_type, elements>;
-      vector_type vec;
+      // we need to profive {} for vec as with tirvialy copyable internal array would not be initialized
+      // in unoccupied space and current c++ standard treats this as not allowed to happen in consteval
+      vector_type vec{};
       emplace_back(vec, 1);
       emplace_back(vec, 2);
       vec.emplace_back(3);
       auto res = emplace_back(vec, 4);
 
-      test_result tr = constexpr_test(res == vector_outcome_e::no_error) | constexpr_test(size(vec) == 4)
-                       | constexpr_test(std::distance(begin(vec), end(vec)) == size(vec));
+      constexpr_test(res == vector_outcome_e::no_error);
+      constexpr_test(size(vec) == 4);
+      constexpr_test(std::distance(begin(vec), end(vec)) == size(vec));
 
       std::array<value_type, 4> tst{1, 2, 3, 4};
-      tr |= constexpr_test(equal(vec, tst));
+      constexpr_test(equal(vec, tst));
 
       vector_type vec2{const_cast<vector_type const &>(vec)};
-      tr |= constexpr_test(size(vec) == 4) | constexpr_test(size(vec2) == 4) | constexpr_test(equal(vec, tst))
-            | constexpr_test(equal(vec2, tst));
+      constexpr_test(size(vec) == 4);
+      constexpr_test(size(vec2) == 4);
+      constexpr_test(equal(vec, tst));
+      constexpr_test(equal(vec2, tst));
 
-      return tr;
+      return {};
     };
 
     result |= run_constexpr_test<traits_list>(fn_tmpl);
