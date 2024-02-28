@@ -78,6 +78,22 @@ consteval bool verify_basic_string()
   return static_cast<bool>(tr);
   }
 
+template<typename char_type, std::size_t N>
+consteval auto test_basic_fixed_string_as_buffor(char_type const (&str)[N])
+  {
+  basic_fixed_string<char_type, N * 2> result{};
+  result[0u] = 'T';
+  result[1u] = 'e';
+  result[2u] = 's';
+  result[3u] = 't';
+  result[4u] = '\0';
+  return result;
+  }
+
+static constexpr auto test_buffer = test_basic_fixed_string_as_buffor("testteststes");
+static constexpr auto test_buffer_view = test_buffer.null_terminated_buffor_view();
+static_assert(test_buffer_view == std::string_view{"Test"});
+
 static_assert(verify_basic_string());
   }  // namespace coll
 

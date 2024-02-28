@@ -69,7 +69,20 @@ struct basic_fixed_string
     }
 
   [[nodiscard]]
+  inline constexpr auto
+    operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
+    {
+    return data_[index];
+    }
+
+  [[nodiscard]]
   inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) const noexcept -> char_type const &
+    {
+    return data_[index];
+    }
+
+  [[nodiscard]]
+  inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
     {
     return data_[index];
     }
@@ -90,6 +103,13 @@ struct basic_fixed_string
     }
 
   constexpr std::basic_string_view<char_type> view() const noexcept { return {&data_[0], N}; }
+
+  /// this is for use cases where basic_fixed_string is used as buffor with extra length and length must be determined
+  /// by "\0"
+  constexpr std::basic_string_view<char_type> null_terminated_buffor_view() const noexcept
+    {
+    return {&data_[0], std::char_traits<char_type>::length(&data_[0])};
+    }
 
   constexpr operator std::basic_string_view<char_type>() const noexcept { return {&data_[0], N}; }
 
