@@ -1,4 +1,4 @@
-#include <coll/static_vector.h>
+#include <small_vectors/static_vector.h>
 #include <unit_test_core.h>
 
 #include <atomic>
@@ -6,7 +6,7 @@
 
 //____________________________________________________________________________//
 
-namespace coll
+namespace small_vectors::inline v3_0
   {
 
 // struct non_trivial
@@ -188,9 +188,9 @@ test_result consteval consteval_static_vector_deduced_types()
 
 static_assert(consteval_static_vector_deduced_types<int32_t>());
 static_assert(consteval_static_vector_deduced_types<aligned_3_byte_struct>());
-  }  // namespace coll
+  }  // namespace small_vectors::inline v3_0
 
-using namespace coll;
+using namespace small_vectors;
 using boost::ut::operator""_test;
 
 //---------------------------------------------------------------------------------------------------------
@@ -309,7 +309,7 @@ int main()
       constexpr_test(equal(vec, tst));
 
       vector_type vec2{std::move(vec)};
-      if constexpr(coll::concepts::trivially_copyable<value_type>)
+      if constexpr(concepts::trivially_copyable<value_type>)
         constexpr_test(
           size(vec) == 4
         );  // unchanged as copied by compiler with memcpy, requirement is to leave in valid state

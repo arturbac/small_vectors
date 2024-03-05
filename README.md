@@ -4,25 +4,24 @@
 
 C++20,23 utilities library
 
-## features
-* static vector is tivialy_copyable for trivialy_copyable element types so it get compiler optimisation with memcpy during copying (since v3.0.3-devel)
-* static vectors with in class storage ( static_vector is address independant and may be used in interprocess data exchange)
-* small vectors with in class storage and/or dynamic allocated memory with custom size type for small_vector and adjusted minimal size type for static_vector depending on number of elements
-* static vector fully constant evaluated for trivial element types
-* basic_string - with in class buffers fully constant evaluated, with dynamic and static storage ( static storage variant is address independant and may be used in interprocess data exchange)
-* basic_fixed_string - for manipulating constant evaluated string literals
-* C++23 standard expected/unexpected implementation with monadic ops for c++20 and up
+## Features
+- **Static Vector**: Trivially copyable for types that are trivially copyable, enabling compiler optimizations such as `memcpy` for copying operations (since v3.0.3-devel).
+- **Address Independence**: Both static and small vectors offer in-class storage, making them address-independent and suitable for interprocess data exchange.
+- **Dynamic and Custom Sized Storage**: Small vectors support dynamic memory allocation with customizable size types. Static vectors adjust the minimal size type based on the number of elements.
+- **Constant Evaluation**: Static vectors can be fully evaluated at compile time for trivial element types.
+- **Basic String with Dual Storage**: Provides a basic string implementation with both dynamic and static in-class storage options. The static storage variant is address-independent.
+- **Basic Fixed String**: Enables manipulation of constant evaluated string literals.
+- **Expected/Unexpected Implementation**: Offers a C++23 standard `expected/unexpected` implementation with monadic operations for C++20 and up.
 
-## minor utility features
+## Minor Utility Features
+- **Meta Packed Struct**: Supports bit-packing data with strong typing. Version 2.3.0 introduced signed type support.
+- **Strong Type Wrapping**: Allows for the strong type wrapping of primitive types.
+- **Unaligned Access**: Functions for memory unaligned access are fully capable of being executed at compile time starting with v2.4.2.
 
-* meta_packed_struct - allows bit packing data with strong typing, v2.3.0 added signed type support
-* strong_type - strong type wrapping for primitive types
-* unaligned_load and unaligned_store - for memory unaligned access, starting with v2.4.2 fully able to execute at compile time
+## Interprocess Features
+- **Fork Wrapper**: Simplifies process spawning with an interface similar to `std::async`.
+- **Shared Memory Utilities**: Facilitates the construction and access of data in shared interprocess memory with automated memory access indexing to prevent errors.
 
-## interprocess features
-* fork - wrapper for easy process spawning with std::async like interface
-* shared_mem_utils - for construction and access data in shared interprocess memory with auto memory accesss indexing preventing errors
-* 
 ### examples
 
 #### small_vector and static_vector
@@ -199,12 +198,13 @@ constexpr_test(get<field_2>(mbs) == true );
 constexpr_test(get<field_3>(mbs) == 0x0ff0 );
 constexpr_test(get<field_4>(mbs) == value3 );
 ```
-### tested compilers as of v2.4.2
+## Tested Compilers (as of v2.4.2)
 
-make workflows tested
-* cmake --workflow --preset="clang-16-libc++release"
-* cmake --workflow --preset="clang-17-release" using gnu libstdc++ on linux
-* cmake --workflow --preset="clang-17-libc++release"
-* cmake --workflow --preset="gcc-13-release"
-* cmake --workflow --preset="gcc-12-release"
-* msvc tested from time to time
+### Make Workflows Tested
+- `cmake --workflow --preset="clang-16-libc++release"`
+- `cmake --workflow --preset="clang-17-release"` using GNU libstdc++ on Linux
+- `cmake --workflow --preset="gcc-13-release"`
+- `cmake --workflow --preset="gcc-12-release"`
+
+### MSVC
+- Tested intermittently

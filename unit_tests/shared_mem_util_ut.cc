@@ -1,9 +1,9 @@
 #include <unit_test_core.h>
-#include <interprocess/fork.h>
-#include <interprocess/shared_mem_utils.h>
-#include <interprocess/atomic_mutex.h>
-#include <coll/static_vector.h>
-#include <coll/basic_string.h>
+#include <small_vectors/interprocess/fork.h>
+#include <small_vectors/interprocess/shared_mem_utils.h>
+#include <small_vectors/interprocess/atomic_mutex.h>
+#include <small_vectors/static_vector.h>
+#include <small_vectors/basic_string.h>
 
 #include <chrono>
 #include <iostream>
@@ -20,7 +20,7 @@ namespace ut = boost::ut;
 using boost::ut::operator""_test;
 using namespace ut::operators::terse;
 using enum std::memory_order;
-
+namespace ip = small_vectors::ip;
 namespace bip = boost::interprocess;
 
 using clock_type = std::chrono::high_resolution_clock;
@@ -129,7 +129,7 @@ int main()
 
   "test_complex_objects"_test = [&]
   {
-    using vector_type = coll::static_vector<uint32_t, 512u>;
+    using vector_type = small_vectors::static_vector<uint32_t, 512u>;
     using shared_vector_decl = ip::shared_type_decl<vector_type>;
     bip::mapped_region region(shm, bip::read_write);
     vector_type & vector_obj{*ip::construct_at<shared_vector_decl>(region)};
@@ -145,7 +145,7 @@ int main()
         vector_type & vector{ip::ref<shared_vector_decl>(cregion)};
         ut::expect(size(vector) == 1u);
         ut::expect(front(vector) == 2u);
-        ut::expect(resize(vector, 512) == coll::vector_outcome_e::no_error) >> ut::fatal;
+        ut::expect(resize(vector, 512) == small_vectors::vector_outcome_e::no_error) >> ut::fatal;
         pop_back(vector);
         std::iota(begin(vector), end(vector), 2);
 
@@ -218,8 +218,8 @@ int main()
       int64_t c;
       };
 
-    using message = coll::static_u8string<512>;
-    using vector_type = coll::static_vector<uint32_t, 128u>;
+    using message = small_vectors::static_u8string<512>;
+    using vector_type = small_vectors::static_vector<uint32_t, 128u>;
 
     // memory offset table
     using foo_obj_decl = ip::shared_type_decl<foo>;
@@ -260,7 +260,7 @@ int main()
 
         ut::expect(size(vector) == 1u);
         ut::expect(front(vector) == 2u);
-        ut::expect(resize(vector, 128) == coll::vector_outcome_e::no_error) >> ut::fatal;
+        ut::expect(resize(vector, 128) == small_vectors::vector_outcome_e::no_error) >> ut::fatal;
         pop_back(vector);
         std::iota(begin(vector), end(vector), 2);
 

@@ -1,9 +1,9 @@
-#include <coll/small_vector.h>
+#include <small_vectors/small_vector.h>
 #include <unit_test_core.h>
 
 #include <iostream>
 
-namespace coll
+namespace small_vectors
   {
 using detail::small_vector_storage_type;
 using enum detail::small_vector_storage_type;
@@ -109,9 +109,9 @@ using constexpr_test_type_list = metatests::type_list<
   non_trivial,
   non_trivial_ptr,
   non_trivial_ptr_except_copy>;
-  }  // namespace coll
+  }  // namespace small_vectors
 
-using namespace coll;
+using namespace small_vectors;
 using namespace metatests;
 
 static bool volatile vfalse{};
@@ -162,7 +162,7 @@ int main()
       using value_type = uint32_t;
       using st = small_vector<value_type, uint16_t, 3>;
       st v;
-      test_result tr = constexpr_test(coll::detail::growth(uint16_t(3), uint16_t(1)) == 7);
+      test_result tr = constexpr_test(small_vectors::detail::growth(uint16_t(3), uint16_t(1)) == 7);
 
       auto res = emplace_back(v, 0xf5u);
       tr |= constexpr_test(res == 0xf5u) | constexpr_test(size(v) == 1u) | constexpr_test(!empty(v))
@@ -350,8 +350,8 @@ int main()
       //   constexpr size_type capacity_req =at_least<value_type>(size_type(4));
       using st = small_vector<value_type, size_type, capacity_req>;
       st v;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
       for(size_type s{}; s != capacity_req; ++s)
         {
@@ -388,10 +388,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -473,10 +473,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -505,7 +505,7 @@ int main()
       st v;
 
       constexpr size_type second_growth
-        = coll::detail::growth(coll::detail::growth(capacity_req, size_type(1)), size_type(1));
+        = small_vectors::detail::growth(small_vectors::detail::growth(capacity_req, size_type(1)), size_type(1));
       static_assert(second_growth + 1u < test_values.size());
       for(size_type s{}; s != second_growth; ++s)
         emplace_back(v, test_values[s]);
@@ -531,7 +531,7 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
 
@@ -575,7 +575,7 @@ int main()
       st v;
 
       constexpr size_type second_growth
-        = coll::detail::growth(coll::detail::growth(capacity_req, size_type(1)), size_type(1));
+        = small_vectors::detail::growth(small_vectors::detail::growth(capacity_req, size_type(1)), size_type(1));
       static_assert(second_growth + 1u < test_values.size());
       for(size_type s{}; s != second_growth; ++s)
         emplace_back(v, test_values[s]);
@@ -603,10 +603,10 @@ int main()
                                            value_type const * t, size_type const * u
                                          ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return test_small_vector_pop_back_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto test_small_vector_pop_back_0 = [test_small_vector_pop_back_tmpl]<typename value_type, typename size_type>(
                                           value_type const * t, size_type const * u
                                         ) -> metatests::test_result
@@ -654,7 +654,7 @@ int main()
       st v;
 
       constexpr size_type second_growth
-        = coll::detail::growth(coll::detail::growth(capacity_req, size_type(1)), size_type(1));
+        = small_vectors::detail::growth(small_vectors::detail::growth(capacity_req, size_type(1)), size_type(1));
       static_assert(second_growth + 1u < test_values.size());
       for(size_type s{}; s != second_growth; ++s)
         emplace_back(v, test_values[s]);
@@ -675,10 +675,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -717,8 +717,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
         {
@@ -726,9 +726,8 @@ int main()
         emplace_back(v, value_type(0xfe));
         emplace_back(v, value_type(0xff));
         std::span span1{test_values.data(), second_growth};
-        auto res = insert(v, begin(v), begin(span1), end(span1));
+        insert(v, begin(v), begin(span1), end(span1));
 
-        tr |= constexpr_test(res == no_error);
         std::array<value_type, second_growth + 2> expected;
         std::iota(begin(expected), std::prev(end(expected), 2), value_type(1));
         expected[expected.size() - 2] = value_type(0xfe);
@@ -742,9 +741,8 @@ int main()
         emplace_back(v, value_type(0xfe));
         emplace_back(v, value_type(0xff));
         std::span span1{test_values.data(), second_growth};
-        auto res = insert(v, std::next(begin(v), 1), begin(span1), end(span1));
+        insert(v, std::next(begin(v), 1), begin(span1), end(span1));
 
-        tr |= constexpr_test(res == no_error);
         std::array<value_type, second_growth + 2> expected;
         std::iota(std::next(begin(expected), 1), std::prev(end(expected), 1), value_type(1));
         expected[0] = value_type(0xfe);
@@ -758,9 +756,8 @@ int main()
         emplace_back(v, value_type(0xfe));
         emplace_back(v, value_type(0xff));
         std::span span1{test_values.data(), second_growth};
-        auto res = insert(v, std::next(begin(v), 2), begin(span1), end(span1));
+        insert(v, std::next(begin(v), 2), begin(span1), end(span1));
 
-        tr |= constexpr_test(res == no_error);
         std::array<value_type, second_growth + 2> expected;
         std::iota(std::next(begin(expected), 2), end(expected), value_type(1));
         expected[0] = value_type(0xfe);
@@ -775,10 +772,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -846,10 +843,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -877,8 +874,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
         {
@@ -928,10 +925,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -991,10 +988,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -1027,8 +1024,8 @@ int main()
       test_result tr;
       using sa = small_vector<value_type, size_type, capacity_req>;
       using st = small_vector<value_type, size_type, capacity_req2>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       if constexpr(capacity_req != 0u)
@@ -1067,15 +1064,15 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{}, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_size_0 = [fn_tmpl]<typename value_type, typename size_type>(
                        value_type const * t, size_type const * u
                      ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       using size_req2 = std::integral_constant<size_type, 0u>;
       return fn_tmpl(t, u, size_req{}, size_req2{});
     };
@@ -1090,7 +1087,7 @@ int main()
                         value_type const * t, size_type const * u
                       ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       using size_req2 = std::integral_constant<size_type, 25u>;
       return fn_tmpl(t, u, size_req{}, size_req2{});
     };
@@ -1139,8 +1136,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       if constexpr(capacity_req != 0u)
@@ -1234,7 +1231,7 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
 
@@ -1265,8 +1262,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       if constexpr(capacity_req != 0u)
@@ -1307,10 +1304,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -1351,8 +1348,8 @@ int main()
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
       using sa = small_vector<value_type, size_type, capacity_req2>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       // buffered = buffered
@@ -1445,15 +1442,15 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{}, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_size_0 = [fn_tmpl]<typename value_type, typename size_type>(
                        value_type const * t, size_type const * u
                      ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       using size_req2 = std::integral_constant<size_type, 0u>;
       return fn_tmpl(t, u, size_req{}, size_req2{});
     };
@@ -1468,7 +1465,7 @@ int main()
                         value_type const * t, size_type const * u
                       ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       using size_req2 = std::integral_constant<size_type, 25u>;
       return fn_tmpl(t, u, size_req{}, size_req2{});
     };
@@ -1514,8 +1511,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       // buffered = buffered left throws
@@ -1753,10 +1750,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -1783,8 +1780,8 @@ int main()
       std::iota(begin(test_values), end(test_values), value_type(1));
       test_result tr;
       using st = small_vector<value_type, size_type, capacity_req>;
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
-      constexpr size_type second_growth = coll::detail::growth(first_growth, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
+      constexpr size_type second_growth = small_vectors::detail::growth(first_growth, size_type(1));
       static_assert(second_growth + 1u < test_values.size());
 
       // buffered = buffered
@@ -1877,10 +1874,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -1939,7 +1936,7 @@ int main()
     };
     auto fn_size = [fn_tmpl]<typename value_type>(value_type const * t) -> metatests::test_result
     {
-      using size_req = std::integral_constant<uint8_t, coll::at_least<value_type>(uint8_t(4))>;
+      using size_req = std::integral_constant<uint8_t, small_vectors::at_least<value_type>(uint8_t(4))>;
       return fn_tmpl(t, size_req{});
     };
 
@@ -2039,10 +2036,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -2079,7 +2076,7 @@ int main()
       test_result tr;
       using vector_type = small_vector<value_type, size_type, capacity_req>;
       constexpr size_type cap{vector_type::buffered_capacity()};
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
         {
         vector_type vec;
         std::array<value_type, first_growth> expected;
@@ -2129,10 +2126,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result
@@ -2171,7 +2168,7 @@ int main()
       test_result tr;
       using vector_type = small_vector<value_type, size_type, capacity_req>;
       constexpr size_type cap{vector_type::buffered_capacity()};
-      constexpr size_type first_growth = coll::detail::growth(capacity_req, size_type(1));
+      constexpr size_type first_growth = small_vectors::detail::growth(capacity_req, size_type(1));
         {
         vector_type vec;
         std::array<value_type, first_growth> expected;
@@ -2245,10 +2242,10 @@ int main()
                      value_type const * t, size_type const * u
                    ) -> metatests::test_result
     {
-      using size_req = std::integral_constant<size_type, coll::at_least<value_type>(size_type(4))>;
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
       return fn_tmpl(t, u, size_req{});
     };
-    // size_type capacity_req = coll::at_least<value_type>(size_type(4))
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
     auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
                   value_type const * t, size_type const * u
                 ) -> metatests::test_result

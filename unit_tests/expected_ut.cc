@@ -1,6 +1,6 @@
 #define SMALL_VECTORS_ENABLE_CUSTOM_EXCPECTED 1
 
-#include <utils/expected.h>
+#include <small_vectors/utils/expected.h>
 #include <unit_test_core.h>
 
 using metatests::constexpr_test;
@@ -936,9 +936,22 @@ static void do_test(test_result & result)
     result |= run_consteval_test<error_type_list>(fn_tmpl);
     result |= run_consteval_test<error_type_list>(fn_tmpl);
   };
-
-  "expected transform_error"_test = [&]
-  {
+    // If the original std::expected<T, E> object does not have a value (i.e., it holds an error), invoking
+    // transform_error on it will apply the provided transformation function to the error. This transformation function
+    // takes the current error as input and returns a new value which could either be of a different error type or a
+    // valid value type for the std::expected.
+    //
+    // The return type of the transform_error function is another std::expected object. The exact nature of this object
+    // (whether it holds a value or an error) depends on what the transformation function returns:
+    //
+    //     If the transformation function returns a type that is compatible with the expected's value type (T), then the
+    //     resulting std::expected from transform_error will contain a value. If the transformation function returns a
+    //     type compatible with a new error type, the resulting std::expected will contain an error of this new type.
+    //
+    // Therefore, transform_error allows the error to be transformed into either a new error type or potentially into a
+    // valid value, depending on the transformation logic implemented in the function passed to transform_error.
+    // "expected transform_error"_test = [&]
+    {
     auto fn_tmpl
       = []<typename value_type, typename error_type>(value_type const *, error_type const *) -> metatests::test_result
     {
@@ -947,22 +960,26 @@ static void do_test(test_result & result)
         {
         expected_type const ex{in_place, value_type{2}};
         auto res{ex.transform_error(f)};
+        constexpr_test(res.has_value());
         constexpr_test(std::same_as<decltype(res), expected_type>);
         constexpr_test(res == value_type{2});
         }
         {
         auto res{expected_type{in_place, value_type{2}}.transform_error(f)};
+        constexpr_test(res.has_value());
         constexpr_test(std::same_as<decltype(res), expected_type>);
         constexpr_test(res == value_type{2});
         }
         {
         expected_type const ex{unexpect, error_type{2}};
         auto res{ex.transform_error(f)};
+        constexpr_test(!res.has_value());
         constexpr_test(std::same_as<decltype(res), expected_type>);
         constexpr_test(res == unexpected{error_type(3)});
         }
         {
         auto res{expected_type{unexpect, error_type{2}}.transform_error(f)};
+        constexpr_test(!res.has_value());
         constexpr_test(std::same_as<decltype(res), expected_type>);
         constexpr_test(res == unexpected{error_type(3)});
         }
@@ -971,7 +988,8 @@ static void do_test(test_result & result)
 
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-  };
+    }
+  // ;
   }
   }  // namespace expected_test
 

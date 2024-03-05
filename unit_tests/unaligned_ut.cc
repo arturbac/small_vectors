@@ -1,6 +1,6 @@
 #include <unit_test_core.h>
 
-#include <utils/unaligned.h>
+#include <small_vectors/utils/unaligned.h>
 #include <cmath>
 
 using traits_list = metatests::type_list<uint8_t, std::byte>;
@@ -9,7 +9,7 @@ using namespace metatests;
 int main()
   {
   using namespace boost::ut;
-  using namespace memutil;
+  using namespace small_vectors::memutil;
 
   metatests::test_result result;
 

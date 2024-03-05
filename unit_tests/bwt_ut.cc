@@ -1,7 +1,7 @@
-#include <iostream>
-#include <algo/bwt.h>
+#include <small_vectors/basic_fixed_string.h>
+#include <small_vectors/algo/bwt.h>
 #include <unit_test_core.h>
-#include <coll/basic_fixed_string.h>
+#include <iostream>
 
 using metatests::constexpr_test;
 using metatests::run_consteval_test;
@@ -14,7 +14,7 @@ using metatests::test_result;
 
 using value_type_list = metatests::type_list<char, char8_t, char16_t, char32_t, wchar_t>;
 // using value_type_list = metatests::type_list<char>;
-using coll::cast_fixed_string;
+using small_vectors::cast_fixed_string;
 using std::ranges::begin;
 
 namespace encode_test
@@ -30,14 +30,14 @@ static void do_test(test_result & result)
         {
         auto constexpr text{cast_fixed_string<char_type>("banana")};
         auto constexpr expected{cast_fixed_string<char_type>("annb$aa")};
-        auto outit{algo::bwt::encode<'$'>(text, begin(buffer))};
+        auto outit{small_vectors::algo::bwt::encode<'$'>(text, begin(buffer))};
         view_type v{begin(buffer), outit};
         constexpr_test(v == expected);
         }
         {
         auto constexpr text{cast_fixed_string<char_type>("abracadabra")};
         auto constexpr expected{cast_fixed_string<char_type>("ard$rcaaaabb")};
-        auto outit{algo::bwt::encode<'$'>(text, begin(buffer))};
+        auto outit{small_vectors::algo::bwt::encode<'$'>(text, begin(buffer))};
         view_type v{begin(buffer), outit};
         constexpr_test(v == expected);
         }
@@ -63,14 +63,14 @@ static void do_test(test_result & result)
         {
         auto constexpr text{cast_fixed_string<char_type>("annb$aa")};
         auto constexpr expected{cast_fixed_string<char_type>("banana")};
-        auto outit{algo::bwt::decode<'$'>(text, begin(buffer))};
+        auto outit{small_vectors::algo::bwt::decode<'$'>(text, begin(buffer))};
         view_type v{begin(buffer), outit};
         constexpr_test(v == expected);
         }
         {
         auto constexpr text{cast_fixed_string<char_type>("ard$rcaaaabb")};
         auto constexpr expected{cast_fixed_string<char_type>("abracadabra")};
-        auto outit{algo::bwt::decode<'$'>(text, begin(buffer))};
+        auto outit{small_vectors::algo::bwt::decode<'$'>(text, begin(buffer))};
         view_type v{begin(buffer), outit};
         constexpr_test(v == expected);
         }

@@ -1,11 +1,12 @@
-#include <utils/meta_packed_struct.h>
+#include <small_vectors/utils/meta_packed_struct.h>
 #include <unit_test_core.h>
 
-using namespace utils;
+using namespace small_vectors::utils;
 using boost::ut::operator""_test;
 
-using utils::detail::compress_value;
-using utils::detail::uncompress_value;
+using small_vectors::utils::bitmask_v;
+using small_vectors::utils::detail::compress_value;
+using small_vectors::utils::detail::uncompress_value;
 
 static_assert(static_cast<uint8_t>(~bitmask_v<uint8_t, 8>) == 0u);
 
@@ -109,38 +110,38 @@ int main()
     {
       metatests::test_result tr;
         {
-        tr |= constexpr_test(utils::bitmask_v<uint8_t, 0> == 0x0u);
-        tr |= constexpr_test(utils::bitmask_v<uint8_t, 8> == 0xFFu);
-        tr |= constexpr_test(utils::bitmask_v<uint8_t, 7> == 0x7Fu);
-        tr |= constexpr_test(utils::bitmask_v<uint8_t, 1> == 0x1u);
+        tr |= constexpr_test(bitmask_v<uint8_t, 0> == 0x0u);
+        tr |= constexpr_test(bitmask_v<uint8_t, 8> == 0xFFu);
+        tr |= constexpr_test(bitmask_v<uint8_t, 7> == 0x7Fu);
+        tr |= constexpr_test(bitmask_v<uint8_t, 1> == 0x1u);
 
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 7> == 0x7Fu);
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 1> == 0x1u);
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 8> == 0xFFu);
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 13> == (1u << 13) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 9> == (1u << 9) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint16_t, 16> == 0xFFFFu);
+        tr |= constexpr_test(bitmask_v<uint16_t, 7> == 0x7Fu);
+        tr |= constexpr_test(bitmask_v<uint16_t, 1> == 0x1u);
+        tr |= constexpr_test(bitmask_v<uint16_t, 8> == 0xFFu);
+        tr |= constexpr_test(bitmask_v<uint16_t, 13> == (1u << 13) - 1);
+        tr |= constexpr_test(bitmask_v<uint16_t, 9> == (1u << 9) - 1);
+        tr |= constexpr_test(bitmask_v<uint16_t, 16> == 0xFFFFu);
 
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 8> == 0xFFu);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 7> == 0x7Fu);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 1> == 0x1u);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 28> == (1u << 28) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 23> == (1u << 23) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 29> == (1u << 29) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint32_t, 32> == 0xFFFFFFFFu);
+        tr |= constexpr_test(bitmask_v<uint32_t, 8> == 0xFFu);
+        tr |= constexpr_test(bitmask_v<uint32_t, 7> == 0x7Fu);
+        tr |= constexpr_test(bitmask_v<uint32_t, 1> == 0x1u);
+        tr |= constexpr_test(bitmask_v<uint32_t, 28> == (1u << 28) - 1);
+        tr |= constexpr_test(bitmask_v<uint32_t, 23> == (1u << 23) - 1);
+        tr |= constexpr_test(bitmask_v<uint32_t, 29> == (1u << 29) - 1);
+        tr |= constexpr_test(bitmask_v<uint32_t, 32> == 0xFFFFFFFFu);
 
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 0> == 0x0u);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 8> == 0xFFu);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 7> == 0x7Fu);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 1> == 0x1u);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 28> == (1u << 28) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 23> == (1u << 23) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 29> == (1u << 29) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 32> == 0xFFFFFFFFu);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 58> == (1LLu << 58) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 53> == (1LLu << 53) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 59> == (1LLu << 59) - 1);
-        tr |= constexpr_test(utils::bitmask_v<uint64_t, 64> == 0xFFFFFFFFFFFFFFFFLLu);
+        tr |= constexpr_test(bitmask_v<uint64_t, 0> == 0x0u);
+        tr |= constexpr_test(bitmask_v<uint64_t, 8> == 0xFFu);
+        tr |= constexpr_test(bitmask_v<uint64_t, 7> == 0x7Fu);
+        tr |= constexpr_test(bitmask_v<uint64_t, 1> == 0x1u);
+        tr |= constexpr_test(bitmask_v<uint64_t, 28> == (1u << 28) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 23> == (1u << 23) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 29> == (1u << 29) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 32> == 0xFFFFFFFFu);
+        tr |= constexpr_test(bitmask_v<uint64_t, 58> == (1LLu << 58) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 53> == (1LLu << 53) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 59> == (1LLu << 59) - 1);
+        tr |= constexpr_test(bitmask_v<uint64_t, 64> == 0xFFFFFFFFFFFFFFFFLLu);
         }
 
       return tr;

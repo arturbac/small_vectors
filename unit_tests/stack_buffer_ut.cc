@@ -1,6 +1,6 @@
-#include <interprocess/fork.h>
-#include <interprocess/shared_mem_utils.h>
-#include <interprocess/stack_buffer.h>
+#include <small_vectors/interprocess/fork.h>
+#include <small_vectors/interprocess/shared_mem_utils.h>
+#include <small_vectors/interprocess/stack_buffer.h>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
@@ -25,7 +25,7 @@ struct destruction_only
     addr->~T();
     }
   };
-
+namespace ip = small_vectors::ip;
 namespace ut = boost::ut;
 using boost::ut::operator""_test;
 using namespace ut::operators::terse;

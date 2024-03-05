@@ -1,36 +1,40 @@
 #include <unit_test_core.h>
-#include <coll/basic_fixed_string.h>
-#include <coll/basic_string.h>
+#include <small_vectors/basic_fixed_string.h>
+#include <small_vectors/basic_string.h>
 
 #include <iostream>
 
-using s_string = coll::static_string<256>;
+using s_string = small_vectors::static_string<256>;
 #define debug_only_static 0
 
-using buffered_string_type_list
-  = metatests::type_list<coll::string, coll::u8string, coll::u16string, coll::u32string, coll::wstring>;
+using buffered_string_type_list = metatests::type_list<
+  small_vectors::string,
+  small_vectors::u8string,
+  small_vectors::u16string,
+  small_vectors::u32string,
+  small_vectors::wstring>;
 
 #if !debug_only_static
 
 using string_type_list = metatests::type_list<
-  coll::string,
-  coll::u8string,
-  coll::u16string,
-  coll::u32string,
-  coll::wstring,
-  coll::static_string<256>,
-  coll::static_u8string<256>,
-  coll::static_u16string<256>,
-  coll::static_u32string<256>,
-  coll::static_wstring<256>>;
+  small_vectors::string,
+  small_vectors::u8string,
+  small_vectors::u16string,
+  small_vectors::u32string,
+  small_vectors::wstring,
+  small_vectors::static_string<256>,
+  small_vectors::static_u8string<256>,
+  small_vectors::static_u16string<256>,
+  small_vectors::static_u32string<256>,
+  small_vectors::static_wstring<256>>;
 #else
 using string_type_list = metatests::type_list<
-  // coll::static_string<256>
-  coll::wstring>;
+  // small_vectors::static_string<256>
+  small_vectors::wstring>;
 
 #endif
-static_assert(std::same_as<uint8_t, coll::static_string<10>::size_type>);
-static_assert(std::same_as<uint16_t, coll::static_string<256>::size_type>);
+static_assert(std::same_as<uint8_t, small_vectors::static_string<10>::size_type>);
+static_assert(std::same_as<uint16_t, small_vectors::static_string<256>::size_type>);
 
 using metatests::constexpr_test;
 using metatests::run_consteval_test;
@@ -40,7 +44,7 @@ using ut::operator""_test;
 using namespace ut::operators::terse;
 using metatests::test_result;
 
-namespace coll
+namespace small_vectors::inline v3_0
   {
 
 consteval bool verify_basic_string()
@@ -99,13 +103,13 @@ static constexpr auto test_buffer_view = test_buffer.null_terminated_buffor_view
 static_assert(test_buffer_view == std::string_view{"Test45"});
 
 static_assert(verify_basic_string());
-  }  // namespace coll
+  }  // namespace small_vectors::inline v3_0
 
-using namespace coll;
+using namespace small_vectors;
 
 constexpr bool is_null_termianted(auto str) noexcept
   {
-  if constexpr(coll::detail::string::null_terminate_string)
+  if constexpr(small_vectors::detail::string::null_terminate_string)
     return str[size(str)] == '\0';
   else
     return true;
@@ -1578,9 +1582,9 @@ int main()
 
       st str{text};
       if(std::is_constant_evaluated())
-        constexpr_test(coll::hash(str) != 0u);
+        constexpr_test(small_vectors::hash(str) != 0u);
       else
-        constexpr_test(coll::hash(str) == stl_hash(str.view()));
+        constexpr_test(small_vectors::hash(str) == stl_hash(str.view()));
       return {};
     };
     result |= run_consteval_test<string_type_list>(fn_tmpl);

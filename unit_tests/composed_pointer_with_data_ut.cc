@@ -1,7 +1,7 @@
-#include <coll/composed_pointer_with_data.h>
+#include <small_vectors/composed_pointer_with_data.h>
 #include <unit_test_core.h>
 
-using namespace coll;
+using namespace small_vectors;
 using boost::ut::expect;
 using metatests::constexpr_test;
 using boost::ut::operator""_test;

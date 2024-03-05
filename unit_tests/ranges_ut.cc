@@ -1,5 +1,5 @@
-#include <coll/ranges/accumulate.h>
-#include <utils/strong_type.h>
+#include <small_vectors/ranges/accumulate.h>
+#include <small_vectors/utils/strong_type.h>
 #include <unit_test_core.h>
 
 struct test_tag : public small_vectors::utils::strong_type_default_traits
@@ -24,21 +24,21 @@ int main()
       using limits = std::numeric_limits<value_type>;
         {
         constexpr std::array<value_type, 1> range{};
-        constexpr_test(value_type(1) == coll::ranges::accumulate(range, value_type(1)));
+        constexpr_test(value_type(1) == small_vectors::ranges::accumulate(range, value_type(1)));
         }
         {
         constexpr std::array<value_type, 10> range{
           limits::lowest(), value_type(0), limits::max() / value_type(4), value_type(1)
         };
         constexpr auto sum(limits::lowest() + value_type(0) + limits::max() / value_type(4) + value_type(1));
-        constexpr_test(sum == coll::ranges::accumulate(range, value_type(0)));
+        constexpr_test(sum == small_vectors::ranges::accumulate(range, value_type(0)));
         }
         {
         constexpr std::array<value_type, 10> range{value_type(0), limits::max() / value_type(4), value_type(1)};
         constexpr auto sum(value_type(0) + limits::max() / value_type(4) + value_type(1));
         constexpr_test(
           sum * value_type(2)
-          == coll::ranges::accumulate(
+          == small_vectors::ranges::accumulate(
             range,
             value_type(0),
             [](value_type init, value_type obj) noexcept { return value_type(init + obj * value_type(2)); }

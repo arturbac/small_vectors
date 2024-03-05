@@ -1,4 +1,4 @@
-#include <utils/strong_type.h>
+#include <small_vectors/utils/strong_type.h>
 #include <unit_test_core.h>
 #include <boost_ut.h>
 
@@ -210,11 +210,11 @@ static void strong_type_suite()
                        | constexpr_test((tst0 | tst1) == test_type{value_type{0b01111101}})
                        | constexpr_test((tst0 & tst1) == test_type{value_type{0b00010100}})
 
-                       | constexpr_test((tst0 >> 1) == test_type{value_type{0b00101010}})
+                       | constexpr_test((tst0 >> 1u) == test_type{value_type{0b00101010}})
                        | constexpr_test((tst0 >> test_type{value_type{1}}) == test_type{value_type{0b00101010}});
 
       tst0 = test_type{value_type{0b00101010}};
-      tr |= constexpr_test((tst0 << 1) == test_type{value_type{0b01010100}})
+      tr |= constexpr_test((tst0 << 1u) == test_type{value_type{0b01010100}})
             | constexpr_test((tst0 << test_type{value_type{1}}) == test_type{value_type{0b01010100}});
 
       tst0 = test_type{value_type{0b01010101}};
