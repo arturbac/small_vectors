@@ -6,8 +6,6 @@
 
 namespace small_vectors::inline v3_0::detail
   {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-template"
 
 template<typename value_type, std::unsigned_integral size_type>
 struct storage_context_t;
@@ -1031,6 +1029,5 @@ struct small_vector_storage<V, S, 0u>
   inline constexpr void set_size_priv_(size_type pos_ix) noexcept { size_ = pos_ix; }
   };
 
-#pragma clang diagnostic pop
   }  // namespace small_vectors::inline v3_0::detail
 

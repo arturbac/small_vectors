@@ -9,9 +9,6 @@
 
 namespace small_vectors::inline v3_0::detail::string
   {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-template"
-
 struct static_string_tag
   {
   };
@@ -681,8 +678,6 @@ struct append_copy_t
 inline constexpr append_copy_t append_copy;
 
 //-------------------------------------------------------------------------------------------------------------------
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-template"
 
 struct push_back_t
   {
@@ -695,7 +690,6 @@ struct push_back_t
   };
 
 inline constexpr push_back_t push_back;
-#pragma clang diagnostic pop
 
 //-------------------------------------------------------------------------------------------------------------------
 struct erase_t
@@ -735,6 +729,5 @@ struct pop_back_t
 
 inline constexpr pop_back_t pop_back;
 
-#pragma clang diagnostic pop
   }  // namespace small_vectors::inline v3_0::detail::string
 

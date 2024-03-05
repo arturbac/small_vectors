@@ -7,9 +7,6 @@
 
 namespace small_vectors::inline v3_0::detail
   {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-template"
-
 // By default, only trivially copyable or trivially movable types are relocatable
 // however, is_relocatable may be specialized to mark complex types as relocatable
 // TODO
@@ -322,5 +319,4 @@ inline constexpr void uninitialized_uneven_range_swap(
   uninitialized_move(iter2 + size1, iter2 + size2, iter1 + size1);
   }
 
-#pragma clang diagnostic pop
   }  // namespace small_vectors::inline v3_0::detail
