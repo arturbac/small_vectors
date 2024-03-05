@@ -1,4 +1,5 @@
 #pragma once
+#include <small_vectors/version.h>
 #include <concepts>
 #include <type_traits>
 #include <cstdint>

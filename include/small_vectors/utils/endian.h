@@ -1,10 +1,9 @@
 #pragma once
-
+#include <small_vectors/utils/utility_cxx20.h>
 #include <concepts>
 #include <bit>
 #include <cstdint>
 #include <algorithm>
-#include <small_vectors/utils/utility_cxx20.h>
 
 namespace small_vectors::inline v3_0::utils
   {

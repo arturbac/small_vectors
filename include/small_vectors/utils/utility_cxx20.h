@@ -24,6 +24,7 @@
 #if !defined(SMALL_VECTORS_CXX_UTILITY)
 #define SMALL_VECTORS_CXX_UTILITY 1
 
+#include <small_vectors/version.h>
 #include <type_traits>
 #include <cstdint>
 #include <limits>

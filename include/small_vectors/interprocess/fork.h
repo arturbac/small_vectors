@@ -1,4 +1,5 @@
 #pragma once
+#include <small_vectors/version.h>
 #include <concepts>
 #include <optional>
 #include <functional>
@@ -54,4 +55,4 @@ inline auto fork(function const & fn, Args... args) noexcept -> std::optional<fo
   else
     return {};
   }
-  }  // namespace ip
+  }  // namespace small_vectors::inline v3_0::ip

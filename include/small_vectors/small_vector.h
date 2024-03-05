@@ -24,6 +24,7 @@
 #include <small_vectors/detail/vector_storage.h>
 #include <small_vectors/detail/vector_func.h>
 #include <small_vectors/detail/adapter_iterator.h>
+
 #include <span>
 
 namespace small_vectors::inline v3_0::detail

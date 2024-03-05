@@ -1,15 +1,17 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
 include(CheckCXXCompilerFlag)
-
+include(cmake/extract_version.cmake)
 project(small_vectors
-        VERSION 3.0.3
+        VERSION ${small_vectors_version}
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
 include(GNUInstallDirs) 
 include(FeatureSummary)
 
-
+if( PROJECT_IS_TOP_LEVEL )
+  message(STATUS "small_vectors v${small_vectors_version}")
+endif()
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   message(
     FATAL_ERROR

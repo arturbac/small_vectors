@@ -1,8 +1,7 @@
 #pragma once
 
-#include <concepts>
 #include <small_vectors/utils/utility_cxx20.h>
-
+#include <concepts>
 #include <cstdint>
 #include <type_traits>
 #include <string_view>

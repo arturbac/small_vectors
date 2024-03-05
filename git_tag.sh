@@ -1,27 +1,28 @@
 #!/bin/bash
 
-# Path to the top level CMakeLists.txt file
-CMAKE_FILE="CMakeLists.txt"
+# Path to the version header file
+VERSION_FILE="include/small_vectors/version.h"
 
-# Extract the version number
-#VERSION=$(grep "VERSION" $CMAKE_FILE | head -n 1 | awk '{print $2}')
-#VERSION=$(grep "VERSION" $CMAKE_FILE | head -n 1 | sed -E 's/.*VERSION ([0-9]+.[0-9]+.[0-9]+).*/\1/')
-#VERSION=$(grep "^project(" $CMAKE_FILE | sed -n 's/.*VERSION \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
-VERSION=$(tail -n +2 $CMAKE_FILE | grep "VERSION" | head -n 1 | awk '{print $2}')
+# Extract the version number from the file
+VERSION=$(grep 'SMALL_VECTORS_VERSION' $VERSION_FILE | sed 's/.*"\(.*\)".*/\1/')
 
-# Check if VERSION is empty
+# Check if the version was successfully extracted
 if [ -z "$VERSION" ]; then
-  echo "Version not found in $CMAKE_FILE"
-  exit 1
+    echo "Error: Could not extract version from $VERSION_FILE"
+    exit 1
 fi
 
-# Prefix the version with a 'v'
+# Create a git tag with the extracted version, prefixed by 'v'
 TAG="v$VERSION"
 
-# Add a git tag
-git tag -a $TAG -m "Release $TAG"
+echo "Creating git tag: $TAG"
 
-# Optional: Push the tag to remote repository
-# git push origin $TAG
+# Check if the tag already exists
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo "Error: Tag $TAG already exists."
+    exit 1
+else
+    git tag -a "$TAG" -m "Version $VERSION"
+    echo "Git tag $TAG created successfully."
 
-echo "Tag $TAG created and ready to be pushed."
+fi

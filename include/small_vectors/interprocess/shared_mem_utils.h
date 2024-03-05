@@ -1,4 +1,5 @@
 #pragma once
+#include <small_vectors/version.h>
 #include <type_traits>
 #include <concepts>
 #include <cstdint>
@@ -75,4 +76,4 @@ inline auto ref(detail::concept_mapped_region auto & region) noexcept -> typenam
   return *std::launder(reinterpret_cast<type *>(addr));
   }
 
-  }  // namespace ip
+  }  // namespace small_vectors::inline v3_0::ip

@@ -1,4 +1,6 @@
 #pragma once
+
+#include <small_vectors/version.h>
 #include <type_traits>
 #include <concepts>
 #include <atomic>

@@ -1,4 +1,5 @@
 #pragma once
+#include <small_vectors/version.h>
 #include <cstdint>
 
 #if defined(__cpp_static_call_operator)

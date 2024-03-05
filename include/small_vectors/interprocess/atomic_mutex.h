@@ -1,5 +1,5 @@
 #pragma once
-
+#include <small_vectors/version.h>
 #include <atomic>
 #include <thread>
 

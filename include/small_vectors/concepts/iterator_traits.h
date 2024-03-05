@@ -1,5 +1,6 @@
 #pragma once
 
+#include <small_vectors/version.h>
 #include <iterator>
 #include <type_traits>
 
