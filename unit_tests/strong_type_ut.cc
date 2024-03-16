@@ -1,5 +1,6 @@
 #include <small_vectors/utils/strong_type.h>
 #include <small_vectors/stream/strong_type.h>
+#include <small_vectors/formattable/strong_type.h>
 
 #include <unit_test_core.h>
 #include <boost_ut.h>
@@ -83,6 +84,38 @@ namespace concepts
   static_assert(!tag_binary_operators<tag_with_binary_operators_neg>);
   static_assert(!tag_binary_operators<tag_empty>);
   }  // namespace concepts
+
+static ut::suite<"strong_type_formatter"> strong_type_formatter = []
+{
+  using namespace ut;
+  using namespace std::string_view_literals;
+
+  "Default format test"_test = []
+  {
+    small_vectors::utils::strong_type<int, small_vectors::utils::test_tag> strong_int{42};
+    expect(eq(std::format("{}", strong_int), "42"sv));
+  };
+
+  "Custom format - width and padding test"_test = []
+  {
+    small_vectors::utils::strong_type<int, small_vectors::utils::test_tag> strong_int{7};
+    expect(eq(std::format("{:04}", strong_int), "0007"sv));
+  };
+
+  "Negative number formatting test"_test = []
+  {
+    small_vectors::utils::strong_type<int, small_vectors::utils::test_tag> strong_int{-123};
+    expect(eq(std::format("{}", strong_int), "-123"sv));
+  };
+
+  "Hexadecimal format test"_test = []
+  {
+    small_vectors::utils::strong_type<int, small_vectors::utils::test_tag> strong_int{255};
+    expect(eq(std::format("{:x}", strong_int), "ff"sv));
+  };
+
+  // More tests can be added here following the same pattern
+};
 
 static void strong_type_suite()
   {
