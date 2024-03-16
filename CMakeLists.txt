@@ -6,9 +6,10 @@ project(small_vectors
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
-include(GNUInstallDirs) 
-include(FeatureSummary)
-
+include(GNUInstallDirs)
+if( PROJECT_IS_TOP_LEVEL )
+  include(FeatureSummary)
+endif()
 if( PROJECT_IS_TOP_LEVEL )
   message(STATUS "small_vectors v${small_vectors_version}")
 endif()
@@ -41,21 +42,21 @@ endif()
 #-----------------------------------------------------------------------------
 # options
 #-----------------------------------------------------------------------------
-if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
+if(SMALL_VECTORS_ENABLE_CPM_PACKAGING AND PROJECT_IS_TOP_LEVEL )
   option(SMALL_VECTORS_ENABLE_UNIT_TESTS "unit tests available from CTest"  ${PROJECT_IS_TOP_LEVEL} )
   add_feature_info("SMALL_VECTORS_ENABLE_UNIT_TESTS" SMALL_VECTORS_ENABLE_UNIT_TESTS "unit test available from CTest")
 else()
   set(SMALL_VECTORS_ENABLE_UNIT_TESTS OFF)
 endif()
 
-if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
+if(SMALL_VECTORS_ENABLE_UNIT_TESTS AND PROJECT_IS_TOP_LEVEL )
   #----------------------------------------------------------------
   # boost-ext/ut
   #----------------------------------------------------------------
   CPMAddPackage(
     ut
-    GITHUB_REPOSITORY boost-ext/ut
-    GIT_TAG        v1.1.9
+    GITHUB_REPOSITORY arturbac/ut-ext
+    GIT_TAG        master
   )
 endif()
 
