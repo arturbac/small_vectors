@@ -1,6 +1,9 @@
 #include <unit_test_core.h>
 #include <small_vectors/basic_fixed_string.h>
 #include <small_vectors/basic_string.h>
+#include <small_vectors/stream/basic_string.h>
+#include <small_vectors/stream/basic_fixed_string.h>
+#include <small_vectors/concepts/stream_insertable.h>
 
 #include <iostream>
 
@@ -99,6 +102,10 @@ consteval auto test_basic_fixed_string_as_buffor(char_type const (&str)[N])
   }
 
 static constexpr auto test_buffer = test_basic_fixed_string_as_buffor("01234567890");
+
+static_assert(small_vectors::concepts::stream_insertable<decltype(test_buffer)>);
+static_assert(small_vectors::concepts::stream_insertable<small_vectors::string>);
+
 static constexpr auto test_buffer_view = test_buffer.null_terminated_buffor_view();
 static_assert(test_buffer_view == std::string_view{"Test45"});
 

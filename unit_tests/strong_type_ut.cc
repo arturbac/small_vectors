@@ -1,4 +1,6 @@
 #include <small_vectors/utils/strong_type.h>
+#include <small_vectors/stream/strong_type.h>
+
 #include <unit_test_core.h>
 #include <boost_ut.h>
 
@@ -15,6 +17,8 @@ namespace small_vectors::utils
 struct test_tag : public strong_type_default_traits
   {
   };
+
+static_assert(small_vectors::concepts::stream_insertable<strong_type<int, test_tag>>);
 
 //----------------------------------------------------------------------------------------------------------------------
 namespace concepts
