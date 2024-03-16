@@ -142,11 +142,11 @@ endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${INCLUDE_INSTALL_DIR} )
 
-if(SMALL_VECTORS_ENABLE_UNIT_TESTS)
+if(SMALL_VECTORS_ENABLE_UNIT_TESTS AND PROJECT_IS_TOP_LEVEL)
   add_custom_target( unit_tests )
 endif()
 
-if( SMALL_VECTORS_ENABLE_UNIT_TESTS )
+if( SMALL_VECTORS_ENABLE_UNIT_TESTS AND PROJECT_IS_TOP_LEVEL)
   enable_testing( TRUE )
   add_subdirectory(unit_tests)
 endif()
