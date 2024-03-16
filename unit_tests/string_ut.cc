@@ -3,9 +3,15 @@
 #include <small_vectors/basic_string.h>
 #include <small_vectors/stream/basic_string.h>
 #include <small_vectors/stream/basic_fixed_string.h>
+#include <small_vectors/formattable/basic_string.h>
+#include <small_vectors/formattable/basic_fixed_string.h>
 #include <small_vectors/concepts/stream_insertable.h>
 
 #include <iostream>
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#endif
 
 using s_string = small_vectors::static_string<256>;
 #define debug_only_static 0
@@ -1599,3 +1605,108 @@ int main()
   };
   }
 
+namespace small_vectors
+  {
+static_assert(std::constructible_from<std::formatter<string, char>, std::formatter<string, char>>);
+static_assert(std::constructible_from<std::formatter<wstring, wchar_t>, std::formatter<wstring, wchar_t>>);
+static_assert(std::formattable<string, char>);
+static_assert(std::formattable<wstring, wchar_t>);
+
+static_assert(
+  std::formattable<basic_fixed_string<char, 10>, char>, "basic_fixed_string<char, N> should be formattable."
+);
+static_assert(
+  std::formattable<basic_fixed_string<wchar_t, 20>, wchar_t>, "basic_fixed_string<wchar_t, N> should be formattable."
+);
+using namespace ut;
+using namespace std::string_view_literals;
+static ut::suite basic_string_formatter = []
+{
+  // Test default formatting
+  "default formatting"_test = []
+  {
+    string test_string("Hello, World!"sv);
+    expect(eq(std::format("{}", test_string), "Hello, World!"sv));
+  };
+
+  // Wide character support
+  "wide character support"_test = []
+  {
+    wstring test_string(L"Hello, Wide World!"sv);
+    wstring result{std::format(L"{}", test_string)};
+    expect(result == L"Hello, Wide World!"sv);
+    expect(eq(result.size(), std::size(L"Hello, Wide World!"sv)));
+  };
+
+  // Add more tests as needed, for example testing different sizes, or custom format specifiers if your formatter
+  // supports them Example: Custom format specifier test "custom format specifier - precision"_test = [] {
+  //     basic_string_t<char, 64, test_tag> test_string("Hello, World!");
+  //     expect(std::format("{:.5}", test_string) == "Hello");
+  // };
+};
+
+static ut::suite basic_fixed_string_formatter = []
+{
+  // Test default formatting
+  "default_format"_test = []
+  {
+    basic_fixed_string bfstr{"Hello"};
+    expect(eq(std::format("{}", bfstr), "Hello"sv)) << "Default formatting should match the input string.";
+  };
+
+  // Test width formatting
+  "width_format"_test = []
+  {
+    basic_fixed_string bfstr{"Hi"};
+    expect(eq(std::format("{:5}", bfstr), "Hi   "sv)) << "Width formatting should add trailing spaces.";
+  };
+
+  // Test precision formatting (truncate)
+  "precision_format"_test = []
+  {
+    basic_fixed_string bfstr{"Hello, world!"};
+    expect(eq(std::format("{:.5}", bfstr), "Hello"sv)) << "Precision formatting should truncate the string.";
+  };
+
+  // Test alignment formatting
+  "alignment_format"_test = []
+  {
+    basic_fixed_string bfstr{"Hey"};
+    expect(eq(std::format("{:>5}", bfstr), "  Hey"sv)) << "Right alignment should add leading spaces.";
+    expect(eq(std::format("{:<5}", bfstr), "Hey  "sv)) << "Left alignment should add trailing spaces.";
+    expect(eq(std::format("{:^5}", bfstr), " Hey "sv)) << "Center alignment should add spaces on both sides.";
+  };
+};
+static ut::suite basic_fixed_string_formatter_wchar = []
+{
+  // Test default formatting with wchar_t
+  "default_format_wchar"_test = []
+  {
+    basic_fixed_string bfstr{L"Hello"};
+    expect(std::format(L"{}", bfstr) == L"Hello"sv) << "Default formatting should match the input string.";
+  };
+
+  // Test width formatting with wchar_t
+  "width_format_wchar"_test = []
+  {
+    basic_fixed_string bfstr{L"Hi"};
+    expect(std::format(L"{:5}", bfstr) == L"Hi   "sv) << "Width formatting should add trailing spaces.";
+  };
+
+  // Test precision formatting (truncate) with wchar_t
+  "precision_format_wchar"_test = []
+  {
+    basic_fixed_string bfstr{L"Hello, world!"};
+    expect(std::format(L"{:.5}", bfstr) == L"Hello"sv) << "Precision formatting should truncate the string.";
+  };
+
+  // Test alignment formatting with wchar_t
+  "alignment_format_wchar"_test = []
+  {
+    basic_fixed_string bfstr{L"Hey"};
+    expect(std::format(L"{:>5}", bfstr) == L"  Hey"sv) << "Right alignment should add leading spaces.";
+    expect(std::format(L"{:<5}", bfstr) == L"Hey  "sv) << "Left alignment should add trailing spaces.";
+    expect(std::format(L"{:^5}", bfstr) == L" Hey "sv) << "Center alignment should add spaces on both sides.";
+  };
+};
+  }  // namespace small_vectors

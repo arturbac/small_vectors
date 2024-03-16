@@ -27,6 +27,7 @@ struct std::formatter<small_vectors::utils::strong_type<value_type, tag>>
 #if __cplusplus >= 202301L
     requires std::formattable<value_type, typename FormatContext::char_type>
 #endif
+  [[nodiscard]]
   auto format(small_vectors::utils::strong_type<value_type, tag> const & strong_value, FormatContext & ctx) const ->
     typename FormatContext::iterator
     {
