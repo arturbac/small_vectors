@@ -1,0 +1,131 @@
+// SPDX-FileCopyrightText: 2024 Artur Bać
+// SPDX-License-Identifier: MIT
+// SPDX-PackageHomePage: https://github.com/arturbac/small_vectors
+#pragma once
+
+#include <cstddef>
+#include <new>
+#include <utility>
+#include <concepts>
+#include <memory>
+
+namespace small_vectors::inline v3_0
+  {
+namespace concepts
+  {
+  template<typename T>
+  concept complete_type = requires { sizeof(T); };
+  }
+
+template<
+  typename ValueType,
+  std::size_t StorageSize = sizeof(ValueType),
+  std::size_t Alignment = std::alignment_of_v<ValueType>>
+struct inclass_store_t
+  {
+  using value_type = ValueType;
+  static constexpr std::size_t storage_size{StorageSize};
+
+  struct store_t
+    {
+    [[alignas(Alignment)]] std::byte data[storage_size];
+    };
+
+  store_t store_;
+
+private:
+  constexpr auto ptr() noexcept -> value_type *
+    {
+    return std::launder(reinterpret_cast<value_type *>(&store_.data[0]));
+    }
+
+  constexpr auto ptr() const noexcept -> value_type const *
+    {
+    return std::launder(reinterpret_cast<value_type const *>(&store_.data[0]));
+    }
+
+public:
+  constexpr inclass_store_t() noexcept(std::is_nothrow_default_constructible_v<value_type>)
+    requires concepts::complete_type<value_type> && std::default_initializable<value_type>
+    {
+    if constexpr(std::is_trivially_default_constructible_v<value_type>)
+      store_ = {};
+    else
+      std::construct_at(ptr());
+    }
+
+  constexpr inclass_store_t(inclass_store_t const & other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+    requires std::copy_constructible<value_type>
+    {
+    if constexpr(std::is_trivially_copy_constructible_v<value_type>)
+      store_ = other.store_;
+    else
+      std::construct_at(ptr(), *other.ptr());
+    }
+
+  constexpr inclass_store_t(inclass_store_t && other) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+    requires concepts::complete_type<value_type> && std::move_constructible<value_type>
+    {
+    if constexpr(std::is_trivially_move_constructible_v<value_type>)
+      store_ = other.store_;
+    else
+      std::construct_at(ptr(), std::move(*other.ptr()));
+    }
+
+  constexpr auto operator=(inclass_store_t const & other) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
+    -> inclass_store_t &
+    requires concepts::complete_type<value_type> && std::copyable<value_type>  // Requires value_type to be copyable
+    {
+    if(this != &other)
+      {
+      if constexpr(std::is_trivially_copy_assignable_v<value_type>)
+        store_ = other.store_;
+      else
+        *ptr() = *other.ptr();
+      }
+    return *this;
+    }
+
+  constexpr auto operator=(inclass_store_t && other) noexcept(std::is_nothrow_move_assignable_v<value_type>)
+    -> inclass_store_t &
+    requires concepts::complete_type<value_type> && std::movable<value_type>  // Requires value_type to be movable
+    {
+    if(this != &other)
+      {
+      if constexpr(std::is_trivially_destructible_v<value_type>)
+        std::destroy_at(ptr());
+      if constexpr(std::is_trivially_move_assignable_v<value_type>)
+        store_ = other.store_;
+      else
+        std::construct_at(ptr(), std::move(*other.ptr()));
+      }
+    return *this;
+    }
+
+  template<typename... Args>
+  constexpr inclass_store_t(Args &&... args)
+    requires concepts::complete_type<value_type> && std::constructible_from<value_type, Args &&...>
+    {
+    std::construct_at(ptr(), std::forward<Args>(args)...);
+    }
+
+  constexpr ~inclass_store_t() noexcept(std::is_nothrow_destructible_v<value_type>)
+    requires std::destructible<value_type> && (!std::is_trivially_constructible_v<value_type>)
+    {
+    std::destroy_at(ptr());
+    }
+
+  constexpr ~inclass_store_t() noexcept
+    requires std::is_trivially_constructible_v<value_type>
+  = default;
+
+  constexpr auto operator*() noexcept -> value_type & { return *ptr(); }
+
+  constexpr auto operator*() const noexcept -> value_type const & { return *ptr(); }
+
+  constexpr auto operator->() noexcept -> value_type * { return ptr(); }
+
+  constexpr auto operator->() const noexcept -> value_type const * { return ptr(); }
+  };
+
+  }  // namespace small_vectors::inline v3_0
