@@ -15,7 +15,146 @@ namespace concepts
   {
   template<typename T>
   concept complete_type = requires { sizeof(T); };
-  }
+
+  template<typename T>
+  concept same_as_inclass_storage = requires {
+    // clang-format off
+    typename T::value_type;
+    { T::storage_size } -> std::convertible_to<std::size_t>;
+    { T::alignment } -> std::convertible_to<std::size_t>;
+    requires sizeof(T) == sizeof(std::byte[T::storage_size]) && alignof(T) == T::alignment;
+      // clang-format on
+  };
+  }  // namespace concepts
+
+template<typename ValueType, std::size_t StorageSize, std::size_t Alignment>
+struct inclass_storage_t
+  {
+  using value_type = ValueType;
+  static constexpr std::size_t storage_size{StorageSize};
+  static constexpr std::size_t alignment{Alignment};
+
+  alignas(alignment) std::byte data[storage_size];
+  };
+
+namespace inclass_storage
+  {
+  template<concepts::same_as_inclass_storage storage_type>
+  constexpr auto ptr(storage_type & store) noexcept -> typename storage_type::value_type *
+    {
+    return std::launder(reinterpret_cast<typename storage_type::value_type *>(&store.data[0]));
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+  constexpr auto ptr(storage_type const & store) noexcept -> typename storage_type::value_type const *
+    {
+    return std::launder(reinterpret_cast<typename storage_type::value_type const *>(&store.data[0]));
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires concepts::complete_type<typename storage_type::value_type>
+             && std::default_initializable<typename storage_type::value_type>
+  constexpr auto
+    default_construct() noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>)
+      -> storage_type
+
+    {
+    if constexpr(std::is_trivially_default_constructible_v<typename storage_type::value_type>)
+      {
+      storage_type storage{};
+      return storage;
+      }
+    else
+      {
+      storage_type storage;
+      std::construct_at(ptr(storage));
+      return storage;
+      }
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires std::destructible<typename storage_type::value_type>
+  constexpr void destroy(storage_type & storage
+  ) noexcept(std::is_nothrow_destructible_v<typename storage_type::value_type>)
+    {
+    if constexpr(!std::is_trivially_constructible_v<typename storage_type::value_type>)
+      std::destroy_at(ptr(storage));
+    }
+
+  template<concepts::same_as_inclass_storage storage_type, typename... Args>
+    requires concepts::complete_type<typename storage_type::value_type>
+             && std::constructible_from<typename storage_type::value_type, Args &&...>
+  constexpr auto construct_from(Args &&... args) -> storage_type
+    {
+    storage_type storage{};
+    std::construct_at(ptr(storage), std::forward<Args>(args)...);
+    return storage;
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires std::copy_constructible<typename storage_type::value_type>
+  constexpr auto copy_construct(storage_type const & other
+  ) noexcept(std::is_nothrow_copy_constructible_v<typename storage_type::value_type>) -> storage_type
+    {
+    if constexpr(std::is_trivially_copy_constructible_v<typename storage_type::value_type>)
+      return storage_type{other};
+    else
+      {
+      storage_type storage{};
+      std::construct_at(ptr(storage), *ptr(other));
+      return storage;
+      }
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires concepts::complete_type<typename storage_type::value_type>
+             && std::move_constructible<typename storage_type::value_type>
+  constexpr auto move_construct(storage_type && other
+  ) noexcept(std::is_nothrow_move_constructible_v<typename storage_type::value_type>) -> storage_type
+    {
+    if constexpr(std::is_trivially_move_constructible_v<typename storage_type::value_type>)
+      return storage_type{other};
+    else
+      {
+      storage_type storage{};
+      std::construct_at(ptr(storage), std::move(*ptr(other)));
+      return storage;
+      }
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires concepts::complete_type<typename storage_type::value_type>
+             && std::copyable<typename storage_type::value_type>
+  constexpr void copy_assign(
+    storage_type & that, storage_type const & other
+  ) noexcept(std::is_nothrow_copy_assignable_v<typename storage_type::value_type>)
+    {
+    if(&that != &other)
+      {
+      if constexpr(std::is_trivially_copy_assignable_v<typename storage_type::value_type>)
+        that = other;
+      else
+        *ptr(that) = *ptr(other);
+      }
+    }
+
+  template<concepts::same_as_inclass_storage storage_type>
+    requires concepts::complete_type<typename storage_type::value_type>
+             && std::movable<typename storage_type::value_type>
+  constexpr void move_assign(
+    storage_type & that, storage_type && other
+  ) noexcept(std::is_nothrow_move_assignable_v<typename storage_type::value_type>)
+    {
+    if(&that != &other)
+      {
+      if constexpr(std::is_trivially_move_assignable_v<typename storage_type::value_type>)
+        that = other;
+      else
+        *ptr(that) = std::move(*ptr(other));
+      }
+    }
+
+  }  // namespace inclass_storage
 
 template<
   typename ValueType,
@@ -28,7 +167,7 @@ struct inclass_store_t
 
   struct store_t
     {
-    [[alignas(Alignment)]] std::byte data[storage_size];
+    alignas(Alignment) std::byte data[storage_size];
     };
 
   store_t store_;
