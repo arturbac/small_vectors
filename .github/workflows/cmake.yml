@@ -39,7 +39,7 @@ jobs:
         clang++ --version
 
     - name: Configure CMake with clang++-18 llvm libc++
-      run: cmake -B ${{github.workspace}}/build/clang-18-libcxx -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+      run: cmake -B ${{github.workspace}}/build/clang-18-libcxx -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_STANDARD=23
     - name: Build with clang++-18 llvm libc++
       run: cmake --build ${{github.workspace}}/build/clang-18-libcxx
     - name: Test with clang++-18 llvm libc++
@@ -47,7 +47,7 @@ jobs:
       run: ctest
 
     - name: Configure CMake with clang++-18 gnu libstdc++
-      run: cmake -B ${{github.workspace}}/build/clang-18 -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=clang++-18
+      run: cmake -B ${{github.workspace}}/build/clang-18 -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_STANDARD=23
     - name: Build with clang++-18
       run: cmake --build ${{github.workspace}}/build/clang-18
     - name: Test with clang++-18
@@ -62,7 +62,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y cmake ninja-build gcc g++ libfmt-dev
 
     - name: Configure CMake with gcc
-      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++
+      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CXX_STANDARD=23
     - name: Build with gcc
       run: cmake --build ${{github.workspace}}/build/gcc
     - name: Test with gcc
