@@ -8,6 +8,8 @@
 #include <utility>
 #include <concepts>
 #include <memory>
+#include <concepts>
+#include <type_traits>
 
 namespace small_vectors::inline v3_0
   {
@@ -22,7 +24,7 @@ namespace concepts
     typename T::value_type;
     { T::storage_size } -> std::convertible_to<std::size_t>;
     { T::alignment } -> std::convertible_to<std::size_t>;
-    requires sizeof(T) == sizeof(std::byte[T::storage_size]) && alignof(T) == T::alignment;
+    requires sizeof(typename T::value_type) == sizeof(std::byte[T::storage_size]) && alignof(typename T::value_type) == T::alignment;
       // clang-format on
   };
   }  // namespace concepts
@@ -53,23 +55,16 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
-             && std::default_initializable<typename storage_type::value_type>
-  constexpr auto
-    default_construct() noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>)
-      -> storage_type
+               && std::default_initializable<typename storage_type::value_type>
+  constexpr auto default_construct(
+  ) noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>) -> storage_type
 
     {
-    if constexpr(std::is_trivially_default_constructible_v<typename storage_type::value_type>)
-      {
-      storage_type storage{};
-      return storage;
-      }
-    else
-      {
-      storage_type storage;
+    storage_type storage{};
+    if constexpr(!std::is_trivially_default_constructible_v<typename storage_type::value_type>)
       std::construct_at(ptr(storage));
-      return storage;
-      }
+
+    return storage;
     }
 
   template<concepts::same_as_inclass_storage storage_type>
@@ -83,7 +78,7 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type, typename... Args>
     requires concepts::complete_type<typename storage_type::value_type>
-             && std::constructible_from<typename storage_type::value_type, Args &&...>
+               && std::constructible_from<typename storage_type::value_type, Args &&...>
   constexpr auto construct_from(Args &&... args) -> storage_type
     {
     storage_type storage{};
@@ -108,7 +103,7 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
-             && std::move_constructible<typename storage_type::value_type>
+               && std::move_constructible<typename storage_type::value_type>
   constexpr auto move_construct(storage_type && other
   ) noexcept(std::is_nothrow_move_constructible_v<typename storage_type::value_type>) -> storage_type
     {
@@ -211,8 +206,8 @@ public:
       std::construct_at(ptr(), std::move(*other.ptr()));
     }
 
-  constexpr auto operator=(inclass_store_t const & other) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
-    -> inclass_store_t &
+  constexpr auto operator=(inclass_store_t const & other
+  ) noexcept(std::is_nothrow_copy_assignable_v<value_type>) -> inclass_store_t &
     requires concepts::complete_type<value_type> && std::copyable<value_type>  // Requires value_type to be copyable
     {
     if(this != &other)
@@ -225,8 +220,8 @@ public:
     return *this;
     }
 
-  constexpr auto operator=(inclass_store_t && other) noexcept(std::is_nothrow_move_assignable_v<value_type>)
-    -> inclass_store_t &
+  constexpr auto operator=(inclass_store_t && other
+  ) noexcept(std::is_nothrow_move_assignable_v<value_type>) -> inclass_store_t &
     requires concepts::complete_type<value_type> && std::movable<value_type>  // Requires value_type to be movable
     {
     if(this != &other)

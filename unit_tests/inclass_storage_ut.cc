@@ -1,8 +1,14 @@
-#include <small_vectors/inclass_buffer.hpp>
+#include <small_vectors/inclass_storage.h>
+#include <small_vectors/basic_string.h>
+#include <small_vectors/stream/basic_string.h>
 
-#include <boost/ut.hpp>
+#include <unit_test_core.h>
 #include <string>
 #include <type_traits>
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#endif
 
 using namespace boost::ut;
 using small_vectors::inclass_store_t;
@@ -144,27 +150,30 @@ struct forward_struct_t;
 
 struct test_pimpl
   {
-  using inclass_foraward_store = small_vectors::inclass_storage_t<forward_struct_t, 4, 4>;
+  using inclass_foraward_store = small_vectors::inclass_storage_t<forward_struct_t, 48, 8>;
   inclass_foraward_store store;
 
   // explicit test_pimpl(inclass_foraward_store const & data);
   test_pimpl();
   explicit test_pimpl(forward_struct_t && data);
+  explicit test_pimpl(std::string_view s, int i);
   test_pimpl(test_pimpl const &);
   test_pimpl(test_pimpl &&) noexcept;
   ~test_pimpl();
   test_pimpl & operator=(test_pimpl const &);
   test_pimpl & operator=(test_pimpl &&);
 
-  auto operator-> () const noexcept -> forward_struct_t const *;
-  auto operator-> () noexcept -> forward_struct_t *;
+  auto operator->() const noexcept -> forward_struct_t const *;
+  auto operator->() noexcept -> forward_struct_t *;
   };
 
 struct forward_struct_t
   {
-  std::string content;
+  small_vectors::string content;
   int integral;
   };
+
+static_assert(sizeof(forward_struct_t) == 48);
 
 // test_pimpl::test_pimpl(inclass_foraward_store const & data) : store{data} {}
 test_pimpl::test_pimpl() : store{small_vectors::inclass_storage::default_construct<inclass_foraward_store>()} {}
@@ -195,25 +204,57 @@ test_pimpl::test_pimpl(forward_struct_t && data) :
   {
   }
 
-auto test_pimpl::operator-> () const noexcept -> forward_struct_t const *
-{
-  return small_vectors::inclass_storage::ptr(store);
-}
+test_pimpl::test_pimpl(std::string_view s, int i) :
+    store{small_vectors::inclass_storage::construct_from<inclass_foraward_store>(
+      small_vectors::string{s}, i
 
-auto test_pimpl::operator-> () noexcept -> forward_struct_t *
-{
+    )}
+  {
+  }
+
+auto test_pimpl::operator->() const noexcept -> forward_struct_t const *
+  {
   return small_vectors::inclass_storage::ptr(store);
-}
+  }
+
+auto test_pimpl::operator->() noexcept -> forward_struct_t * { return small_vectors::inclass_storage::ptr(store); }
+
 static suite<"inclass_forward__struct"> inclass_forward_struct = []
 {
+  "default_constructor"_test = []
+  {
+    test_pimpl store;
+    expect(store->content.empty());
+  };
+  "copy_constructor"_test = []
+  {
+    test_pimpl const original{test_text, 0x55aaff};
+    test_pimpl copy{original};
+    expect(eq(test_text, copy->content));
+    expect(eq(0x55aaff, copy->integral));
+  };
+  "move_constructor"_test = []
+  {
+    test_pimpl original{test_text, 0x55aaff};
+    test_pimpl const moved{std::move(original)};
+    expect(eq(test_text, moved->content));
+    expect(eq(0x55aaff, moved->integral));
+  };
   "copy_assignment"_test = []
   {
-#if 1
-    test_pimpl original{forward_struct_t{std::string{test_text}, 0x55aaff}};
+    test_pimpl original{forward_struct_t{small_vectors::string{test_text}, 0x55aaff}};
     test_pimpl copy;
     copy = original;
     expect(eq(test_text, copy->content));
-#endif
+    expect(eq(0x55aaff, copy->integral));
+  };
+  "move_assignment"_test = []
+  {
+    test_pimpl original{forward_struct_t{small_vectors::string{test_text}, 0x55aaff}};
+    test_pimpl moved;
+    moved = std::move(original);
+    expect(eq(test_text, moved->content));
+    expect(eq(0x55aaff, moved->integral));
   };
 };
 

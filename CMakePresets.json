@@ -46,6 +46,14 @@
       "inherits": ["clang-18-release", "cfg-libc++"]
     },
     {
+      "name": "clang-18-libc++release-asan",
+      "inherits": ["clang-18-release", "cfg-libc++"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-ggdb -fvisibility=default -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=undefined",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=undefined"
+      }
+    },
+    {
       "name": "clang-17-release",
       "inherits": [ "cfg-common", "cfg-ninja", "cfg-c++23" ],
       "cacheVariables": { "CMAKE_CXX_COMPILER" : "/usr/lib/llvm/17/bin/clang++" }
@@ -117,6 +125,10 @@
       "configurePreset": "clang-18-libc++release"
     },
     {
+      "name": "clang-18-libc++release-asan",
+      "configurePreset": "clang-18-libc++release-asan"
+    },
+    {
       "name": "clang-17-release",
       "configurePreset": "clang-17-release"
     },
@@ -159,6 +171,12 @@
     {
       "name": "clang-18-libc++release",
       "configurePreset": "clang-18-libc++release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "clang-18-libc++release-asan",
+      "configurePreset": "clang-18-libc++release-asan",
       "output": {"outputOnFailure": true},
       "execution": {"noTestsAction": "error", "stopOnFailure": true}
     },
@@ -212,6 +230,57 @@
     }
   ],
   "workflowPresets": [
+      {
+      "name": "clang-18-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-18-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-18-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-18-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-18-libc++release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-18-libc++release"
+        },
+        {
+          "type": "build",
+          "name": "clang-18-libc++release"
+        },
+        {
+          "type": "test",
+          "name": "clang-18-libc++release"
+        }
+      ]
+    },
+    {
+      "name": "clang-18-libc++release-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-18-libc++release-asan"
+        },
+        {
+          "type": "build",
+          "name": "clang-18-libc++release-asan"
+        },
+        {
+          "type": "test",
+          "name": "clang-18-libc++release-asan"
+        }
+      ]
+    },
     {
       "name": "clang-17-release",
       "steps": [
