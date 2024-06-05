@@ -23,11 +23,14 @@ inline constexpr void handle_error(vector_outcome_e error)
   using enum vector_outcome_e;
   switch(error)
     {
-    [[likely]] case no_error:
+    [[likely]]
+    case no_error:
       return;
-    [[unlikely]] case out_of_storage:
+    [[unlikely]]
+    case out_of_storage:
       throw std::bad_alloc{};
-    [[unlikely]] case invalid_source_range:
+    [[unlikely]]
+    case invalid_source_range:
       throw std::runtime_error{"invalid_source_range"};
     }
   }
@@ -41,9 +44,7 @@ enum struct vector_tune_e : uint8_t
 template<typename vector_type>
 concept has_size_member_function = requires(vector_type const & vec) {
   typename vector_type::size_type;
-    {
-    vec.size()
-    } noexcept -> std::same_as<typename vector_type::size_type>;
+    { vec.size() } noexcept -> std::same_as<typename vector_type::size_type>;
 };
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -72,9 +73,7 @@ concept has_index_operator = requires(vector_type const & vec, size_type index) 
   requires has_size_member_function<vector_type>;
   requires concepts::unsigned_arithmetic_integral<size_type>;
   typename vector_type::value_type;
-    {
-    vec[index]
-    } noexcept -> value_type_or_lv_refrence<typename vector_type::value_type>;
+    { vec[index] } noexcept -> value_type_or_lv_refrence<typename vector_type::value_type>;
 };
 //-------------------------------------------------------------------------------------------------------------------
 template<concepts::unsigned_arithmetic_integral size_type>
@@ -112,9 +111,7 @@ inline constexpr auto & at(vector_type & vec, size_type index) noexcept
 template<typename vector_type>
 concept has_capacity_member_fn = requires(vector_type const & vec) {
   typename vector_type::size_type;
-    {
-    vec.capacity()
-    } -> std::same_as<typename vector_type::size_type>;
+    { vec.capacity() } -> std::same_as<typename vector_type::size_type>;
 };
 
 [[nodiscard]]
@@ -127,9 +124,7 @@ inline constexpr auto capacity(has_capacity_member_fn auto const & vec) noexcept
 template<typename vector_type>
 concept has_max_size_member_fn = requires(vector_type const & vec) {
   typename vector_type::size_type;
-    {
-    vec.max_size()
-    } -> std::same_as<typename vector_type::size_type>;
+    { vec.max_size() } -> std::same_as<typename vector_type::size_type>;
 };
 
 [[nodiscard]]
@@ -150,9 +145,7 @@ inline constexpr auto free_space(auto const & vec) noexcept
 template<typename vector_type>
 concept has_data_member_function = requires(vector_type & vec) {
   typename vector_type::value_type;
-    {
-    vec.data()
-    } noexcept -> const_or_nonconst_pointer<typename vector_type::value_type>;
+    { vec.data() } noexcept -> const_or_nonconst_pointer<typename vector_type::value_type>;
 };
 
 template<typename vector_type>
@@ -409,8 +402,7 @@ inline constexpr storage_context_t<value_type, size_type> sv_allocate(size_type 
     {
     std::align_val_t alignment{alignof(value_type)};
     size_t alloc_size{capacity * sizeof(value_type)};
-    return storage_type
-      {
+    return storage_type{
       static_cast<value_type *>(
 // https://clang.llvm.org/docs/LanguageExtensions.html#builtin-operator-new-and-builtin-operator-delete
 #if defined(__has_builtin) && __has_builtin(__builtin_operator_new) >= 201802L
@@ -420,7 +412,7 @@ inline constexpr storage_context_t<value_type, size_type> sv_allocate(size_type 
         ::operator new(alloc_size, alignment, std::nothrow_t{})
       ),
 #endif
-        capacity
+      capacity
       // clang-format off
       };
     // clang-format on
@@ -473,9 +465,7 @@ inline constexpr void emplace_back_unchecked(
 template<typename vector_type, typename... Args>
   requires requires(vector_type & vec) {
     requires vector_with_size_and_value<vector_type>;
-      {
-      vector_type::support_reallocation()
-      } -> std::same_as<bool>;
+      { vector_type::support_reallocation() } -> std::same_as<bool>;
       requires std::constructible_from<typename vector_type::value_type, Args...>;
   }
 inline constexpr vector_outcome_e emplace_back(
@@ -507,7 +497,7 @@ inline constexpr vector_outcome_e emplace_back(
           if constexpr(use_nothrow)
             // remains only for purprose of better data access order
             {
-            uninitialized_relocate_n(my.data(), my.size(), new_space.data());
+            detail::uninitialized_relocate_n(my.data(), my.size(), new_space.data());
             // construct new element
             std::construct_at(unext(new_space.data(), my.size()), std::forward<Args>(args)...);
             }
@@ -519,9 +509,9 @@ inline constexpr vector_outcome_e emplace_back(
             };
             // if only constructor throw use relocate for elements
             if constexpr(std::is_nothrow_move_constructible_v<value_type>)
-              uninitialized_relocate_n(my.data(), my.size(), new_space.data());
+              detail::uninitialized_relocate_n(my.data(), my.size(), new_space.data());
             else
-              uninitialized_relocate_with_copy_n(my.data(), my.size(), new_space.data());
+              detail::uninitialized_relocate_with_copy_n(my.data(), my.size(), new_space.data());
             // dont destroy if no exception is thrown with uninitialized_relocate_with_copy_n
             // for std::is_nothrow_move_constructible_v<value_type> is no op
             el.release();
@@ -561,9 +551,7 @@ inline constexpr auto
 template<typename vector_type, concepts::random_access_iterator source_iterator>
   requires requires(vector_type & vec) {
     requires vector_with_size_and_value<vector_type>;
-      {
-      vector_type::support_reallocation()
-      } -> std::same_as<bool>;
+      { vector_type::support_reallocation() } -> std::same_as<bool>;
     // value must be constructible from *iterator
     requires std::constructible_from<typename vector_type::value_type, detail::iterator_value_type_t<source_iterator>>;
     vec.set_size_priv_(typename vector_type::size_type{});
@@ -617,12 +605,12 @@ inline constexpr vector_outcome_e insert(
         {
         // remaining part in uninitialized space
         size_type const low_ext_part{udistance<size_type>(it_part, itend)};
-        uninitialized_copy_n(it_part, low_ext_part, unext(itpos, old_el_count));
+        detail::uninitialized_copy_n(it_part, low_ext_part, unext(itpos, old_el_count));
         vec.set_size_priv_(nic_sum(my.size(), low_ext_part));
         }
       if(old_el_count != 0)
         {
-        uninitialized_move_n(itpos, old_el_count, unext(itpos, u_new_el_count));
+        detail::uninitialized_move_n(itpos, old_el_count, unext(itpos, u_new_el_count));
         vec.set_size_priv_(nic_sum(my.size(), u_new_el_count));
         // move part in initialized space
         std::copy(itbeg, it_part, itpos);
@@ -642,7 +630,7 @@ inline constexpr vector_outcome_e insert(
       // free   item5
       // free   item6
       // free   free
-      uninitialized_move_n(unext(itpos, uninit_move_pos), u_new_el_count, unext(itpos, old_el_count));
+      detail::uninitialized_move_n(unext(itpos, uninit_move_pos), u_new_el_count, unext(itpos, old_el_count));
       vec.set_size_priv_(nic_sum(my.size(), u_new_el_count));
       std::move_backward(itpos, unext(itpos, uninit_move_pos), unext(itpos, nic_sum(u_new_el_count, uninit_move_pos)));
       std::copy(itbeg, itend, itpos);
@@ -664,7 +652,7 @@ inline constexpr vector_outcome_e insert(
           size_type lower_el_count{udistance<size_type>(my.begin(), itpos)};
 
           // insert new elements
-          uninitialized_copy_n(itbeg, u_new_el_count, unext(new_space.data(), lower_el_count));
+          detail::uninitialized_copy_n(itbeg, u_new_el_count, unext(new_space.data(), lower_el_count));
           typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range ext_range_unwind{
             new_space.data(), lower_el_count, nic_sum(lower_el_count, u_new_el_count)
           };
@@ -672,9 +660,9 @@ inline constexpr vector_outcome_e insert(
           if constexpr(std::is_nothrow_move_constructible_v<value_type>)
             {
             // relocate lower part
-            uninitialized_relocate_n(my.begin(), lower_el_count, new_space.data());
+            detail::uninitialized_relocate_n(my.begin(), lower_el_count, new_space.data());
             // relocate upper part, last loop unwinds if throws by itself
-            uninitialized_relocate_n(
+            detail::uninitialized_relocate_n(
               unext(my.begin(), lower_el_count),
               nic_sub(my.size(), lower_el_count),
               unext(new_space.data(), nic_sum(lower_el_count, u_new_el_count))
@@ -682,12 +670,12 @@ inline constexpr vector_outcome_e insert(
             }
           else
             {
-            uninitialized_copy_n(my.begin(), lower_el_count, new_space.data());
+            detail::uninitialized_copy_n(my.begin(), lower_el_count, new_space.data());
             typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range
               lower_part_unwind{new_space.data(), size_type{0u}, lower_el_count};
             // cond_destroy_range_at
             // relocate upper part, last loop unwinds if throws by itself
-            uninitialized_relocate_with_copy_n(
+            detail::uninitialized_relocate_with_copy_n(
               unext(my.begin(), lower_el_count),
               nic_sub(my.size(), lower_el_count),
               unext(new_space.data(), nic_sum(lower_el_count, u_new_el_count))
@@ -806,8 +794,8 @@ inline constexpr vector_outcome_e emplace(
 
           if constexpr(std::is_nothrow_move_constructible_v<value_type>)
             {
-            uninitialized_relocate_n(my.begin(), lower_el_count, new_space.data());
-            uninitialized_relocate_n(
+            detail::uninitialized_relocate_n(my.begin(), lower_el_count, new_space.data());
+            detail::uninitialized_relocate_n(
               unext(my.begin(), lower_el_count),
               nic_sub(my.size(), lower_el_count),
               unext(new_space.data(), nic_sum(lower_el_count, 1u))
@@ -816,12 +804,12 @@ inline constexpr vector_outcome_e emplace(
           else
             {
             // copy lower part
-            uninitialized_copy_n(my.data(), lower_el_count, new_space.data());
+            detail::uninitialized_copy_n(my.data(), lower_el_count, new_space.data());
             // unwind reclamation of copied instances
             typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range
               lower_part_unwind{new_space.data(), size_type{0u}, lower_el_count};
 
-            uninitialized_relocate_with_copy_n(
+            detail::uninitialized_relocate_with_copy_n(
               unext(my.begin(), lower_el_count),
               nic_sub(my.size(), lower_el_count),
               unext(new_space.data(), nic_sum(lower_el_count, 1u))
@@ -850,9 +838,7 @@ template<typename vector_type>
 concept reserve_constraints = requires {
   requires vector_with_size_and_value<vector_type>;
   requires(true == std::is_move_constructible_v<typename vector_type::value_type>);
-    {
-    vector_type::support_reallocation()
-    } -> std::same_as<bool>;
+    { vector_type::support_reallocation() } -> std::same_as<bool>;
     requires(true == vector_type::support_reallocation());
 };
 
@@ -870,9 +856,9 @@ constexpr vector_outcome_e relocate_elements_dyn(
   if(new_space)
     {
     if constexpr(use_nothrow)
-      uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
+      detail::uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
     else
-      uninitialized_relocate_with_copy_n(my.begin(), my.size(), new_space.data());
+      detail::uninitialized_relocate_with_copy_n(my.begin(), my.size(), new_space.data());
     // deallocate old space
     storage_context_t old_storage{vec.exchange_priv_(new_space.release(), my.size())};
     if(old_storage.data != nullptr)
@@ -892,9 +878,9 @@ constexpr vector_outcome_e relocate_elements_static(
   constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<typename vector_type::value_type>;
   typename noexcept_if<use_nothrow>::cond_except_holder_revert old_storage{vec, my.size(), vec.switch_static_priv_()};
   if constexpr(use_nothrow)
-    uninitialized_relocate_n(my.begin(), my.size(), vec.begin());
+    detail::uninitialized_relocate_n(my.begin(), my.size(), vec.begin());
   else
-    uninitialized_relocate_with_copy_n(my.begin(), my.size(), vec.begin());
+    detail::uninitialized_relocate_with_copy_n(my.begin(), my.size(), vec.begin());
   vec.set_size_priv_(my.size());
   sv_deallocate(old_storage.release());
   return vector_outcome_e::no_error;
@@ -927,9 +913,7 @@ concept vector_with_move_and_default_constructible_value_type = requires {
   requires vector_with_size_and_value<vector_type>;
   requires(true == std::is_move_constructible_v<typename vector_type::value_type>);
   requires(true == std::is_default_constructible_v<typename vector_type::value_type>);
-    {
-    vector_type::support_reallocation()
-    } -> std::same_as<bool>;
+    { vector_type::support_reallocation() } -> std::same_as<bool>;
 };
 
 template<vector_with_move_and_default_constructible_value_type vector_type>
@@ -945,7 +929,7 @@ inline constexpr vector_outcome_e default_append(
 
   if(count <= my.free_space())
     {
-    uninitialized_value_construct_n(my.end(), count);
+    detail::uninitialized_value_construct_n(my.end(), count);
     vec.set_size_priv_(nic_sum(my.size(), count));
     return vector_outcome_e::no_error;
     }
@@ -960,21 +944,21 @@ inline constexpr vector_outcome_e default_append(
       if constexpr(use_nothrow)
         {
         // exists only of the purpose of better memory access order
-        uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
-        uninitialized_value_construct_n(unext(new_space.data(), my.size()), count);
+        detail::uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
+        detail::uninitialized_value_construct_n(unext(new_space.data(), my.size()), count);
         }
       else
         {
-        uninitialized_value_construct_n(unext(new_space.data(), my.size()), count);
+        detail::uninitialized_value_construct_n(unext(new_space.data(), my.size()), count);
         // remember new objects constructed for destroy_range if append fails
         typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_range new_elems_unwind{
           new_space.data(), my.size(), nic_sum(my.size(), count)
         };
 
         if constexpr(std::is_nothrow_move_constructible_v<value_type>)
-          uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
+          detail::uninitialized_relocate_n(my.begin(), my.size(), new_space.data());
         else
-          uninitialized_relocate_with_copy_n(my.begin(), my.size(), new_space.data());
+          detail::uninitialized_relocate_with_copy_n(my.begin(), my.size(), new_space.data());
 
         new_elems_unwind.release();
         }
