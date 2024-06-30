@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-and-test-clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     
@@ -58,21 +58,20 @@ jobs:
       run: ctest
       
   build-and-test-gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install gcc-13
+    - name: Install gcc-14
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install -y gcc-13 g++-13
+        sudo apt-get install -y gcc-14 g++-14
         
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libfmt-dev
 
     - name: Configure CMake with gcc
-      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_CXX_STANDARD=23
+      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_CXX_STANDARD=23
       
     - name: Build with gcc
       run: cmake --build ${{github.workspace}}/build/gcc
