@@ -1,7 +1,8 @@
 #include <small_vectors/utils/strong_type.h>
 #include <small_vectors/stream/strong_type.h>
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 202110L
 #include <small_vectors/formattable/strong_type.h>
-
+#endif
 #include <unit_test_core.h>
 #include <boost_ut.h>
 
@@ -84,7 +85,7 @@ namespace concepts
   static_assert(!tag_binary_operators<tag_with_binary_operators_neg>);
   static_assert(!tag_binary_operators<tag_empty>);
   }  // namespace concepts
-
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 202110L
 static ut::suite<"strong_type_formatter"> strong_type_formatter = []
 {
   using namespace ut;
@@ -116,7 +117,7 @@ static ut::suite<"strong_type_formatter"> strong_type_formatter = []
 
   // More tests can be added here following the same pattern
 };
-
+#endif
 static void strong_type_suite()
   {
   test_result result;
