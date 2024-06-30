@@ -2259,7 +2259,105 @@ int main()
     result |= run_constexpr_test_dual<consteval_test_type_list_1, constexpr_size_type_traits_list>(fn_size);
     result |= run_constexpr_test_dual<consteval_test_type_list_1, constexpr_size_type_traits_list>(fn_0);
   };
+  //---------------------------------------------------------------------------------------------------------
+  static int * instance_counter{};
 
+  struct S
+    {
+    int i_;
+
+    explicit S(int i) : i_(i)
+      {
+      ++(*instance_counter);
+      printf("Ctor %d (%lX)\n", i_, uintptr_t(this));
+      }
+
+    S(S && rhs) noexcept : i_(rhs.i_)
+      {
+      ++(*instance_counter);
+      printf("Move-ctor %d (%lX -> %lX)\n", i_, uintptr_t(&rhs), uintptr_t(this));
+      }
+
+    S(S const & rhs) noexcept : i_(rhs.i_)
+      {
+      ++(*instance_counter);
+      printf("Copy-ctor %d (%lX -> %lX)\n", i_, uintptr_t(&rhs), uintptr_t(this));
+      }
+
+    S & operator=(S const &) noexcept = default;
+
+    // S & operator=(S &&) noexcept;
+
+    ~S()
+      {
+      --(*instance_counter);
+      printf("Dtor %d (%lX)\n", i_, uintptr_t(this));
+      }
+    };
+
+  "test_small_vector_swap"_test = [&result]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
+    {
+      auto constexpr elements = 20;
+      using vector_type = small_vector<value_type, uint8_t, elements>;
+      vector_type vec{};
+      emplace_back(vec, 1);
+      emplace_back(vec, 2);
+      emplace_back(vec, 3);
+      emplace_back(vec, 4);
+
+      vector_type vec2{};
+      emplace_back(vec2, 11);
+      emplace_back(vec2, 22);
+
+      std::array<value_type, 4> expected1{1, 2, 3, 4};
+      std::array<value_type, 2> expected2{11, 22};
+
+      constexpr_test(size(vec) == 4) | constexpr_test(equal(vec, expected1));
+      constexpr_test(size(vec2) == 2) | constexpr_test(equal(vec2, expected2));
+
+      std::swap(vec, vec2);
+      constexpr_test(size(vec2) == 4) | constexpr_test(equal(vec2, expected1));
+      constexpr_test(size(vec) == 2) | constexpr_test(equal(vec, expected2));
+
+      std::swap(vec, vec2);
+      constexpr_test(size(vec) == 4) | constexpr_test(equal(vec, expected1));
+      constexpr_test(size(vec2) == 2) | constexpr_test(equal(vec2, expected2));
+      return {};
+    };
+    using consteval_test_type_list_1 = metatests::type_list<uint8_t, uint16_t, uint32_t, uint64_t>;
+    using consteval_test_type_list_2 = metatests::type_list<
+      uint8_t,
+      uint16_t,
+      uint32_t,
+      uint64_t,
+      non_trivial_ptr,
+      non_trivial_ptr_except,
+      non_trivial_ptr_except_copy>;
+    result |= run_constexpr_test<consteval_test_type_list_2>(fn_tmpl);
+    result |= run_consteval_test<consteval_test_type_list_1>(fn_tmpl);
+
+    "Quuxplusone case"_test = []
+    {
+      using boost::ut::expect;
+      auto constexpr elements = 20;
+      using vector_type = small_vector<S, uint8_t, elements>;
+
+      int ctr = 0;
+      instance_counter = &ctr;
+        {
+        vector_type vec{}, vec2{};
+        vec.emplace_back(S{1});
+        vec.emplace_back(S{2});
+
+        std::swap(vec, vec2);
+        expect(size(vec) == 0);
+        expect(size(vec2) == 2);
+        }
+      expect(ctr == 0) << ctr;
+    };
+  };
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
   }
 

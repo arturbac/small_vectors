@@ -27,6 +27,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(small_vectors_ut_core
     PUBLIC
       -Wno-misleading-indentation
+      -Wno-attributes
       )
 endif()
 

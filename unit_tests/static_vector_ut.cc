@@ -150,7 +150,7 @@ namespace concepts
     static_assert(std::same_as<uint8_t &, decltype(back(std::declval<vec_type &>()))>);
     static_assert(std::same_as<uint8_t const &, decltype(back(std::declval<vec_type const &>()))>);
     }  // namespace method_tests
-  }    // namespace concepts
+  }  // namespace concepts
 
 static_assert(sizeof(static_vector<uint8_t, 7>) == 8);
 static_assert(sizeof(static_vector<uint32_t, 3>) == 16);
@@ -684,6 +684,40 @@ int main()
 
     result |= run_constexpr_test<traits_list>(constexpr_static_vector_resize);
     result |= run_consteval_test<constexpr_traits_list>(constexpr_static_vector_resize);
+  };
+  //---------------------------------------------------------------------------------------------------------
+  "test_static_vector_swap"_test = [&result]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
+    {
+      auto constexpr elements = 10;
+      using vector_type = static_vector<value_type, elements>;
+      // we need to profive {} for vec as with tirvialy copyable internal array would not be initialized
+      // in unoccupied space and current c++ standard treats this as not allowed to happen in consteval
+      vector_type vec{};
+      emplace_back(vec, 1);
+      emplace_back(vec, 2);
+      emplace_back(vec, 3);
+      emplace_back(vec, 4);
+
+      vector_type vec2{};
+      emplace_back(vec2, 11);
+      emplace_back(vec2, 22);
+
+      std::array<value_type, 4> expected1{1, 2, 3, 4};
+      std::array<value_type, 2> expected2{11, 22};
+
+      constexpr_test(size(vec) == 4) | constexpr_test(equal(vec, expected1));
+      constexpr_test(size(vec2) == 2) | constexpr_test(equal(vec2, expected2));
+
+      std::swap(vec, vec2);
+      constexpr_test(size(vec2) == 4) | constexpr_test(equal(vec2, expected1));
+      constexpr_test(size(vec) == 2) | constexpr_test(equal(vec, expected2));
+      return {};
+    };
+
+    result |= run_constexpr_test<traits_list>(fn_tmpl);
+    result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
   };
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
   }

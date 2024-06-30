@@ -3,8 +3,10 @@
 #include <small_vectors/basic_string.h>
 #include <small_vectors/stream/basic_string.h>
 #include <small_vectors/stream/basic_fixed_string.h>
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 202110L
 #include <small_vectors/formattable/basic_string.h>
 #include <small_vectors/formattable/basic_fixed_string.h>
+#endif
 #include <small_vectors/concepts/stream_insertable.h>
 
 #include <iostream>
@@ -1604,9 +1606,10 @@ int main()
     result |= run_constexpr_test<string_type_list>(fn_tmpl);
   };
   }
-
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 202110L
 namespace small_vectors
   {
+
 static_assert(std::constructible_from<std::formatter<string, char>, std::formatter<string, char>>);
 static_assert(std::constructible_from<std::formatter<wstring, wchar_t>, std::formatter<wstring, wchar_t>>);
 static_assert(std::formattable<string, char>);
@@ -1618,6 +1621,7 @@ static_assert(
 static_assert(
   std::formattable<basic_fixed_string<wchar_t, 20>, wchar_t>, "basic_fixed_string<wchar_t, N> should be formattable."
 );
+
 using namespace ut;
 using namespace std::string_view_literals;
 static ut::suite basic_string_formatter = []
@@ -1709,4 +1713,6 @@ static ut::suite basic_fixed_string_formatter_wchar = []
     expect(std::format(L"{:^5}", bfstr) == L" Hey "sv) << "Center alignment should add spaces on both sides.";
   };
 };
+
   }  // namespace small_vectors
+#endif

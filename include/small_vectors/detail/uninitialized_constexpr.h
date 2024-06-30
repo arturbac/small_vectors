@@ -316,7 +316,7 @@ inline constexpr void uninitialized_uneven_range_swap(
     std::swap(size1, size2);
     }
   std::swap_ranges(iter1, iter1 + size1, iter2);
-  uninitialized_move(iter2 + size1, iter2 + size2, iter1 + size1);
+  uninitialized_relocate_if_noexcept_n(iter2 + size1, size2 - size1, iter1 + size1);
   }
 
   }  // namespace small_vectors::inline v3_0::detail
