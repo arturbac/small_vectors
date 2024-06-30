@@ -17,7 +17,8 @@ jobs:
   build-and-test-clang:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    
     - name: Add LLVM Repository
       run: |
         wget https://apt.llvm.org/llvm.sh
@@ -40,8 +41,10 @@ jobs:
 
     - name: Configure CMake with clang++-18 llvm libc++
       run: cmake -B ${{github.workspace}}/build/clang-18-libcxx -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_STANDARD=23
+      
     - name: Build with clang++-18 llvm libc++
       run: cmake --build ${{github.workspace}}/build/clang-18-libcxx
+      
     - name: Test with clang++-18 llvm libc++
       working-directory: ${{github.workspace}}/build/clang-18-libcxx
       run: ctest
@@ -57,14 +60,23 @@ jobs:
   build-and-test-gcc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    
+    - name: Install GCC-13
+      run: |
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo apt-get update
+        sudo apt-get install -y gcc-13 g++-13
+        
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y cmake ninja-build gcc g++ libfmt-dev
+      run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libfmt-dev
 
     - name: Configure CMake with gcc
-      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CXX_STANDARD=23
+      run: cmake -B ${{github.workspace}}/build/gcc -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_CXX_STANDARD=23
+      
     - name: Build with gcc
       run: cmake --build ${{github.workspace}}/build/gcc
+      
     - name: Test with gcc
       working-directory: ${{github.workspace}}/build/gcc
       run: ctest
