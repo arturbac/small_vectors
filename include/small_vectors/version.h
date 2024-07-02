@@ -1,3 +1,3 @@
 #pragma once
 
-#define SMALL_VECTORS_VERSION "3.1.5"
+#define SMALL_VECTORS_VERSION "3.1.6"
