@@ -33,10 +33,10 @@ jobs:
            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
 
     - name: tests clang-18-release
-      run: cmake --workflow "clang-18-release"
+      run: cmake --workflow --preset="clang-18-release"
 
     - name: tests clang-18-libc++release
-      run: cmake --workflow "clang-18-libc++release"
+      run: cmake --workflow --preset="clang-18-libc++release"
       
     - name: tests gcc-14-release
-      run: cmake --workflow "gcc-14-release"
+      run: cmake --workflow --preset="gcc-14-release"
