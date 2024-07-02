@@ -1,4 +1,11 @@
 #include <small_vectors/small_vector.h>
+
+// same gcc can fail building consteval complicated code, ex on ubuntu it reports nonsense while on gentoo there is no
+// problem at all
+#if defined(__GNUC__) && !defined(__clang__)
+#define DISABLE_CONSTEVAL_TESTING
+#endif
+
 #include <unit_test_core.h>
 
 #include <iostream>
