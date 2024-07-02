@@ -269,7 +269,13 @@ template<typename templ_list, typename templ_list2, typename unit_test>
 consteval test_result
   run_consteval_test_dual(unit_test const & test, source_location const location = source_location::current())
   {
+#ifndef DISABLE_CONSTEVAL_TESTING
+  // same gcc can fail building consteval complicated code, ex on ubuntu it reports nonsense while on gentoo there is no
+  // problem at all
   return constexpr_test(detail::test_invoke_dual<templ_list, templ_list2>::consteval_run(test), location);
+#else
+  return test_result{};
+#endif
   }
 
 consteval test_result test_dual()

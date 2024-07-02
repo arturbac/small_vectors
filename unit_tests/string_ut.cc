@@ -1,4 +1,3 @@
-#include <unit_test_core.h>
 #include <small_vectors/basic_fixed_string.h>
 #include <small_vectors/basic_string.h>
 #include <small_vectors/stream/basic_string.h>
@@ -8,6 +7,13 @@
 #include <small_vectors/formattable/basic_fixed_string.h>
 #endif
 #include <small_vectors/concepts/stream_insertable.h>
+
+// same gcc can fail building consteval complicated code, ex on ubuntu it reports nonsense while on gentoo there is no
+// problem at all
+#if defined(__GNUC__) && !defined(__clang__)
+#define DISABLE_CONSTEVAL_TESTING
+#endif
+#include <unit_test_core.h>
 
 #include <iostream>
 #ifdef __clang__

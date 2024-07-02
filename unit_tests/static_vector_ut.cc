@@ -1,4 +1,9 @@
 #include <small_vectors/static_vector.h>
+// same gcc can fail building consteval complicated code, ex on ubuntu it reports nonsense while on gentoo there is no
+// problem at all
+#if defined(__GNUC__) && !defined(__clang__)
+#define DISABLE_CONSTEVAL_TESTING
+#endif
 #include <unit_test_core.h>
 
 #include <atomic>
@@ -8,38 +13,6 @@
 
 namespace small_vectors::inline v3_0
   {
-
-// struct non_trivial
-//   {
-//   int value_;
-//
-//   constexpr non_trivial() noexcept : value_{} {}
-//   constexpr non_trivial( int value ) noexcept : value_{value} {}
-//
-//   constexpr non_trivial( non_trivial && r ) noexcept
-//       : value_{r.value_}
-//     {
-//     r.value_ = {};
-//     }
-//   constexpr non_trivial( non_trivial const & r) noexcept
-//       : value_{r.value_}
-//     {
-//     }
-//   constexpr non_trivial & operator =( non_trivial && r ) noexcept
-//     {
-//     std::swap(value_,r.value_);
-//     return *this;
-//     }
-//   constexpr non_trivial & operator =( non_trivial const & r ) noexcept
-//     {
-//     value_ = r.value_;
-//     return *this;
-//     }
-//
-//   constexpr ~non_trivial() {}
-//   constexpr bool operator ==( non_trivial const & r ) const noexcept = default;
-//   constexpr bool operator ==( int r ) const noexcept { return value_ == r; }
-//   };
 
 struct non_trivial_counter : public non_trivial
   {
