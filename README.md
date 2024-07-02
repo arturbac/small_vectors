@@ -201,10 +201,9 @@ constexpr_test(get<field_4>(mbs) == value3 );
 ## Tested Compilers (as of v2.4.2)
 
 ### Make Workflows Tested
-- `cmake --workflow --preset="clang-16-libc++release"`
-- `cmake --workflow --preset="clang-17-release"` using GNU libstdc++ on Linux
-- `cmake --workflow --preset="gcc-13-release"`
-- `cmake --workflow --preset="gcc-12-release"`
+- `cmake --workflow --preset="clang-18-libc++release"`
+- `cmake --workflow --preset="clang-18-release"` using GNU libstdc++ on Linux
+- `cmake --workflow --preset="gcc-14-release"`
 
 ### MSVC
 - Tested intermittently
