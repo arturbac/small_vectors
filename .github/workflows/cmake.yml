@@ -14,7 +14,7 @@ on:
       - 'docs/**'
 
 jobs:
-  build-and-test-clang:
+  build-and-test:
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
