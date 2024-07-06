@@ -54,8 +54,7 @@ struct static_vector
 #if !defined(WIN32)
   [[no_unique_address]]
 #endif
-  detail::static_vector_storage<value_type, capacity_>
-    storage_;
+  detail::static_vector_storage<value_type, capacity_> storage_;
 
   [[nodiscard]]
   static inline constexpr auto capacity() noexcept -> size_type
@@ -174,16 +173,15 @@ struct static_vector
   inline constexpr auto crend() const noexcept -> const_reverse_iterator { return const_reverse_iterator{begin()}; }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator[](concepts::unsigned_arithmetic_integral auto index) const noexcept -> value_type const &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index
+  ) const noexcept -> value_type const &
     {
     assert(index < storage_.size_);
     return data()[index];
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> value_type &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> value_type &
     {
     assert(index < storage_.size_);
     return data()[index];
@@ -247,8 +245,8 @@ struct static_vector
       return detail::emplace_unchecked(*this, itpos, std::forward<Args>(args)...);
     }
 
-  inline constexpr auto resize(size_type new_size) noexcept(noexcept(detail::resize(*this, new_size)))
-    -> vector_outcome_e
+  inline constexpr auto resize(size_type new_size) noexcept(noexcept(detail::resize(*this, new_size))
+  ) -> vector_outcome_e
     {
     return detail::resize(*this, new_size);
     }
@@ -259,6 +257,8 @@ struct static_vector
     }
 
   inline constexpr void set_size_priv_(size_type pos_ix) noexcept { storage_.size_ = pos_ix; }
+
+  inline constexpr void swap(static_vector & b) noexcept { storage_.swap(b.storage_); }
   };
 
 namespace concepts
@@ -359,8 +359,9 @@ inline constexpr auto & back(static_vector_type & vec) noexcept
   }
 
 template<typename V, uint64_t N>
-inline constexpr auto erase_at_end(static_vector<V, N> & vec, typename static_vector<V, N>::const_iterator pos) noexcept
-  -> typename static_vector<V, N>::iterator
+inline constexpr auto
+  erase_at_end(static_vector<V, N> & vec, typename static_vector<V, N>::const_iterator pos) noexcept ->
+  typename static_vector<V, N>::iterator
   {
   return vec.erase_at_end(pos);
   }
@@ -498,4 +499,4 @@ inline constexpr vector_outcome_e split_by_half(
   else
     return vector_outcome_e::out_of_storage;
   }
-  }  // namespace coll
+  }  // namespace small_vectors::inline v3_0

@@ -175,8 +175,7 @@ struct small_vector
 
   template<concepts::unsigned_arithmetic_integral arg_size_type>
   [[nodiscard]]
-  inline constexpr auto
-    operator[](arg_size_type index) const noexcept -> value_type const &
+  inline constexpr auto operator[](arg_size_type index) const noexcept -> value_type const &
     {
     assert(index < size());
     return data()[index];
@@ -184,8 +183,7 @@ struct small_vector
 
   template<concepts::unsigned_arithmetic_integral arg_size_type>
   [[nodiscard]]
-  inline constexpr auto
-    operator[](arg_size_type index) noexcept -> value_type &
+  inline constexpr auto operator[](arg_size_type index) noexcept -> value_type &
     {
     assert(index < size());
     return data()[index];
@@ -329,6 +327,8 @@ struct small_vector
     }
 
   inline constexpr auto shrink_to_fit() -> vector_outcome_e { return detail::shrink_to_fit(*this); }
+
+  inline constexpr void swap(small_vector & b) noexcept { storage_.swap(b.storage_); }
   };
 
 template<typename V, std::unsigned_integral S, uint64_t N>
@@ -347,9 +347,7 @@ namespace concepts
   concept same_as_small_vector = requires {
     typename small_vector_type::value_type;
     typename small_vector_type::size_type;
-      {
-      small_vector_type::buffered_capacity()
-      } noexcept -> std::same_as<typename small_vector_type::size_type>;
+      { small_vector_type::buffered_capacity() } noexcept -> std::same_as<typename small_vector_type::size_type>;
       requires concepts::unsigned_arithmetic_integral<typename small_vector_type::size_type>;
     requires std::same_as<
       std::remove_const_t<small_vector_type>,
