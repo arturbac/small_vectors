@@ -2324,11 +2324,11 @@ int main()
       constexpr_test(size(vec) == 4) | constexpr_test(equal(vec, expected1));
       constexpr_test(size(vec2) == 2) | constexpr_test(equal(vec2, expected2));
 
-      std::swap(vec, vec2);
+      vec.swap(vec2);
       constexpr_test(size(vec2) == 4) | constexpr_test(equal(vec2, expected1));
       constexpr_test(size(vec) == 2) | constexpr_test(equal(vec, expected2));
 
-      std::swap(vec, vec2);
+      vec.swap(vec2);
       constexpr_test(size(vec) == 4) | constexpr_test(equal(vec, expected1));
       constexpr_test(size(vec2) == 2) | constexpr_test(equal(vec2, expected2));
       return {};
@@ -2358,7 +2358,7 @@ int main()
         vec.emplace_back(S{1});
         vec.emplace_back(S{2});
 
-        std::swap(vec, vec2);
+        vec.swap(vec2);
         expect(size(vec) == 0);
         expect(size(vec2) == 2);
         }
