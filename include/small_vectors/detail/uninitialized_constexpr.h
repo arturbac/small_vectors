@@ -3,6 +3,7 @@
 #include <small_vectors/utils/utility_cxx20.h>
 #include <small_vectors/concepts/concepts.h>
 #include <memory>
+#include <cstring>
 #include <algorithm>
 
 namespace small_vectors::inline v3_0::detail
@@ -173,13 +174,14 @@ inline constexpr auto uninitialized_copy(
   InputIterator first, InputIterator last, ForwardIterator result
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>) -> ForwardIterator
   {
-  constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
-  using unwind = range_unwinder<use_nothrow, ForwardIterator>;
-  unwind cur{result};
-  for(; first != last; ++first, (void)++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), *first);
-  cur.release();
-  return cur.last_;
+  if(std::is_constant_evaluated())
+    {
+    for(; first != last; ++first, (void)++result)
+      std::construct_at(std::addressof(*result), *first);
+    return result;
+    }
+  else
+    return std::uninitialized_copy(first, last, result);
   }
 
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
@@ -187,13 +189,11 @@ inline constexpr void uninitialized_copy_n(
   InputIterator first, Size count, ForwardIterator result
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>)
   {
-  constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
-  using unwind = range_unwinder<use_nothrow, ForwardIterator>;
-  unwind cur{result};
-  auto src{first};
-  for(; count > 0; --count, (void)++src, ++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), *src);
-  cur.release();
+  if(std::is_constant_evaluated())
+    for(; count > 0; --count, (void)++first, ++result)
+      std::construct_at(std::addressof(*result), *first);
+  else
+    std::uninitialized_copy_n(first, count, result);
   }
 
 template<concepts::input_iterator InputIterator, concepts::forward_iterator ForwardIterator>
@@ -201,14 +201,11 @@ inline constexpr void uninitialized_move(
   InputIterator first, InputIterator last, ForwardIterator result
 ) noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
   {
-  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
-  using unwind = range_unwinder<use_nothrow, ForwardIterator>;
-  unwind cur{result};
-  auto src{std::make_move_iterator(first)};
-  auto end{std::make_move_iterator(last)};
-  for(; src != end; ++src, (void)++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), std::move(*src));
-  cur.release();
+  if(std::is_constant_evaluated())
+    for(; first != last; ++first, (void)++result)
+      std::construct_at(std::addressof(result), std::move(*first));
+  else
+    std::uninitialized_move(first, last, result);
   }
 
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
@@ -216,13 +213,11 @@ inline constexpr void uninitialized_move_n(
   InputIterator first, Size count, ForwardIterator result
 ) noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
   {
-  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
-  using unwind = range_unwinder<use_nothrow, ForwardIterator>;
-  unwind cur{result};
-  auto src{std::make_move_iterator(first)};
-  for(; count > 0; --count, (void)++src, ++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), std::move(*src));
-  cur.release();
+  if(std::is_constant_evaluated())
+    for(; count > 0; --count, (void)++first, ++result)
+      std::construct_at(std::addressof(*result), std::move(*first));
+  else
+    std::uninitialized_move_n(first, count, result);
   }
 
 template<typename iterator>
