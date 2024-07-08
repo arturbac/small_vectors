@@ -261,6 +261,13 @@ struct static_vector
   inline constexpr void swap(static_vector & b) noexcept { storage_.swap(b.storage_); }
   };
 
+// always relocatable after move
+template<concepts::vector_constraints V, uint64_t N>
+consteval bool adl_decl_relocatable(static_vector<V, N> const *)
+  {
+  return true;
+  }
+
 namespace concepts
   {
   ///\brief constraint requiring type to be a static_vector or const static_vector

@@ -331,6 +331,13 @@ struct small_vector
   inline constexpr void swap(small_vector & b) noexcept { storage_.swap(b.storage_); }
   };
 
+// always relocatable after move
+template<typename V, std::unsigned_integral S, uint64_t N>
+consteval bool adl_decl_relocatable(small_vector<V, S, N> const *)
+  {
+  return true;
+  }
+
 template<typename V, std::unsigned_integral S, uint64_t N>
 small_vector(small_vector<V, S, N> &&) -> small_vector<V, S, N>;
 
