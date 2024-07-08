@@ -5,12 +5,12 @@
 #include <iostream>
 #include <algorithm>
 #include <functional>
+#include <ranges>
+#include <array>
 
 using traits_list_move
   = metatests::type_list<uint16_t, int32_t, int64_t, double, non_trivial, non_trivial_ptr, non_trivial_ptr_except>;
 
-namespace small_vectors::detail
-  {
 template<typename value_type, unsigned size>
 constexpr auto construct_vec()
   {
@@ -33,26 +33,152 @@ constexpr auto destroy_vec(std::array<value_type *, size> & sz)
   );
   }
 
-auto constexpr_uninitialized_move_n = []<typename value_type>(value_type const *) -> metatests::test_result
-{
-  {
-  auto arr1{construct_vec<value_type, 10>()};
-  std::array<value_type *, 10> out;
-  uninitialized_move_n(begin(arr1), 10, begin(out));
-  destroy_vec(out);
-  }
-return {};
-};
+using namespace boost::ext::ut;
 
-  }  // namespace small_vectors::detail
+static int * instance_counter{};
+
+struct explicit_relocatable_t
+  {
+  int i_;
+
+  explicit explicit_relocatable_t(int i = 0) noexcept : i_(i) { ++(*instance_counter); }
+
+  explicit_relocatable_t(explicit_relocatable_t && rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  explicit_relocatable_t(explicit_relocatable_t const & rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  explicit_relocatable_t & operator=(explicit_relocatable_t const &) noexcept = default;
+
+  // S & operator=(S &&) noexcept;
+
+  ~explicit_relocatable_t() { --(*instance_counter); }
+  };
+
+inline bool operator==(explicit_relocatable_t const & lh, explicit_relocatable_t const & rh) noexcept
+  {
+  return lh.i_ == rh.i_;
+  }
+
+consteval bool adl_decl_relocatable(explicit_relocatable_t const *) { return true; }
+
+struct implicit_relocatable_t
+  {
+  int i_;
+
+  explicit implicit_relocatable_t(int i) noexcept : i_(i) { ++(*instance_counter); }
+
+  implicit_relocatable_t(implicit_relocatable_t && rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  implicit_relocatable_t(implicit_relocatable_t const & rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  implicit_relocatable_t & operator=(implicit_relocatable_t const &) noexcept = default;
+
+  // S & operator=(S &&) noexcept;
+
+  ~implicit_relocatable_t() = default;
+  };
+
+inline bool operator==(implicit_relocatable_t const & lh, implicit_relocatable_t const & rh) noexcept
+  {
+  return lh.i_ == rh.i_;
+  }
+
+struct non_relocatable_t
+  {
+  int i_;
+
+  explicit non_relocatable_t(int i) noexcept : i_(i) { ++(*instance_counter); }
+
+  non_relocatable_t(non_relocatable_t && rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  non_relocatable_t(non_relocatable_t const & rhs) noexcept : i_(rhs.i_)
+    {
+    ++(*instance_counter);
+    i_ = rhs.i_;
+    }
+
+  non_relocatable_t & operator=(non_relocatable_t const &) noexcept = default;
+
+  // S & operator=(S &&) noexcept;
+
+  ~non_relocatable_t() { --(*instance_counter); }
+  };
+
+inline bool operator==(non_relocatable_t const & lh, non_relocatable_t const & rh) noexcept { return lh.i_ == rh.i_; }
+
+static_assert(small_vectors::concepts::relocatable<explicit_relocatable_t>);
+static_assert(small_vectors::concepts::relocatable<implicit_relocatable_t>);
+static_assert(small_vectors::concepts::relocatable<int>);
+static_assert(!small_vectors::concepts::relocatable<non_relocatable_t>);
 
 int main()
   {
   using namespace metatests;
+  "test_uninitialized_move_n"_test = []
+  {
+    auto constexpr_uninitialized_move_n = []<typename value_type>(value_type const *) -> metatests::test_result
+    {
+      {
+      auto arr1{construct_vec<value_type, 10>()};
+      std::array<value_type *, 10> out;
+      small_vectors::detail::uninitialized_move_n(begin(arr1), 10, begin(out));
 
-  test_result res = run_constexpr_test<traits_list_move>(small_vectors::detail::constexpr_uninitialized_move_n);
-  res |= run_consteval_test<traits_list_move>(small_vectors::detail::constexpr_uninitialized_move_n);
-
-  return res ? EXIT_SUCCESS : EXIT_FAILURE;
+      destroy_vec(out);
+      return {};
+      }
+    };
+    std::ignore = run_constexpr_test<traits_list_move>(constexpr_uninitialized_move_n);
+    std::ignore = run_consteval_test<traits_list_move>(constexpr_uninitialized_move_n);
+  };
+  "test_uninitialized_relocate_n"_test = []
+  {
+    int ctr;
+    instance_counter = &ctr;
+    "test_uninitialized_move_n"_test = [&]
+    {
+      using T = explicit_relocatable_t;
+      ctr = 0;
+      std::allocator<T> alloc;
+      std::array<T, 4> source{T{1}, T{2}, T{3}, T{4}};
+      T * ptr{alloc.allocate(4)};
+      small_vectors::detail::uninitialized_relocate_n(source.begin(), 4u, ptr);
+      expect(ctr == 8) << "expecting destructor was not called 8 times" << ctr;
+      expect(std::ranges::equal(std::span<T const>{source}, std::span<T const>{ptr, 4}));
+      alloc.deallocate(ptr, 4);
+    };
+    "test_uninitialized_move_n"_test = [&]
+    {
+      using T = non_relocatable_t;
+      ctr = 0;
+      std::allocator<T> alloc;
+      std::array<T, 4> source{T{1}, T{2}, T{3}, T{4}};
+      T * ptr{alloc.allocate(4)};
+      small_vectors::detail::uninitialized_relocate_n(source.begin(), 4u, ptr);
+      // range in ptr is not destroyed
+      expect(ctr == 4) << "expecting destructor was called 4 times by uninitialized_relocate_n" << ctr;
+      expect(std::ranges::equal(std::span{source}, std::span{ptr, 4}));
+      alloc.deallocate(ptr, 4);
+    };
+  };
   }
 

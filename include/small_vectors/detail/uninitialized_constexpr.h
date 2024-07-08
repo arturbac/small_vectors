@@ -259,16 +259,9 @@ template<concepts::iterator InputIterator, std::integral size_type, concepts::fo
 inline constexpr void uninitialized_relocate_n(InputIterator first, size_type count, ForwardIterator result) noexcept
   {
   using value_type = iterator_value_type_t<InputIterator>;
-  // TODO update to relocate with c++23 or later when it became available
-  InputIterator cur{result};
-  auto src{first};
-  for(; count > 0; --count, (void)++src, ++cur)
-    {
-    // construct and destroy in the same loop for better cache utilization
-    std::construct_at(std::addressof(*cur), std::move(*src));
-    if constexpr(!std::is_trivially_destructible_v<value_type>)
-      std::destroy_at(std::addressof(*src));
-    }
+  uninitialized_move_n(first, count, result);
+  if constexpr(!concepts::relocatable<value_type>)
+    destroy_range(first, size_type(0u), count);
   }
 
 template<concepts::iterator InputIterator, std::integral size_type, concepts::forward_iterator ForwardIterator>
@@ -284,7 +277,7 @@ inline constexpr void uninitialized_relocate_if_noexcept_n(
   else
     {
     uninitialized_copy_n(first, count, result);
-    if constexpr(!std::is_trivially_destructible_v<value_type>)
+    if constexpr(!concepts::relocatable<value_type>)
       destroy_range(first, size_type(0u), count);
     }
   }
@@ -296,7 +289,7 @@ inline constexpr void uninitialized_relocate_with_copy_n(
   {
   using value_type = iterator_value_type_t<InputIterator>;
   uninitialized_copy_n(first, count, result);
-  if constexpr(!std::is_trivially_destructible_v<value_type>)
+  if constexpr(!concepts::relocatable<value_type>)
     destroy_range(first, size_type(0u), count);
   }
 
