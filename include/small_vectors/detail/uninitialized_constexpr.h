@@ -277,7 +277,7 @@ inline constexpr void uninitialized_relocate_if_noexcept_n(
   else
     {
     uninitialized_copy_n(first, count, result);
-    if constexpr(!concepts::relocatable<value_type>)
+    if constexpr(!std::is_trivially_destructible_v<value_type>)
       destroy_range(first, size_type(0u), count);
     }
   }
@@ -289,7 +289,7 @@ inline constexpr void uninitialized_relocate_with_copy_n(
   {
   using value_type = iterator_value_type_t<InputIterator>;
   uninitialized_copy_n(first, count, result);
-  if constexpr(!concepts::relocatable<value_type>)
+  if constexpr(!std::is_trivially_destructible_v<value_type>)
     destroy_range(first, size_type(0u), count);
   }
 
