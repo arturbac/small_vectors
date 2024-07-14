@@ -164,15 +164,17 @@ static_assert(!small_vectors::concepts::relocatable<copy_non_relocatable_t>);
 int main()
   {
   using namespace metatests;
+
   "test_uninitialized_move_n"_test = []
   {
     auto constexpr_uninitialized_move_n = []<typename value_type>(value_type const *) -> metatests::test_result
     {
       {
-      auto arr1{construct_vec<value_type, 10>()};
+      auto const arr1{construct_vec<value_type, 10>()};
+      auto arr2{arr1};
       std::array<value_type *, 10> out;
-      small_vectors::detail::uninitialized_move_n(begin(arr1), 10, begin(out));
-
+      small_vectors::detail::uninitialized_move_n(begin(arr2), 10, begin(out));
+      constexpr_test(std::ranges::equal(arr1, out));
       destroy_vec(out);
       return {};
       }

@@ -15,6 +15,9 @@ concept even_size = (sz & 1) == 0 && sz != 0;
 template<typename iterator>
 using iterator_category_t = typename std::iterator_traits<iterator>::iterator_category;
 
+template<typename iter_t>
+inline constexpr bool is_contiguous_iterator_v = std::contiguous_iterator<iter_t>;
+
 template<typename iterator>
 concept forward_iterator = std::forward_iterator<iterator>;
 
