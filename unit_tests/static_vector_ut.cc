@@ -123,10 +123,15 @@ namespace concepts
     static_assert(std::same_as<uint8_t &, decltype(back(std::declval<vec_type &>()))>);
     static_assert(std::same_as<uint8_t const &, decltype(back(std::declval<vec_type const &>()))>);
     }  // namespace method_tests
+
   }  // namespace concepts
 
 static_assert(sizeof(static_vector<uint8_t, 7>) == 8);
 static_assert(sizeof(static_vector<uint32_t, 3>) == 16);
+
+static_assert(std::same_as<std::contiguous_iterator_tag, static_vector<uint8_t, 7>::iterator::iterator_concept>);
+static_assert(concepts::is_contiguous_iterator_v<static_vector<uint8_t, 7>::iterator>);
+static_assert(concepts::is_contiguous_iterator_v<char const *>);
 
 struct aligned_3_byte_struct
   {

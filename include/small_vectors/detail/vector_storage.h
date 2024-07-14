@@ -130,7 +130,7 @@ namespace detail_concepts
     { obj.context() } -> std::same_as<typename T::storage_context_type>;
               // clang-format on
   };
-  }
+  }  // namespace detail_concepts
 
 template<concepts::vector_constraints V, uint64_t N>
 struct static_vector_storage
@@ -400,7 +400,7 @@ struct storage_context_t
   constexpr storage_context_t(value_type * d, size_type c) noexcept : data{d}, capacity{c} {}
   };
 
-// holder for auto reclmation during unwind for throwing types during copy
+// holder for auto reclamation during unwind for throwing types during copy
 template<bool is_noexcept>
 struct noexcept_if
   {
@@ -844,8 +844,8 @@ struct small_vector_storage
     return result;
     }
 
-  inline constexpr auto exchange_priv_(storage_context_type new_storage, size_type size) noexcept
-    -> storage_context_type
+  inline constexpr auto
+    exchange_priv_(storage_context_type new_storage, size_type size) noexcept -> storage_context_type
     {
     if(active_ == dynamic)
       {
@@ -1019,8 +1019,8 @@ struct small_vector_storage<V, S, 0u>
       }
     }
 
-  inline constexpr auto exchange_priv_(storage_context_type new_storage, size_type size) noexcept
-    -> storage_context_type
+  inline constexpr auto
+    exchange_priv_(storage_context_type new_storage, size_type size) noexcept -> storage_context_type
     {
     size_ = size;
     return std::exchange(dynamic, new_storage);
