@@ -6,7 +6,7 @@ C++20,23 utilities library
 
 ## Features
 - **Static Vector**: Trivially copyable for types that are trivially copyable, enabling compiler optimizations such as `memcpy` for copying operations (since v3.0.3-devel).
-- **Address Independence**: Both static and small vectors offer in-class storage, making them address-independent and suitable for interprocess data exchange.
+- **Address Independence**: static vectors and static string offer in-class storage, making them address-independent and suitable for interprocess data exchange.
 - **Dynamic and Custom Sized Storage**: Small vectors support dynamic memory allocation with customizable size types. Static vectors adjust the minimal size type based on the number of elements.
 - **Constant Evaluation**: Static vectors can be fully evaluated at compile time for trivial element types.
 - **Basic String with Dual Storage**: Provides a basic string implementation with both dynamic and static in-class storage options. The static storage variant is address-independent.
