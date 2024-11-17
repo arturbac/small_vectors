@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR )
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR )
 include(CheckCXXCompilerFlag)
 include(cmake/extract_version.cmake)
 project(small_vectors
@@ -6,6 +6,9 @@ project(small_vectors
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/arturbac/small_vectors"
         ) 
+cmake_policy(SET CMP0167 NEW)
+cmake_policy(SET CMP0175 NEW)
+
 include(GNUInstallDirs)
 if( PROJECT_IS_TOP_LEVEL )
   include(FeatureSummary)
@@ -29,7 +32,7 @@ option(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vt
 add_feature_info("SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION" SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vtable of bad_expected_access")
 
 if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
-  include(cmake/CPM.cmake)
+  include(cmake/get_cpm.cmake)
 
   # ---- Add dependencies via CPM ----
   # see https://github.com/cpm-cmake/CPM.cmake for more info

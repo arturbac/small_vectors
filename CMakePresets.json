@@ -28,6 +28,11 @@
     "cacheVariables": { "CMAKE_CXX_STANDARD" : "23" }
     },
     {
+    "name": "cfg-c++26",
+    "hidden": true,
+    "cacheVariables": { "CMAKE_CXX_STANDARD" : "26" }
+    },
+    {
     "name": "cfg-libc++",
     "hidden": true,
     "generator": "Ninja",
@@ -35,6 +40,15 @@
         "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
         "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
       }
+    },
+    {
+      "name": "clang-19-release",
+      "inherits": [ "cfg-common", "cfg-ninja", "cfg-c++26" ],
+      "cacheVariables": { "CMAKE_CXX_COMPILER" : "clang++-19" }
+    },
+    {
+      "name": "clang-19-libc++release",
+      "inherits": ["clang-19-release", "cfg-libc++"]
     },
     {
       "name": "clang-18-release",
@@ -50,7 +64,8 @@
       "inherits": ["clang-18-release", "cfg-libc++"],
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-ggdb -fvisibility=default -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=undefined",
-        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=undefined"
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=undefined",
+        "ENABLE_FUZZ_TARGETS" : "ON"
       }
     },
     {
@@ -92,6 +107,14 @@
   ],
   "buildPresets": [
     {
+      "name": "clang-19-release",
+      "configurePreset": "clang-19-release"
+    },
+    {
+      "name": "clang-19-libc++release",
+      "configurePreset": "clang-19-libc++release"
+    },
+    {
       "name": "clang-18-release",
       "configurePreset": "clang-18-release"
     },
@@ -122,6 +145,18 @@
     
   ],
   "testPresets": [
+    {
+      "name": "clang-19-release",
+      "configurePreset": "clang-19-release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "clang-19-libc++release",
+      "configurePreset": "clang-19-libc++release",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
     {
       "name": "clang-18-release",
       "configurePreset": "clang-18-release",
@@ -166,6 +201,40 @@
     }
   ],
   "workflowPresets": [
+      {
+      "name": "clang-19-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-19-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-19-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-19-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-19-libc++release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-19-libc++release"
+        },
+        {
+          "type": "build",
+          "name": "clang-19-libc++release"
+        },
+        {
+          "type": "test",
+          "name": "clang-19-libc++release"
+        }
+      ]
+    },
       {
       "name": "clang-18-release",
       "steps": [

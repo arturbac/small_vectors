@@ -1,3 +1,4 @@
+#include <string>
 #include <small_vectors/basic_fixed_string.h>
 #include <small_vectors/basic_string.h>
 #include <small_vectors/stream/basic_string.h>
@@ -93,8 +94,7 @@ consteval bool verify_basic_string()
     {
     using uchar = unsigned char;
     auto s{cast_fixed_string<uchar>("12")};
-    constexpr uchar expected[]{uchar('1'), uchar('2'), uchar('\0')};
-    tr |= constexpr_test(s == std::basic_string_view(&expected[0]));
+    tr |= constexpr_test(s[0u] == uchar('1') and s[1u] == uchar('2'));
     }
   return static_cast<bool>(tr);
   }
