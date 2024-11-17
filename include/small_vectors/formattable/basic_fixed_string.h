@@ -3,6 +3,7 @@
 
 #pragma once
 #include <small_vectors/basic_fixed_string.h>
+#include <format>
 
 namespace std
   {

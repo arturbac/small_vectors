@@ -55,9 +55,10 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
-               && std::default_initializable<typename storage_type::value_type>
-  constexpr auto default_construct(
-  ) noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>) -> storage_type
+             && std::default_initializable<typename storage_type::value_type>
+  constexpr auto
+    default_construct() noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>)
+      -> storage_type
 
     {
     storage_type storage{};
@@ -78,7 +79,7 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type, typename... Args>
     requires concepts::complete_type<typename storage_type::value_type>
-               && std::constructible_from<typename storage_type::value_type, Args &&...>
+             && std::constructible_from<typename storage_type::value_type, Args &&...>
   constexpr auto construct_from(Args &&... args) -> storage_type
     {
     storage_type storage{};
@@ -103,7 +104,7 @@ namespace inclass_storage
 
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
-               && std::move_constructible<typename storage_type::value_type>
+             && std::move_constructible<typename storage_type::value_type>
   constexpr auto move_construct(storage_type && other
   ) noexcept(std::is_nothrow_move_constructible_v<typename storage_type::value_type>) -> storage_type
     {
@@ -206,8 +207,8 @@ public:
       std::construct_at(ptr(), std::move(*other.ptr()));
     }
 
-  constexpr auto operator=(inclass_store_t const & other
-  ) noexcept(std::is_nothrow_copy_assignable_v<value_type>) -> inclass_store_t &
+  constexpr auto operator=(inclass_store_t const & other) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
+    -> inclass_store_t &
     requires concepts::complete_type<value_type> && std::copyable<value_type>  // Requires value_type to be copyable
     {
     if(this != &other)
@@ -220,13 +221,13 @@ public:
     return *this;
     }
 
-  constexpr auto operator=(inclass_store_t && other
-  ) noexcept(std::is_nothrow_move_assignable_v<value_type>) -> inclass_store_t &
+  constexpr auto operator=(inclass_store_t && other) noexcept(std::is_nothrow_move_assignable_v<value_type>)
+    -> inclass_store_t &
     requires concepts::complete_type<value_type> && std::movable<value_type>  // Requires value_type to be movable
     {
     if(this != &other)
       {
-      if constexpr(std::is_trivially_destructible_v<value_type>)
+      if constexpr(not std::is_trivially_destructible_v<value_type>)
         std::destroy_at(ptr());
       if constexpr(std::is_trivially_move_assignable_v<value_type>)
         store_ = other.store_;
@@ -244,13 +245,13 @@ public:
     }
 
   constexpr ~inclass_store_t() noexcept(std::is_nothrow_destructible_v<value_type>)
-    requires std::destructible<value_type> && (!std::is_trivially_constructible_v<value_type>)
+    requires std::destructible<value_type> and (not std::is_trivially_destructible_v<value_type>)
     {
     std::destroy_at(ptr());
     }
 
   constexpr ~inclass_store_t() noexcept
-    requires std::is_trivially_constructible_v<value_type>
+    requires std::is_trivially_destructible_v<value_type>
   = default;
 
   constexpr auto operator*() noexcept -> value_type & { return *ptr(); }
