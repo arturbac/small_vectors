@@ -29,6 +29,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       -Wno-misleading-indentation
       -Wno-attributes
       -Wno-unused-parameter
+      -Wno-unknown-pragmas
       )
 endif()
 
