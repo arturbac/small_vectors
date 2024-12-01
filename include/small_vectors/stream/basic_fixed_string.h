@@ -5,7 +5,7 @@
 #include <small_vectors/basic_fixed_string.h>
 #include <iostream>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 template<concepts::integral_or_byte CharType, std::size_t N>
 std::basic_ostream<CharType> &
@@ -15,4 +15,4 @@ std::basic_ostream<CharType> &
   os << str.view();
   return os;
   }
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2

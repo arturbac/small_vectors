@@ -6,7 +6,7 @@
 #include <cassert>
 #include <bit>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 template<typename T, concepts::trivial V>
 //     requires( alignof(T) > 1 ) //disabled due to not being able use declaration for recurent types
@@ -64,4 +64,4 @@ struct composed_pointer_with_data
     data_ = (data_ & pointer_mask) | static_cast<uintptr_t>(value);
     }
   };
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2

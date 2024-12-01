@@ -6,7 +6,7 @@
 #include <small_vectors/concepts/stream_insertable.h>
 #include <iostream>
 
-namespace small_vectors::inline v3_0::utils
+namespace small_vectors::inline v3_2::utils
   {
 
 template<small_vectors::concepts::stream_insertable ValueType, typename Tag>
@@ -16,4 +16,4 @@ std::ostream & operator<<(std::ostream & os, strong_type<ValueType, Tag> const &
   return os;
   }
 
-  }  // namespace small_vectors::inline v3_0::utils
+  }  // namespace small_vectors::inline v3_2::utils

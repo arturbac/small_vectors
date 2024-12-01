@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <bit>
 
-namespace small_vectors::inline v3_0::ip
+namespace small_vectors::inline v3_2::ip
   {
 enum struct push_status : uint8_t
   {
@@ -220,4 +220,4 @@ struct pop_t
   };
 
 inline constexpr pop_t pop;
-  }  // namespace small_vectors::inline v3_0::ip
+  }  // namespace small_vectors::inline v3_2::ip

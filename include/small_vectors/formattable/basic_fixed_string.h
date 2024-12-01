@@ -8,7 +8,7 @@
 namespace std
   {
 template<typename CharType, std::size_t N>
-struct formatter<small_vectors::v3_0::basic_fixed_string<CharType, N>, CharType>
+struct formatter<small_vectors::basic_fixed_string<CharType, N>, CharType>
   {
   formatter<std::basic_string_view<CharType>, CharType> value_formatter;
 
@@ -20,7 +20,7 @@ struct formatter<small_vectors::v3_0::basic_fixed_string<CharType, N>, CharType>
 
   template<typename FormatContext>
   [[nodiscard]]
-  auto format(small_vectors::v3_0::basic_fixed_string<CharType, N> const & value, FormatContext & ctx) const ->
+  auto format(small_vectors::basic_fixed_string<CharType, N> const & value, FormatContext & ctx) const ->
     typename FormatContext::iterator
     {
     return value_formatter.format(value.view(), ctx);

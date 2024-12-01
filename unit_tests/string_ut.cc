@@ -62,7 +62,7 @@ using ut::operator""_test;
 using namespace ut::operators::terse;
 using metatests::test_result;
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 
 consteval bool verify_basic_string()
@@ -124,7 +124,7 @@ static constexpr auto test_buffer_view = test_buffer.null_terminated_buffor_view
 static_assert(test_buffer_view == std::string_view{"Test45"});
 
 static_assert(verify_basic_string());
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2
 
 using namespace small_vectors;
 

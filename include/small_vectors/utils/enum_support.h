@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <string_view>
 
-namespace small_vectors::inline v3_0::utils
+namespace small_vectors::inline v3_2::utils
   {
 namespace internal
   {
@@ -41,4 +41,4 @@ inline constexpr enum_type enum_cond_flag(bool cond, enum_type cond_e) noexcept
   else
     return {};
   }
-  }  // namespace small_vectors::inline v3_0::utils
+  }  // namespace small_vectors::inline v3_2::utils

@@ -6,7 +6,7 @@
 #include <cstring>
 #include <algorithm>
 
-namespace small_vectors::inline v3_0::detail
+namespace small_vectors::inline v3_2::detail
   {
 // By default, only trivially copyable or trivially movable types are relocatable
 // however, is_relocatable may be specialized to mark complex types as relocatable
@@ -450,5 +450,5 @@ inline constexpr void uninitialized_uneven_range_swap(
   uninitialized_relocate_if_noexcept_n(iter2 + size1, size_type(size2 - size1), iter1 + size1);
   small_vectors_clang_unsafe_buffer_usage_end  //
   }
-  }  // namespace small_vectors::inline v3_0::detail
+  }  // namespace small_vectors::inline v3_2::detail
 

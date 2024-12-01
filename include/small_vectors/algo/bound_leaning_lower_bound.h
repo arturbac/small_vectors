@@ -5,7 +5,7 @@
 #include <iterator>
 
 /// \brief Burrows–Wheeler transform
-namespace small_vectors::inline v3_0::algo::lower_bound
+namespace small_vectors::inline v3_2::algo::lower_bound
   {
 
 // Idea from Andrei Alexandrescu on improved lower bound
@@ -71,4 +71,4 @@ struct bound_leaning_lower_bound_fn
   };
 
 inline constexpr bound_leaning_lower_bound_fn bound_leaning{};
-  }  // namespace small_vectors::inline v3_0::algo::lower_bound
+  }  // namespace small_vectors::inline v3_2::algo::lower_bound

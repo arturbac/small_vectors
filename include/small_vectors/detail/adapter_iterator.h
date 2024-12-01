@@ -2,7 +2,7 @@
 #include <small_vectors/concepts/iterator_traits.h>
 #include <concepts>
 
-namespace small_vectors::inline v3_0::detail
+namespace small_vectors::inline v3_2::detail
   {
 /// \brief adapter for wrapping use of pointer arithmetic
 template<std::input_iterator Iterator>
@@ -193,4 +193,4 @@ inline constexpr auto
   {
   return adapter_iterator<iter1>(i.base() + n);
   }
-  }  // namespace small_vectors::inline v3_0::detail
+  }  // namespace small_vectors::inline v3_2::detail

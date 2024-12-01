@@ -29,7 +29,7 @@
 #include <numeric>
 #include <compare>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 using detail::string::buffered_string_tag;
 using detail::string::static_string_tag;
@@ -743,7 +743,7 @@ inline constexpr auto hash(basic_string_t<V, N, T> const & str) noexcept
   else
     return std::hash<std::basic_string_view<V>>()(str.view());
   }
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2
 
 namespace std
   {

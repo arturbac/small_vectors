@@ -8,7 +8,7 @@
 #include <boost/container/flat_map.hpp>
 
 /// \brief Burrows–Wheeler transform
-namespace small_vectors::inline v3_0::algo::bwt
+namespace small_vectors::inline v3_2::algo::bwt
   {
 namespace concepts
   {
@@ -175,4 +175,4 @@ struct decode_t
 
 template<char end_char>
 inline constexpr decode_t<end_char> decode;
-  }  // namespace small_vectors::inline v3_0::algo::bwt
+  }  // namespace small_vectors::inline v3_2::algo::bwt

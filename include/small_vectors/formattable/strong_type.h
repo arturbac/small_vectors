@@ -5,10 +5,6 @@
 #include <small_vectors/utils/strong_type.h>
 #include <format>
 
-namespace small_vectors::inline v3_0::utils
-  {
-  }
-
 template<typename value_type, typename tag>
 struct std::formatter<small_vectors::utils::strong_type<value_type, tag>>
   {

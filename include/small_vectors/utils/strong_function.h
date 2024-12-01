@@ -2,7 +2,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace small_vectors::inline v3_0::utils
+namespace small_vectors::inline v3_2::utils
   {
 template<typename Tag, typename X>
 struct strong_function;  // undefined
@@ -30,4 +30,4 @@ struct strong_function<Tag, ret_type(args_type...)>
 template<typename Tag, class ret_type, class... args_type>
 strong_function(Tag, ret_type (*)(args_type...)) -> strong_function<Tag, ret_type(args_type...)>;
 
-  }  // namespace small_vectors::inline v3_0::utils
+  }  // namespace small_vectors::inline v3_2::utils

@@ -27,13 +27,13 @@
 #include <span>
 #include <cassert>
 
-namespace small_vectors::inline v3_0::detail
+namespace small_vectors::inline v3_2::detail
   {
 template<typename value_type, typename size_type>
 inline constexpr void sv_deallocate(value_type * p, size_type count) noexcept;
-  }  // namespace small_vectors::inline v3_0::detail
+  }  // namespace small_vectors::inline v3_2::detail
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 using detail::vector_outcome_e;
 
@@ -566,4 +566,4 @@ inline constexpr auto shrink_to_fit(small_vector<V, S, N> & vec) -> vector_outco
   {
   return vec.shrink_to_fit();
   }
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2

@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <cassert>
 
-namespace small_vectors::inline v3_0::detail
+namespace small_vectors::inline v3_2::detail
   {
 
 enum struct vector_outcome_e : uint8_t
@@ -1033,5 +1033,5 @@ constexpr vector_outcome_e shrink_to_fit(vector_type & vec
     }
   return vector_outcome_e::no_error;
   }
-  }  // namespace small_vectors::inline v3_0::detail
+  }  // namespace small_vectors::inline v3_2::detail
 
