@@ -218,10 +218,12 @@ int main()
             pop_status popres{ip::pop(stack, index)};
             if(succeed_range_valid == popres)
               {
-              std::span indata{it_beg, it_end};
-              ranges::subrange refsubrange{
-                ranges::begin(refvalue), ranges::next(ranges::begin(refvalue), static_cast<ptrdiff_t>(indata.size()))
-              };
+              small_vectors_clang_unsafe_buffer_usage_begin  //
+                std::span indata{it_beg, it_end};
+              small_vectors_clang_unsafe_buffer_usage_end  //
+                ranges::subrange refsubrange{
+                  ranges::begin(refvalue), ranges::next(ranges::begin(refvalue), static_cast<ptrdiff_t>(indata.size()))
+                };
               auto match{ranges::equal(indata, refsubrange)};
               constexpr_test(match);
               if(!match)

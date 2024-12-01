@@ -18,14 +18,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include <cassert>
-
+#include <small_vectors/detail/safe_buffers.h>
 #include <small_vectors/detail/uninitialized_constexpr.h>
 #include <small_vectors/detail/vector_storage.h>
 #include <small_vectors/detail/vector_func.h>
 #include <small_vectors/detail/adapter_iterator.h>
 
 #include <span>
+#include <cassert>
 
 namespace small_vectors::inline v3_0::detail
   {
@@ -178,7 +178,14 @@ struct small_vector
   inline constexpr auto operator[](arg_size_type index) const noexcept -> value_type const &
     {
     assert(index < size());
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   template<concepts::unsigned_arithmetic_integral arg_size_type>
@@ -186,7 +193,14 @@ struct small_vector
   inline constexpr auto operator[](arg_size_type index) noexcept -> value_type &
     {
     assert(index < size());
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   template<concepts::unsigned_arithmetic_integral arg_size_type>
@@ -194,7 +208,14 @@ struct small_vector
   inline constexpr auto at(arg_size_type index) const noexcept -> value_type const &
     {
     assert(index < size());
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   template<concepts::unsigned_arithmetic_integral arg_size_type>
@@ -202,7 +223,14 @@ struct small_vector
   inline constexpr auto at(arg_size_type index) noexcept -> value_type &
     {
     assert(index < size());
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   // compatibility with old code

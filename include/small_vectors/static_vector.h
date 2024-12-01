@@ -20,6 +20,7 @@
 
 #include <cassert>
 
+#include <small_vectors/detail/safe_buffers.h>
 #include <small_vectors/detail/uninitialized_constexpr.h>
 #include <small_vectors/detail/vector_storage.h>
 #include <small_vectors/detail/vector_func.h>
@@ -51,9 +52,6 @@ struct static_vector
 
   static constexpr bool support_reallocation() noexcept { return false; }
 
-#if !defined(WIN32)
-  [[no_unique_address]]
-#endif
   detail::static_vector_storage<value_type, capacity_> storage_;
 
   [[nodiscard]]
@@ -173,18 +171,32 @@ struct static_vector
   inline constexpr auto crend() const noexcept -> const_reverse_iterator { return const_reverse_iterator{begin()}; }
 
   [[nodiscard]]
-  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index
-  ) const noexcept -> value_type const &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) const noexcept
+    -> value_type const &
     {
     assert(index < storage_.size_);
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> value_type &
     {
     assert(index < storage_.size_);
-    return data()[index];
+    if constexpr(detail::check_valid_element_access)
+      {
+      if(storage_.size_ <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", storage_.size_, index);
+      }
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   template<vector_tune_e tune = vector_tune_e::checked, typename... Args>
@@ -245,8 +257,8 @@ struct static_vector
       return detail::emplace_unchecked(*this, itpos, std::forward<Args>(args)...);
     }
 
-  inline constexpr auto resize(size_type new_size) noexcept(noexcept(detail::resize(*this, new_size))
-  ) -> vector_outcome_e
+  inline constexpr auto resize(size_type new_size) noexcept(noexcept(detail::resize(*this, new_size)))
+    -> vector_outcome_e
     {
     return detail::resize(*this, new_size);
     }
@@ -366,9 +378,8 @@ inline constexpr auto & back(static_vector_type & vec) noexcept
   }
 
 template<typename V, uint64_t N>
-inline constexpr auto
-  erase_at_end(static_vector<V, N> & vec, typename static_vector<V, N>::const_iterator pos) noexcept ->
-  typename static_vector<V, N>::iterator
+inline constexpr auto erase_at_end(static_vector<V, N> & vec, typename static_vector<V, N>::const_iterator pos) noexcept
+  -> typename static_vector<V, N>::iterator
   {
   return vec.erase_at_end(pos);
   }

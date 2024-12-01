@@ -7,8 +7,10 @@
 #include <cassert>
 #include <source_location>
 #include <iostream>
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 #include <boost_ut.h>
+#pragma clang diagnostic pop
 
 namespace metatests
   {

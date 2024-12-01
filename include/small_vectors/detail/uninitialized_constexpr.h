@@ -1,5 +1,5 @@
 #pragma once
-
+#include <small_vectors/version.h>
 #include <small_vectors/utils/utility_cxx20.h>
 #include <small_vectors/concepts/concepts.h>
 #include <memory>
@@ -112,8 +112,11 @@ inline constexpr void uninitialized_default_construct(
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
   {
   if(std::is_constant_evaluated())
-    for(; first != last; ++first)
-      std::construct_at(std::addressof(*first));
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; first != last; ++first) std::construct_at(std::addressof(*first));
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
   else
     std::uninitialized_default_construct(first, last);
   }
@@ -124,8 +127,11 @@ inline constexpr void uninitialized_value_construct_n(
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
   {
   if(std::is_constant_evaluated())
-    for(size_type ix{}; ix != count; ++ix)
-      std::construct_at(std::addressof(first[ix]));
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(size_type ix{}; ix != count; ++ix) std::construct_at(std::addressof(first[ix]));
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
   else
     std::uninitialized_value_construct_n(first, count);
   }
@@ -136,8 +142,11 @@ inline constexpr auto uninitialized_value_construct(
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>)
   {
   if(std::is_constant_evaluated())
-    for(; first != last; ++first)
-      std::construct_at(std::addressof(*first));
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; first != last; ++first) std::construct_at(std::addressof(*first));
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
   else
     std::uninitialized_value_construct(first, last);
   return last;
@@ -151,9 +160,10 @@ inline constexpr auto uninitialized_fill(
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<iterator>>;
   using unwind = range_unwinder<use_nothrow, iterator>;
   unwind cur{first};
-  for(; cur.last_ != last; (void)++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), fill_value);
-  cur.release();
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    for(; cur.last_ != last; (void)++cur.last_) std::construct_at(std::addressof(*cur.last_), fill_value);
+  small_vectors_clang_unsafe_buffer_usage_end  //
+    cur.release();
   return cur.last_;
   }
 
@@ -198,9 +208,10 @@ inline auto uninitialized_copy_n_impl(InputIterator first, Size count, ForwardIt
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
-  for(; count > 0; --count, (void)++first, ++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), *first);
-  cur.release();
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    for(; count > 0; --count, (void)++first, ++cur.last_) std::construct_at(std::addressof(*cur.last_), *first);
+  small_vectors_clang_unsafe_buffer_usage_end  //
+    cur.release();
   return cur.last_;
   }
 
@@ -223,9 +234,10 @@ inline auto uninitialized_copy_impl(InputIterator first, InputIterator last, For
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
-  for(; first != last; ++first, (void)++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), *first);
-  cur.release();
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    for(; first != last; ++first, (void)++cur.last_) std::construct_at(std::addressof(*cur.last_), *first);
+  small_vectors_clang_unsafe_buffer_usage_end  //
+    cur.release();
   return cur.last_;
   }
 
@@ -236,9 +248,10 @@ inline constexpr auto uninitialized_copy(
   {
   if(std::is_constant_evaluated())
     {
-    for(; first != last; ++first, (void)++result)
-      std::construct_at(std::addressof(*result), *first);
-    return result;
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; first != last; ++first, (void)++result) std::construct_at(std::addressof(*result), *first);
+    small_vectors_clang_unsafe_buffer_usage_end  //
+      return result;
     }
   else
     return uninitialized_copy_impl(first, last, result);
@@ -250,8 +263,11 @@ inline constexpr void uninitialized_copy_n(
 ) noexcept(std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>)
   {
   if(std::is_constant_evaluated())
-    for(; count > 0; --count, (void)++first, ++result)
-      std::construct_at(std::addressof(*result), *first);
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; count > 0; --count, (void)++first, ++result) std::construct_at(std::addressof(*result), *first);
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
   else
     uninitialized_copy_n_impl(first, count, result);
   }
@@ -282,9 +298,10 @@ inline auto uninitialized_move_impl(InputIterator first, InputIterator last, For
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
-  for(; first != last; ++first, (void)++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), std::move(*first));
-  cur.release();
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    for(; first != last; ++first, (void)++cur.last_) std::construct_at(std::addressof(*cur.last_), std::move(*first));
+  small_vectors_clang_unsafe_buffer_usage_end  //
+    cur.release();
   return cur.last_;
   }
 
@@ -307,9 +324,11 @@ auto uninitialized_move_n_impl(InputIterator first, Size count, ForwardIterator 
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
-  for(; count > 0; --count, (void)++first, ++cur.last_)
-    std::construct_at(std::addressof(*cur.last_), std::move(*first));
-  cur.release();
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    for(; count > 0; --count, (void)++first, ++cur.last_)
+      std::construct_at(std::addressof(*cur.last_), std::move(*first));
+  small_vectors_clang_unsafe_buffer_usage_end  //
+    cur.release();
   return cur.last_;
   }
 
@@ -331,8 +350,11 @@ inline constexpr void uninitialized_move_n(
 ) noexcept(std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
   {
   if(std::is_constant_evaluated())
-    for(; count > 0; --count, (void)++first, ++result)
-      std::construct_at(std::addressof(*result), std::move(*first));
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; count > 0; --count, (void)++first, ++result) std::construct_at(std::addressof(*result), std::move(*first));
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
   else
     uninitialized_move_n_impl(first, count, result);
   }
@@ -423,8 +445,10 @@ inline constexpr void uninitialized_uneven_range_swap(
     std::swap(iter1, iter2);
     std::swap(size1, size2);
     }
-  std::swap_ranges(iter1, iter1 + size1, iter2);
+  small_vectors_clang_unsafe_buffer_usage_begin  //
+    std::swap_ranges(iter1, iter1 + size1, iter2);
   uninitialized_relocate_if_noexcept_n(iter2 + size1, size_type(size2 - size1), iter1 + size1);
+  small_vectors_clang_unsafe_buffer_usage_end  //
   }
-
   }  // namespace small_vectors::inline v3_0::detail
+

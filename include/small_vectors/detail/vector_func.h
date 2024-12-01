@@ -5,6 +5,7 @@
 #include <small_vectors/utils/enum_support.h>
 #include <memory>
 #include <stdexcept>
+#include <cassert>
 
 namespace small_vectors::inline v3_0::detail
   {

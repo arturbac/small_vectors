@@ -102,8 +102,8 @@ struct empty_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> const & buff) small_vector_static_call_operator_const noexcept
+  small_vector_static_call_operator constexpr auto operator()(stack_buffer_t<buffer_size, index_type> const & buff
+  ) small_vector_static_call_operator_const noexcept
     {
     auto const b = buff.stack_index_.load(acquire);
     return b.index == 0;
@@ -131,9 +131,9 @@ struct push_t
   {
   template<std::size_t buffer_size, typename index_type, std::forward_iterator iterator>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> & buff, iterator data_beg, iterator data_end)
-      small_vector_static_call_operator_const noexcept -> push_status
+  small_vector_static_call_operator constexpr auto operator()(
+    stack_buffer_t<buffer_size, index_type> & buff, iterator data_beg, iterator data_end
+  ) small_vector_static_call_operator_const noexcept -> push_status
     {
     // calculate space required
     stack_index_t stack_index{buff.stack_index_.load(acquire)};
@@ -185,10 +185,16 @@ struct top_t
     if(stack_during_copy_top.index != 0) [[likely]]
       {
       auto [footer, it_top_footer]{detail::footer_from_index(buff, stack_during_copy_top)};
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
       return std::make_pair(
         std::span<uint8_t const>{ranges::prev(it_top_footer, static_cast<ptrdiff_t>(footer.size)), it_top_footer},
         stack_during_copy_top
       );
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
       }
     return {};
     }
@@ -200,9 +206,9 @@ struct pop_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr pop_status
-    operator()(stack_buffer_t<buffer_size, index_type> & buff, stack_index_t stack_during_copy_top)
-      small_vector_static_call_operator_const noexcept
+  small_vector_static_call_operator constexpr pop_status operator()(
+    stack_buffer_t<buffer_size, index_type> & buff, stack_index_t stack_during_copy_top
+  ) small_vector_static_call_operator_const noexcept
     {
     auto [footer, _]{detail::footer_from_index(buff, stack_during_copy_top)};
     stack_index_t next_index{stack_during_copy_top.index - footer.size - sizeof(footer_data_t)};
@@ -214,4 +220,4 @@ struct pop_t
   };
 
 inline constexpr pop_t pop;
-  }  // namespace ip
+  }  // namespace small_vectors::inline v3_0::ip

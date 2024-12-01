@@ -32,15 +32,13 @@ struct adapter_iterator
 
   // forward
   [[nodiscard]]
-  inline constexpr auto
-    operator*() const noexcept -> reference
+  inline constexpr auto operator*() const noexcept -> reference
     {
     return *current_;
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator->() const noexcept -> pointer
+  inline constexpr auto operator->() const noexcept -> pointer
     {
     return current_;
     }
@@ -48,13 +46,18 @@ struct adapter_iterator
   inline constexpr auto operator++() noexcept -> adapter_iterator &
     requires std::forward_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     ++current_;
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     return *this;
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator++(int) noexcept -> adapter_iterator
+  inline constexpr auto operator++(int) noexcept -> adapter_iterator
     requires std::forward_iterator<iterator_type>
     {
     return adapter_iterator{current_++};
@@ -64,13 +67,18 @@ struct adapter_iterator
   inline constexpr auto operator--() noexcept -> adapter_iterator &
     requires std::bidirectional_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     --current_;
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     return *this;
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator--(int) noexcept -> adapter_iterator
+  inline constexpr auto operator--(int) noexcept -> adapter_iterator
     requires std::bidirectional_iterator<iterator_type>
     {
     return adapter_iterator{current_--};
@@ -78,41 +86,68 @@ struct adapter_iterator
 
   // random
   [[nodiscard]]
-  inline constexpr auto
-    operator[](std::size_t index) const noexcept -> reference
+  inline constexpr auto operator[](std::size_t index) const noexcept -> reference
     requires std::random_access_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     return current_[index];
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     }
 
   inline constexpr auto operator+=(difference_type index) noexcept -> adapter_iterator &
     requires std::random_access_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     current_ += index;
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     return *this;
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator+(difference_type index) const noexcept -> adapter_iterator
+  inline constexpr auto operator+(difference_type index) const noexcept -> adapter_iterator
     requires std::random_access_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     return adapter_iterator(current_ + index);
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     }
 
   inline constexpr auto operator-=(difference_type index) noexcept -> adapter_iterator &
     requires std::random_access_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     current_ -= index;
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     return *this;
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator-(difference_type index) const noexcept -> adapter_iterator
+  inline constexpr auto operator-(difference_type index) const noexcept -> adapter_iterator
     requires std::random_access_iterator<iterator_type>
     {
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage begin
+#endif
     return adapter_iterator(current_ - index);
+#ifdef __clang__
+#pragma clang unsafe_buffer_usage end
+#endif
     }
 
   [[nodiscard]]
@@ -127,28 +162,25 @@ adapter_iterator(iterator_type const & i) -> adapter_iterator<iterator_type>;
 
 template<typename iter1, std::equality_comparable_with<iter1> iter2>
 [[nodiscard]]
-inline constexpr auto
-  operator==(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept(
-    noexcept(l.base() == r.base())
-  ) -> bool
+inline constexpr auto operator==(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept(
+  noexcept(l.base() == r.base())
+) -> bool
   {
   return l.base() == r.base();
   }
 
 template<typename iter1, std::totally_ordered_with<iter1> iter2>
 [[nodiscard]]
-inline constexpr auto
-  operator<=>(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept(
-    noexcept(l.base() <=> r.base())
-  )
+inline constexpr auto operator<=>(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept(
+  noexcept(l.base() <=> r.base())
+)
   {
   return l.base() <=> r.base();
   }
 
 template<typename iter1, typename iter2>
 [[nodiscard]]
-inline constexpr auto
-  operator-(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept
+inline constexpr auto operator-(adapter_iterator<iter1> const & l, adapter_iterator<iter2> const & r) noexcept
   {
   return l.base() - r.base();
   }
