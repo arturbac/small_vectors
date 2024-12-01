@@ -29,7 +29,7 @@
 #include <numeric>
 #include <compare>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 using detail::string::buffered_string_tag;
 using detail::string::static_string_tag;
@@ -165,9 +165,8 @@ struct basic_string_t
     }
 
   [[nodiscard]]
-  inline constexpr auto c_str() const noexcept -> value_type const * requires(detail::string::null_terminate_string) {
-    return storage_.data();
-  }
+  inline constexpr auto c_str() const noexcept
+    -> value_type const * requires(detail::string::null_terminate_string) { return storage_.data(); }
 
   /// \returns The largest possible number of char-like objects that can be stored in a basic_string.
   [[nodiscard]] inline static constexpr auto max_size() noexcept -> size_type
@@ -268,28 +267,36 @@ struct basic_string_t
   constexpr ~basic_string_t() { detail::string::storage_cleanup<storage_tag>(storage_); }
 
   [[nodiscard]]
-  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index
-  ) const noexcept -> char_type const &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) const noexcept
+    -> char_type const &
     {
-    return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
     {
-    return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) const noexcept -> char_type const &
     {
-    return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
     {
-    return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return data()[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   // compatibility with old code
@@ -412,9 +419,9 @@ struct basic_string_t
     return *this;
     }
 
-  inline constexpr auto append(
-    std::convertible_to<view_type> auto const & s, size_type index_str, size_type count = npos
-  ) -> basic_string_t &
+  inline constexpr auto
+    append(std::convertible_to<view_type> auto const & s, size_type index_str, size_type count = npos)
+      -> basic_string_t &
     {
     view_type t{static_cast<view_type>(s).substr(index_str, count)};
     append(t);
@@ -498,8 +505,8 @@ struct basic_string_t
     return static_cast<size_type>(view().find(ch, pos));
     }
 
-  inline constexpr auto
-    find(std::convertible_to<view_type> auto const & s, size_type pos = 0u) const noexcept -> size_type
+  inline constexpr auto find(std::convertible_to<view_type> auto const & s, size_type pos = 0u) const noexcept
+    -> size_type
     {
     return static_cast<size_type>(view().find(static_cast<view_type>(s), pos));
     }
@@ -516,8 +523,8 @@ struct basic_string_t
     return static_cast<size_type>(view().rfind(ch, pos));
     }
 
-  inline constexpr auto
-    rfind(std::convertible_to<view_type> auto const & s, size_type pos = npos) const noexcept -> size_type
+  inline constexpr auto rfind(std::convertible_to<view_type> auto const & s, size_type pos = npos) const noexcept
+    -> size_type
     {
     return static_cast<size_type>(view().rfind(static_cast<view_type>(s), pos));
     }
@@ -540,14 +547,14 @@ struct basic_string_t
     return view().compare(pos1, count1, static_cast<view_type>(s));
     }
 
-  inline constexpr auto
-    find_first_of(std::convertible_to<view_type> auto const & v, size_type pos = 0u) const noexcept -> size_type
+  inline constexpr auto find_first_of(std::convertible_to<view_type> auto const & v, size_type pos = 0u) const noexcept
+    -> size_type
     {
     return static_cast<size_type>(view().find_first_of(static_cast<view_type>(v), pos));
     }
 
-  constexpr auto
-    replace(size_type pos, size_type count, std::convertible_to<view_type> auto const & v) -> basic_string_t &
+  constexpr auto replace(size_type pos, size_type count, std::convertible_to<view_type> auto const & v)
+    -> basic_string_t &
     {
     detail::string::replace_copy(storage_, pos, count, v.begin(), v.end());
     return *this;
@@ -555,8 +562,8 @@ struct basic_string_t
 
   template<std::forward_iterator iterator>
     requires std::same_as<char_type, std::iter_value_t<iterator>>
-  inline constexpr auto
-    replace(const_iterator first, const_iterator last, iterator first2, iterator last2) -> basic_string_t &
+  inline constexpr auto replace(const_iterator first, const_iterator last, iterator first2, iterator last2)
+    -> basic_string_t &
     {
     auto pos{static_cast<size_type>(std::distance(cbegin(), first))};
     auto count{static_cast<size_type>(std::distance(first, last))};
@@ -564,9 +571,9 @@ struct basic_string_t
     return *this;
     }
 
-  inline constexpr auto replace(
-    const_iterator first, const_iterator last, std::convertible_to<view_type> auto const & v
-  ) -> basic_string_t &
+  inline constexpr auto
+    replace(const_iterator first, const_iterator last, std::convertible_to<view_type> auto const & v)
+      -> basic_string_t &
     {
     auto pos{static_cast<size_type>(std::distance(cbegin(), first))};
     auto count{static_cast<size_type>(std::distance(first, last))};
@@ -579,8 +586,8 @@ struct basic_string_t
     return *this;
     }
 
-  inline constexpr auto
-    replace(const_iterator first, const_iterator last, size_type count2, char_type ch) -> basic_string_t &
+  inline constexpr auto replace(const_iterator first, const_iterator last, size_type count2, char_type ch)
+    -> basic_string_t &
     {
     auto pos{static_cast<size_type>(std::distance(cbegin(), first))};
     auto count{static_cast<size_type>(std::distance(first, last))};
@@ -588,9 +595,9 @@ struct basic_string_t
     }
 
   ///\brief replaces all occurrences of \ref what with \ref with
-  inline constexpr auto find_and_replace(
-    std::convertible_to<view_type> auto const & what, std::convertible_to<view_type> auto const & with
-  ) -> size_type
+  inline constexpr auto
+    find_and_replace(std::convertible_to<view_type> auto const & what, std::convertible_to<view_type> auto const & with)
+      -> size_type
     {
     size_type const what_size = static_cast<size_type>(what.size());
     size_type const with_size = static_cast<size_type>(with.size());
@@ -704,15 +711,15 @@ constexpr auto operator==(basic_string_t<V, N, T> const & l, std::basic_string_v
   }
 
 template<typename V, uint64_t N, typename T>
-constexpr auto
-  operator<=>(basic_string_t<V, N, T> const & l, basic_string_t<V, N, T> const & r) noexcept -> std::strong_ordering
+constexpr auto operator<=>(basic_string_t<V, N, T> const & l, basic_string_t<V, N, T> const & r) noexcept
+  -> std::strong_ordering
   {
   return l.view() <=> r.view();
   }
 
 template<typename V, uint64_t N, typename T>
-constexpr auto
-  operator<=>(basic_string_t<V, N, T> const & l, std::basic_string_view<V> r) noexcept -> std::strong_ordering
+constexpr auto operator<=>(basic_string_t<V, N, T> const & l, std::basic_string_view<V> r) noexcept
+  -> std::strong_ordering
   {
   return l.view() <=> r;
   }
@@ -736,7 +743,7 @@ inline constexpr auto hash(basic_string_t<V, N, T> const & str) noexcept
   else
     return std::hash<std::basic_string_view<V>>()(str.view());
   }
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2
 
 namespace std
   {

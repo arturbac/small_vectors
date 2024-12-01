@@ -4,7 +4,7 @@
 #include <concepts>
 #include <cstdint>
 
-namespace small_vectors::inline v3_0::ip
+namespace small_vectors::inline v3_2::ip
   {
 namespace detail
   {
@@ -50,9 +50,7 @@ namespace detail
   template<typename type>
   concept concept_mapped_region = requires(type & region) {
     region.get_address();
-      {
-      region.get_address()
-      } -> concept_pointer;
+      { region.get_address() } -> concept_pointer;
   };
   }  // namespace detail
 
@@ -76,4 +74,4 @@ inline auto ref(detail::concept_mapped_region auto & region) noexcept -> typenam
   return *std::launder(reinterpret_cast<type *>(addr));
   }
 
-  }  // namespace small_vectors::inline v3_0::ip
+  }  // namespace small_vectors::inline v3_2::ip

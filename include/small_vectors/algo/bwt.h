@@ -8,7 +8,7 @@
 #include <boost/container/flat_map.hpp>
 
 /// \brief Burrows–Wheeler transform
-namespace small_vectors::inline v3_0::algo::bwt
+namespace small_vectors::inline v3_2::algo::bwt
   {
 namespace concepts
   {
@@ -49,8 +49,11 @@ struct encode_t
           auto it{data};
           it = ranges::copy(beg, end, it).out;
           *it = char_type(end_marker);
-          ++it;
-          it = ranges::copy(beg, end, it).out;
+          small_vectors_clang_unsafe_buffer_usage_begin  //
+            ++ it;
+          small_vectors_clang_unsafe_buffer_usage_end  //
+            it
+            = ranges::copy(beg, end, it).out;
           *it = char_type(end_marker);
           return sz + sz;
         }
@@ -116,8 +119,10 @@ struct decode_t
     using index_list = small_vector<uint32_t, uint32_t>;
     if(beg != end)
       {
-      std::span const btw_arr{beg, end};
-      auto it_x{ranges::find(btw_arr, char_type(end_marker))};
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        std::span const btw_arr{beg, end};
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        auto it_x{ranges::find(btw_arr, char_type(end_marker))};
       if(it_x != ranges::end(btw_arr))
         {
         size_type const sz{size_type(btw_arr.size())};
@@ -170,4 +175,4 @@ struct decode_t
 
 template<char end_char>
 inline constexpr decode_t<end_char> decode;
-  }  // namespace small_vectors::inline v3_0::algo::bwt
+  }  // namespace small_vectors::inline v3_2::algo::bwt

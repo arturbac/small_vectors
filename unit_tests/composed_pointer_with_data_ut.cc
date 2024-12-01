@@ -38,7 +38,7 @@ int main()
       expect((x.data_ & type::pointer_mask) == 0);
       expect(x.ptr() == nullptr);
       }
-
+    small_vectors_clang_unsafe_buffer_usage_begin  // clang-18
       {
       double test[2];
       type x{&test[1]};
@@ -57,5 +57,6 @@ int main()
       expect(x.data() == some_enum::maybe);
       expect(x.ptr() == &test[0]);
       }
+    small_vectors_clang_unsafe_buffer_usage_end  // clang-18
   };
   }

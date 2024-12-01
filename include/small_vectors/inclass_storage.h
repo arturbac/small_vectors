@@ -11,7 +11,7 @@
 #include <concepts>
 #include <type_traits>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 namespace concepts
   {
@@ -263,4 +263,4 @@ public:
   constexpr auto operator->() const noexcept -> value_type const * { return ptr(); }
   };
 
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2

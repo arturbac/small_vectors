@@ -6,6 +6,7 @@
 using traits_list = metatests::type_list<uint8_t, std::byte>;
 using namespace metatests;
 
+small_vectors_clang_unsafe_buffer_usage_begin  //
 int main()
   {
   using namespace boost::ut;
@@ -94,3 +95,5 @@ int main()
     result |= run_consteval_test<traits_list>(fn_tmpl);
   };
   }
+
+small_vectors_clang_unsafe_buffer_usage_end  //

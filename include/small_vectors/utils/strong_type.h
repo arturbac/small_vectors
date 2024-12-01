@@ -31,7 +31,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace small_vectors::inline v3_0::utils
+namespace small_vectors::inline v3_2::utils
   {
 
 struct strong_type_default_traits
@@ -103,7 +103,7 @@ namespace concepts
     requires tag::enable_hash_specialization == true;
   };
   }  // namespace concepts
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2::utils
 
 template<small_vectors::concepts::hashable value_type, small_vectors::utils::concepts::tag_hash_specialization tag>
 struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
@@ -112,8 +112,7 @@ struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
 #if defined(__cpp_static_call_operator)
   static
 #endif
-    constexpr auto
-    operator()(small_vectors::utils::strong_type<value_type, tag> t)
+    constexpr auto operator()(small_vectors::utils::strong_type<value_type, tag> t)
 #if !defined(__cpp_static_call_operator)
       const
 #endif
@@ -123,16 +122,16 @@ struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
     }
   };
 
-namespace small_vectors::inline v3_0::concepts
+namespace small_vectors::inline v3_2::concepts
   {
 template<typename tag>
 concept tag_ostream = requires {
   tag::enable_ostream;
   requires tag::enable_ostream == true;
 };
-  }  // namespace small_vectors::inline v3_0::concepts
+  }  // namespace small_vectors::inline v3_2::concepts
 
-namespace small_vectors::inline v3_0::utils
+namespace small_vectors::inline v3_2::utils
   {
 template<small_vectors::concepts::stream_insertable value_type, small_vectors::concepts::tag_ostream tag>
 inline auto operator<<(std::ostream & out, strong_type<value_type, tag> const & value) -> std::ostream &
@@ -153,7 +152,7 @@ namespace concepts
     tag::enable_arithemtic;
     requires tag::enable_arithemtic == true;
   };
-  }
+  }  // namespace concepts
 
 template<small_vectors::concepts::prefix_incrementable value_type, concepts::tag_arithemtic tag>
 constexpr auto operator++(strong_type<value_type, tag> & v) noexcept -> strong_type<value_type, tag> &
@@ -197,7 +196,7 @@ namespace concepts
     tag::enable_comparison;
     requires tag::enable_comparison == true;
   };
-  }
+  }  // namespace concepts
 
 template<std::equality_comparable value_type, concepts::tag_comparison tag>
 [[nodiscard]]
@@ -257,8 +256,8 @@ inline constexpr auto
 
 template<small_vectors::concepts::multiplicatable_with<int> value_type, concepts::tag_arithemtic tag>
 [[nodiscard]]
-inline constexpr auto
-  operator*(strong_type<value_type, tag> const & lhs, int rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator*(strong_type<value_type, tag> const & lhs, int rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() * rhs)};
   }
@@ -274,8 +273,8 @@ inline constexpr auto
 
 template<small_vectors::concepts::dividable value_type, concepts::tag_arithemtic tag>
 [[nodiscard]]
-inline constexpr auto
-  operator/(strong_type<value_type, tag> const & lhs, unsigned rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator/(strong_type<value_type, tag> const & lhs, unsigned rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() / static_cast<value_type>(rhs))};
   }
@@ -291,8 +290,8 @@ inline constexpr auto
 
 template<small_vectors::concepts::has_modulo_operator value_type, concepts::tag_arithemtic tag>
 [[nodiscard]]
-inline constexpr auto
-  operator%(strong_type<value_type, tag> const & lhs, unsigned rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator%(strong_type<value_type, tag> const & lhs, unsigned rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() % static_cast<value_type>(rhs))};
   }
@@ -309,7 +308,7 @@ namespace concepts
     tag::enable_binary_operators;
     requires tag::enable_binary_operators == true;
   };
-  }
+  }  // namespace concepts
 
 template<small_vectors::concepts::has_bitwise_xor_operator value_type, concepts::tag_binary_operators tag>
 [[nodiscard]]
@@ -322,8 +321,7 @@ inline constexpr auto
 
 template<small_vectors::concepts::has_bitwise_not_operator value_type, concepts::tag_binary_operators tag>
 [[nodiscard]]
-inline constexpr auto
-  operator~(strong_type<value_type, tag> const & v) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator~(strong_type<value_type, tag> const & v) noexcept -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(~v.value())};
   }
@@ -340,8 +338,8 @@ inline constexpr auto
 template<typename value_type, typename operand, concepts::tag_binary_operators tag>
   requires small_vectors::concepts::has_left_shift_operator_with_integral<value_type, operand>
 [[nodiscard]]
-inline constexpr auto
-  operator<<(strong_type<value_type, tag> const & lhs, operand rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator<<(strong_type<value_type, tag> const & lhs, operand rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() << rhs)};
   }
@@ -358,8 +356,8 @@ inline constexpr auto
 template<typename value_type, typename operand, concepts::tag_binary_operators tag>
   requires small_vectors::concepts::has_right_shift_operator_with_integral<value_type, operand>
 [[nodiscard]]
-inline constexpr auto
-  operator>>(strong_type<value_type, tag> const & lhs, operand rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator>>(strong_type<value_type, tag> const & lhs, operand rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() >> rhs)};
   }
@@ -373,10 +371,12 @@ inline constexpr auto
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() & rhs.value())};
   }
 
-template<small_vectors::concepts::has_bitwise_and_operator_with<unsigned> value_type, concepts::tag_binary_operators tag>
+template<
+  small_vectors::concepts::has_bitwise_and_operator_with<unsigned> value_type,
+  concepts::tag_binary_operators tag>
 [[nodiscard]]
-inline constexpr auto
-  operator&(strong_type<value_type, tag> const & lhs, uint16_t rhs) noexcept -> strong_type<value_type, tag>
+inline constexpr auto operator&(strong_type<value_type, tag> const & lhs, uint16_t rhs) noexcept
+  -> strong_type<value_type, tag>
   {
   return strong_type<value_type, tag>{static_cast<value_type>(lhs.value() & rhs)};
   }
@@ -480,6 +480,6 @@ constexpr auto operator|=(strong_type<value_type, tag> & v, strong_type<value_ty
   v.ref_value() |= rhs.value();
   return v;
   }
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2::utils
 
 //

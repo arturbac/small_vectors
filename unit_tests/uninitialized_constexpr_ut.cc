@@ -195,8 +195,10 @@ int main()
       T * ptr{alloc.allocate(4)};
       small_vectors::detail::uninitialized_relocate_if_noexcept_n(source.begin(), 4u, ptr);
       expect(ctr == 8) << "expecting destructor was not called 8 times" << ctr;
-      expect(std::ranges::equal(std::span<T const>{source}, std::span<T const>{ptr, 4}));
-      alloc.deallocate(ptr, 4);
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        expect(std::ranges::equal(std::span<T const>{source}, std::span<T const>{ptr, 4}));
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        alloc.deallocate(ptr, 4);
     };
     "movable"_test = [&]
     {
@@ -208,8 +210,10 @@ int main()
       small_vectors::detail::uninitialized_relocate_if_noexcept_n(source.begin(), 4u, ptr);
       // range in ptr is not destroyed
       expect(ctr == 4) << "expecting destructor was called 4 times by uninitialized_relocate_n" << ctr;
-      expect(std::ranges::equal(std::span{source}, std::span{ptr, 4}));
-      alloc.deallocate(ptr, 4);
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        expect(std::ranges::equal(std::span{source}, std::span{ptr, 4}));
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        alloc.deallocate(ptr, 4);
     };
     "copyable"_test = [&]
     {
@@ -221,8 +225,10 @@ int main()
       small_vectors::detail::uninitialized_relocate_if_noexcept_n(source.begin(), 4u, ptr);
       // range in ptr is not destroyed
       expect(ctr == 4) << "expecting destructor was called 4 times by uninitialized_relocate_if_noexcept_n" << ctr;
-      expect(std::ranges::equal(std::span{source}, std::span{ptr, 4}));
-      alloc.deallocate(ptr, 4);
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        expect(std::ranges::equal(std::span{source}, std::span{ptr, 4}));
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        alloc.deallocate(ptr, 4);
     };
   };
   }

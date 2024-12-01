@@ -28,8 +28,7 @@ set(CMAKE_MODULE_PATH
   )
   
 option(SMALL_VECTORS_ENABLE_CPM_PACKAGING "cmake packaging by cpm" ON)
-option(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vtable of bad_expected_access" ON)
-add_feature_info("SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION" SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION "builds static library with vtable of bad_expected_access")
+set(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION ON)
 
 if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
   include(cmake/get_cpm.cmake)
@@ -66,8 +65,12 @@ endif()
 message(STATUS "CMake install directory: " ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION)
-  add_library(small_vectors STATIC)
-  target_sources(small_vectors PRIVATE source/expected.cc)
+  add_library(small_vectors)
+  target_sources(small_vectors PRIVATE
+   source/expected.cc
+   source/safe_buffers.cc
+   )
+  
   target_compile_definitions( small_vectors PUBLIC SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION=1)
 else()
   add_library(small_vectors INTERFACE)
@@ -116,7 +119,7 @@ if( PROJECT_IS_TOP_LEVEL )
         )
       check_cxx_compiler_flag(-Wunsafe-buffer-usage WUNSAFE_BUFFER_USAGE)
       if(WUNSAFE_BUFFER_USAGE)
-        list(APPEND SMALL_VECTORS_COMPILE_OPTIONS -Wno-unsafe-buffer-usage)
+        list(APPEND SMALL_VECTORS_COMPILE_OPTIONS -Wunsafe-buffer-usage)
       endif()
       check_cxx_compiler_flag(-Wswitch-default WNO_SWITCH_DEFAULT)
       if(WNO_SWITCH_DEFAULT)

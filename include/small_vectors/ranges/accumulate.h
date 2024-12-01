@@ -1,28 +1,30 @@
 #pragma once
 #include <small_vectors/utils/static_call_operator.h>
+#include <small_vectors/version.h>
 #include <concepts>
 #include <iterator>
 #include <ranges>
 
-namespace small_vectors::inline v3_0::ranges
+namespace small_vectors::inline v3_2::ranges
   {
 struct accumulate_t
   {
   template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(source_iterator beg, sentinel end, auto init, auto binary_op)
-      small_vector_static_call_operator_const noexcept
+  small_vector_static_call_operator constexpr auto operator()(
+    source_iterator beg, sentinel end, auto init, auto binary_op
+  ) small_vector_static_call_operator_const noexcept
     {
-    for(; beg != end; ++beg)
-      init = binary_op(std::move(init), *beg);
-    return init;
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; beg != end; ++beg) init
+      = binary_op(std::move(init), *beg);
+    small_vectors_clang_unsafe_buffer_usage_end  //
+      return init;
     }
 
   template<std::input_iterator source_iterator, std::sentinel_for<source_iterator> sentinel>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(source_iterator beg, sentinel end, auto init)
+  small_vector_static_call_operator constexpr auto operator()(source_iterator beg, sentinel end, auto init)
     {
     return operator()(beg, end, std::move(init), std::plus<decltype(init)>{});
     }
@@ -45,4 +47,4 @@ struct accumulate_t
   };
 
 inline constexpr accumulate_t accumulate;
-  }  // namespace coll::ranges
+  }  // namespace small_vectors::inline v3_2::ranges

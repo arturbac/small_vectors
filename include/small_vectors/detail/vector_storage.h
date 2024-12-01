@@ -4,7 +4,7 @@
 #include <utility>
 #include <array>
 
-namespace small_vectors::inline v3_0::detail
+namespace small_vectors::inline v3_2::detail
   {
 
 template<typename value_type, std::unsigned_integral size_type>
@@ -844,8 +844,8 @@ struct small_vector_storage
     return result;
     }
 
-  inline constexpr auto
-    exchange_priv_(storage_context_type new_storage, size_type size) noexcept -> storage_context_type
+  inline constexpr auto exchange_priv_(storage_context_type new_storage, size_type size) noexcept
+    -> storage_context_type
     {
     if(active_ == dynamic)
       {
@@ -1019,8 +1019,8 @@ struct small_vector_storage<V, S, 0u>
       }
     }
 
-  inline constexpr auto
-    exchange_priv_(storage_context_type new_storage, size_type size) noexcept -> storage_context_type
+  inline constexpr auto exchange_priv_(storage_context_type new_storage, size_type size) noexcept
+    -> storage_context_type
     {
     size_ = size;
     return std::exchange(dynamic, new_storage);
@@ -1029,5 +1029,5 @@ struct small_vector_storage<V, S, 0u>
   inline constexpr void set_size_priv_(size_type pos_ix) noexcept { size_ = pos_ix; }
   };
 
-  }  // namespace small_vectors::inline v3_0::detail
+  }  // namespace small_vectors::inline v3_2::detail
 

@@ -15,7 +15,7 @@
 // Functions
 //
 // -----------------------------------------------------------------------
-namespace small_vectors::inline v3_0::memutil
+namespace small_vectors::inline v3_2::memutil
   {
 namespace detail
   {
@@ -201,4 +201,4 @@ inline void * void_ptr_cast(input_type data) noexcept
   {
   return reinterpret_cast<void *>(static_cast<uintptr_t>(data));
   }
-  }  // namespace memutil
+  }  // namespace small_vectors::inline v3_2::memutil

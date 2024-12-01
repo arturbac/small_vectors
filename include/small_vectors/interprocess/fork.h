@@ -7,7 +7,7 @@
 #include <sys/unistd.h>
 #include <sys/wait.h>
 
-namespace small_vectors::inline v3_0::ip
+namespace small_vectors::inline v3_2::ip
   {
 struct fork_child_t
   {
@@ -55,4 +55,4 @@ inline auto fork(function const & fn, Args... args) noexcept -> std::optional<fo
   else
     return {};
   }
-  }  // namespace small_vectors::inline v3_0::ip
+  }  // namespace small_vectors::inline v3_2::ip

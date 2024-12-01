@@ -11,7 +11,7 @@
 
 //____________________________________________________________________________//
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 
 struct non_trivial_counter : public non_trivial
@@ -166,7 +166,7 @@ test_result consteval consteval_static_vector_deduced_types()
 
 static_assert(consteval_static_vector_deduced_types<int32_t>());
 static_assert(consteval_static_vector_deduced_types<aligned_3_byte_struct>());
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2
 
 using namespace small_vectors;
 using boost::ut::operator""_test;

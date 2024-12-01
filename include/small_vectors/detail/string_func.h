@@ -1,5 +1,5 @@
 #pragma once
-
+#include <small_vectors/version.h>
 #include <small_vectors/detail/vector_func.h>
 #include <algorithm>
 #include <string_view>
@@ -7,7 +7,7 @@
 #include <ranges>
 #include <small_vectors/utils/static_call_operator.h>
 
-namespace small_vectors::inline v3_0::detail::string
+namespace small_vectors::inline v3_2::detail::string
   {
 struct static_string_tag
   {
@@ -45,8 +45,8 @@ struct growth_t
   {
   template<typename size_type>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(size_type new_elements) small_vector_static_call_operator_const noexcept -> size_type
+  small_vector_static_call_operator constexpr auto operator()(size_type new_elements
+  ) small_vector_static_call_operator_const noexcept -> size_type
     {
     auto byte_size = static_cast<size_type>(sizeof(char_type) * new_elements);
     return static_cast<size_type>((((byte_size + 8u) >> 3) << 3) / sizeof(char_type));
@@ -72,7 +72,11 @@ struct cond_null_terminate_t
     operator()(char_type * data, size_type new_size) small_vector_static_call_operator_const noexcept
     {
     if constexpr(null_terminate_string)
-      uninitialized_value_construct(data + new_size);
+      {
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        uninitialized_value_construct(data + new_size);
+      small_vectors_clang_unsafe_buffer_usage_end  //
+      }
     }
   };
 
@@ -112,8 +116,10 @@ struct shrink_to_fit_t
           {
           auto old_strage_data{storage.data()};
           storage_context_t new_space{sv_allocate<char_type>(optimal_capacity)};
-          uninitialized_copy(old_strage_data, old_strage_data + storage.size_, new_space.data);
-          storage_context_t old_storage{storage.exchange_priv_(new_space, storage.size_)};
+          small_vectors_clang_unsafe_buffer_usage_begin  //
+            uninitialized_copy(old_strage_data, old_strage_data + storage.size_, new_space.data);
+          small_vectors_clang_unsafe_buffer_usage_end  //
+            storage_context_t old_storage{storage.exchange_priv_(new_space, storage.size_)};
           assert(old_storage.data != nullptr);
           sv_deallocate(old_storage);
           }
@@ -124,9 +130,12 @@ struct shrink_to_fit_t
         storage_context_t old_storage{storage.switch_static_priv_()};
         assert(old_storage.data != nullptr);
         auto data{storage.data()};
-        uninitialized_copy(old_storage.data, old_storage.data + size, data);
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_copy(old_storage.data, old_storage.data + size, data);
         cond_null_terminate(data + size);
-        storage.size_ = size;
+        small_vectors_clang_unsafe_buffer_usage_end  //
+          storage.size_
+          = size;
         sv_deallocate(old_storage);
         }
       }
@@ -141,9 +150,9 @@ struct uninitialized_construct_t
   {
   template<typename lambda>
   [[nodiscard]]
-  small_vector_static_call_operator inline constexpr auto
-    operator()(typename vector_storage::size_type sz, lambda const & uninitialized_fn)
-      small_vector_static_call_operator_const->vector_storage
+  small_vector_static_call_operator inline constexpr auto operator()(
+    typename vector_storage::size_type sz, lambda const & uninitialized_fn
+  ) small_vector_static_call_operator_const->vector_storage
     {
     vector_storage storage;
 
@@ -170,8 +179,11 @@ struct uninitialized_construct_t
       auto dest_data{storage.data()};
       // in constant evaluated buffer must be initialized even when unused
       if(std::is_constant_evaluated())
-        uninitialized_default_construct(dest_data, dest_data + storage.buffered_capacity);
-
+        {
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_default_construct(dest_data, dest_data + storage.buffered_capacity);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+        }
       auto last = uninitialized_fn(dest_data);
       cond_null_terminate(last);
 
@@ -243,8 +255,8 @@ struct swap_t
     operator()(vector_storage & lstorage, vector_storage & rstorage) small_vector_static_call_operator_const noexcept
     {
     lstorage.swap(rstorage);
-    cond_null_terminate(lstorage.data() + lstorage.size_);
-    cond_null_terminate(rstorage.data() + rstorage.size_);
+    cond_null_terminate(lstorage.data(), lstorage.size_);
+    cond_null_terminate(rstorage.data(), rstorage.size_);
     }
   };
 
@@ -293,8 +305,8 @@ template<detail_concepts::vector_storage vector_storage>
 struct value_construct_t
   {
   [[nodiscard]]
-  small_vector_static_call_operator inline constexpr auto
-    operator()(typename vector_storage::size_type sz) small_vector_static_call_operator_const->vector_storage
+  small_vector_static_call_operator inline constexpr auto operator()(typename vector_storage::size_type sz
+  ) small_vector_static_call_operator_const->vector_storage
     {
     return uninitialized_construct<vector_storage>(
       sz, [sz](auto * data) noexcept { return uninitialized_value_construct(data, data + sz); }
@@ -310,12 +322,18 @@ template<detail_concepts::vector_storage vector_storage>
 struct fill_construct_t
   {
   [[nodiscard]]
-  small_vector_static_call_operator inline constexpr auto
-    operator()(typename vector_storage::size_type sz, typename vector_storage::value_type ch)
-      small_vector_static_call_operator_const->vector_storage
+  small_vector_static_call_operator inline constexpr auto operator()(
+    typename vector_storage::size_type sz, typename vector_storage::value_type ch
+  ) small_vector_static_call_operator_const->vector_storage
     {
     return uninitialized_construct<vector_storage>(
-      sz, [sz, ch](auto * data) noexcept { return uninitialized_fill(data, data + sz, ch); }
+      sz,
+      [sz, ch](auto * data) noexcept
+      {
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          return uninitialized_fill(data, data + sz, ch);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+      }
     );
     }
   };
@@ -332,7 +350,14 @@ struct fill_assign_t
   ) small_vector_static_call_operator_const
     {
     uninitialized_assign(
-      storage, sz, [sz, ch](auto * data) noexcept { return uninitialized_fill(data, data + sz, ch); }
+      storage,
+      sz,
+      [sz, ch](auto * data) noexcept
+      {
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          return uninitialized_fill(data, data + sz, ch);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+      }
     );
     }
   };
@@ -357,8 +382,10 @@ struct reserve_t
         auto new_capacity{growth<char_type>(raw_size)};
         storage_context_t new_space{sv_allocate<char_type>(new_capacity)};
         auto first{storage.data()};
-        auto last{first + storage.size_ + null_termination};
-        uninitialized_copy(first, last, new_space.data);  // copies conditionally null termination
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          auto last{first + storage.size_ + null_termination};
+        small_vectors_clang_unsafe_buffer_usage_end         //
+          uninitialized_copy(first, last, new_space.data);  // copies conditionally null termination
 
         // deallocate old space
         storage_context_t old_storage{storage.exchange_priv_(new_space, storage.size_)};
@@ -389,7 +416,7 @@ struct resize_and_overwrite_t
       {
       auto data{storage.data()};
       typename vector_storage::size_type new_size{op(data, storage.capacity())};
-      cond_null_terminate(data + new_size);
+      cond_null_terminate(data, new_size);
       storage.size_ = new_size;
       }
     else if constexpr(vector_storage::supports_reallocation)
@@ -397,15 +424,19 @@ struct resize_and_overwrite_t
       auto new_capacity{growth<char_type>(raw_size)};
       storage_context_t new_space{sv_allocate<char_type>(new_capacity)};
       auto data{storage.data()};
-      uninitialized_copy(data, data + storage.size_, new_space.data);
-      if(std::is_constant_evaluated())
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        uninitialized_copy(data, data + storage.size_, new_space.data);
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        if(std::is_constant_evaluated())
         {
         // for constant evaluated mode we have to initialize storage to allow user operator assignment
         // in constant evaluated mode assignment to uninitialized store is not allowed
-        uninitialized_value_construct(new_space.data + storage.size_, new_space.data + new_capacity);
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_value_construct(new_space.data + storage.size_, new_space.data + new_capacity);
+        small_vectors_clang_unsafe_buffer_usage_end  //
         }
       typename vector_storage::size_type new_size{op(new_space.data, new_capacity - null_termination)};
-      cond_null_terminate(new_space.data + new_size);
+      cond_null_terminate(new_space.data, new_size);
 
       // deallocate old space
       storage_context_t old_storage{storage.exchange_priv_(new_space, new_size)};
@@ -435,7 +466,11 @@ struct resize_t
       [old_size = storage.size_, sz](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
       {
         if(sz > old_size)
-          uninitialized_value_construct(data + old_size, data + sz);
+          {
+          small_vectors_clang_unsafe_buffer_usage_begin  //
+            uninitialized_value_construct(data + old_size, data + sz);
+          small_vectors_clang_unsafe_buffer_usage_end  //
+          }
         return sz;
       }
     );
@@ -455,7 +490,11 @@ struct resize_t
       [old_size = storage.size_, sz, ch](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
       {
         if(sz > old_size)
-          uninitialized_fill(data + old_size, data + sz, ch);
+          {
+          small_vectors_clang_unsafe_buffer_usage_begin  //
+            uninitialized_fill(data + old_size, data + sz, ch);
+          small_vectors_clang_unsafe_buffer_usage_end  //
+          }
         return sz;
       }
     );
@@ -493,16 +532,22 @@ struct replace_aux_t
       char_type * data{storage.data()};
       if(old_size == new_size) {}
       else if(old_size > new_size)
-        uninitialized_copy(data + pos + old_size, data + storage.size_, data + pos + new_size);
-      else
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_copy(data + pos + old_size, data + storage.size_, data + pos + new_size);
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        else
         {
-        auto ito_end{std::reverse_iterator{data + pos + old_size}};
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          auto ito_end{std::reverse_iterator{data + pos + old_size}};
         auto ito_begin{std::reverse_iterator{data + storage.size_}};
         auto itn_begin{std::reverse_iterator{data + storage.size_ - old_size + new_size}};
-        uninitialized_copy(ito_begin, ito_end, itn_begin);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+          uninitialized_copy(ito_begin, ito_end, itn_begin);
         }
-      op(data + pos);
-      cond_null_terminate(data + str_new_size);
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        op(data + pos);
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        cond_null_terminate(data, str_new_size);
       storage.size_ = str_new_size;
       }
     else if constexpr(vector_storage::supports_reallocation)
@@ -510,10 +555,13 @@ struct replace_aux_t
       size_type new_capacity{growth<char_type>(raw_size)};
       storage_context_t new_space{sv_allocate<char_type>(new_capacity)};
       char_type * data{storage.data()};
-      uninitialized_copy(data, data + pos, new_space.data);
+
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        uninitialized_copy(data, data + pos, new_space.data);
       op(new_space.data + pos);
       uninitialized_copy(data + pos + old_size, data + storage.size_, new_space.data + pos + new_size);
-      cond_null_terminate(new_space.data + str_new_size);
+      small_vectors_clang_unsafe_buffer_usage_end  //
+        cond_null_terminate(new_space.data, str_new_size);
       // deallocate old space
       storage_context_t old_storage{storage.exchange_priv_(new_space, str_new_size)};
       if(old_storage.data != nullptr) [[unlikely]]
@@ -571,7 +619,12 @@ struct replace_fill_t
       pos,
       count,
       count2,
-      [count2, ch](char_type * data) noexcept { uninitialized_fill(data, data + count2, ch); }
+      [count2, ch](char_type * data) noexcept
+      {
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_fill(data, data + count2, ch);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+      }
     );
     }
   };
@@ -597,7 +650,12 @@ struct insert_fill_t
       pos,
       size_type(0u),
       count,
-      [count, ch](char_type * data) noexcept { uninitialized_fill(data, data + count, ch); }
+      [count, ch](char_type * data) noexcept
+      {
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_fill(data, data + count, ch);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+      }
     );
     }
   };
@@ -643,8 +701,10 @@ struct append_fill_t
       new_size,
       [old_size = storage.size_, new_size, ch](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
       {
-        uninitialized_fill(data + old_size, data + new_size, ch);
-        return new_size;
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_fill(data + old_size, data + new_size, ch);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+          return new_size;
       }
     );
     }
@@ -668,8 +728,10 @@ struct append_copy_t
       new_size,
       [old_size = storage.size_, new_size, first, last](char_type * data, size_type /*buff_cap*/) noexcept -> size_type
       {
-        uninitialized_copy(first, last, data + old_size);
-        return new_size;
+        small_vectors_clang_unsafe_buffer_usage_begin  //
+          uninitialized_copy(first, last, data + old_size);
+        small_vectors_clang_unsafe_buffer_usage_end  //
+          return new_size;
       }
     );
     }
@@ -705,9 +767,12 @@ struct erase_t
     count = std::min<size_type>(count, storage.size_ - index);
     size_type rpos = index + count;
     char_type * data{storage.data()};
-    std::ranges::copy(data + rpos, data + storage.size_, data + index);
-    storage.size_ -= count;
-    cond_null_terminate(data + storage.size_);
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      std::ranges::copy(data + rpos, data + storage.size_, data + index);
+    small_vectors_clang_unsafe_buffer_usage_end  //
+      storage.size_
+      -= count;
+    cond_null_terminate(data, storage.size_);
     }
   };
 
@@ -723,11 +788,11 @@ struct pop_back_t
     using char_type = typename vector_storage::value_type;
     char_type * data{storage.data()};
     storage.size_ -= 1u;
-    cond_null_terminate(data + storage.size_);
+    cond_null_terminate(data, storage.size_);
     }
   };
 
 inline constexpr pop_back_t pop_back;
 
-  }  // namespace small_vectors::inline v3_0::detail::string
+  }  // namespace small_vectors::inline v3_2::detail::string
 

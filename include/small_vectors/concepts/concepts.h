@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <iterator>
 
-namespace small_vectors::inline v3_0::concepts
+namespace small_vectors::inline v3_2::concepts
   {
 using std::convertible_to;
 
@@ -227,4 +227,4 @@ template<typename T>
 concept has_bitwise_or_assign = requires(T a, T const & b) {
   { a |= b } -> same_as_any_of<T &, T const &>;
 };
-  }  // namespace small_vectors::inline v3_0::concepts
+  }  // namespace small_vectors::inline v3_2::concepts

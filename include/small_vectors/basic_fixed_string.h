@@ -1,5 +1,6 @@
 #pragma once
 
+#include <small_vectors/detail/safe_buffers.h>
 #include <small_vectors/concepts/concepts.h>
 #include <small_vectors/concepts/integral_or_byte.h>
 #include <small_vectors/detail/adapter_iterator.h>
@@ -7,7 +8,7 @@
 #include <algorithm>
 #include <array>
 
-namespace small_vectors::inline v3_0
+namespace small_vectors::inline v3_2
   {
 
 template<concepts::integral_or_byte CharType, std::size_t N>
@@ -53,39 +54,70 @@ struct basic_fixed_string
   [[nodiscard]]
   constexpr auto end() const noexcept -> const_iterator
     {
-    return const_iterator{&data_[N]};
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return const_iterator{&data_[N]};
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   constexpr auto end() noexcept -> iterator
     {
-    return iterator{&data_[N]};
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      return iterator{&data_[N]};
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator[](concepts::unsigned_arithmetic_integral auto index) const noexcept -> char_type const &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) const noexcept
+    -> char_type const &
     {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      if constexpr(detail::check_valid_element_access)
+      {
+      if(N <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", N, index);
+      }
     return data_[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
-  inline constexpr auto
-    operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
+  inline constexpr auto operator[](concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
     {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      if constexpr(detail::check_valid_element_access)
+      {
+      if(N <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", N, index);
+      }
     return data_[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) const noexcept -> char_type const &
     {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      if constexpr(detail::check_valid_element_access)
+      {
+      if(N <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", N, index);
+      }
     return data_[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   [[nodiscard]]
   inline constexpr auto at(concepts::unsigned_arithmetic_integral auto index) noexcept -> char_type &
     {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      if constexpr(detail::check_valid_element_access)
+      {
+      if(N <= index) [[unlikely]]
+        detail::report_invalid_element_access("out of bounds element access ", N, index);
+      }
     return data_[index];
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   constexpr basic_fixed_string() noexcept = default;
@@ -100,7 +132,9 @@ struct basic_fixed_string
     requires(!std::same_as<other_char_type, char_type>)
   constexpr basic_fixed_string(other_char_type const (&foo)[N + 1]) noexcept
     {
-    std::transform(foo, foo + N + 1, data_, [](other_char_type c) noexcept { return static_cast<char_type>(c); });
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      std::transform(foo, foo + N + 1, data_, [](other_char_type c) noexcept { return static_cast<char_type>(c); });
+    small_vectors_clang_unsafe_buffer_usage_end  //
     }
 
   constexpr auto view() const noexcept -> std::basic_string_view<char_type> { return {&data_[0], N}; }
@@ -168,4 +202,4 @@ inline consteval auto cast_fixed_string(char_type const (&str)[N]) noexcept -> b
   return basic_fixed_string<decl_chr_type, N - 1>(str);
   }
 
-  }  // namespace small_vectors::inline v3_0
+  }  // namespace small_vectors::inline v3_2
