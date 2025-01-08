@@ -68,7 +68,7 @@ inline constexpr bool is_nothrow_copy_constr_and_constr_v
 template<typename T>
 concept explicit_relocatable = requires(T const * value) {
   { adl_decl_relocatable(value) } -> std::same_as<bool>;
-  adl_decl_relocatable(value) == true;
+  requires adl_decl_relocatable(static_cast<T const *>(nullptr));
 };
 
 template<typename T>
