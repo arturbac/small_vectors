@@ -1,8 +1,13 @@
+// SPDX-FileCopyrightText: 2024 Artur Bać
+// SPDX-License-Identifier: MIT
+// SPDX-PackageHomePage: https://github.com/arturbac/small_vectors
+
 #pragma once
 
 #ifndef SMALL_VECTORS_EXPECTED
 #define SMALL_VECTORS_EXPECTED
 
+#include <version>
 #include <small_vectors/utils/static_call_operator.h>
 #include <utility>
 #include <concepts>
@@ -104,7 +109,7 @@ namespace detail
   }
 
 template<typename E>
-class unexpected
+class [[clang::trivial_abi]] unexpected
   {
 public:
   static_assert(concepts::unexpected_constraint<E>, "not a valid type for unexpected error type");
@@ -292,8 +297,11 @@ namespace concepts
   };
   }  // namespace concepts
 
+// https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
+// Attribute trivial_abi has no effect when the class has a non-static data member whose type is non-trivial for the
+// purposes of calls
 template<typename T, typename E>
-class [[nodiscard]] expected
+class [[nodiscard, clang::trivial_abi]] expected
   {
 public:
   static_assert(concepts::unexpected_constraint<E>, "not a valid type for expected error type");
