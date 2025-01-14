@@ -108,7 +108,8 @@ struct static_vector
 
   template<uint64_t M>
     requires(M < N && std::copy_constructible<value_type>)
-  explicit constexpr static_vector(static_vector<value_type, M> const & rh
+  explicit constexpr static_vector(
+    static_vector<value_type, M> const & rh
   ) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
     {
     storage_.construct_copy(rh.storage_);
@@ -200,8 +201,9 @@ struct static_vector
     }
 
   template<vector_tune_e tune = vector_tune_e::checked, typename... Args>
-  inline constexpr auto emplace_back(Args &&... args
-  ) noexcept(tune == vector_tune_e::unchecked || noexcept(detail::emplace_back(*this, std::forward<Args>(args)...)))
+  inline constexpr auto emplace_back(Args &&... args) noexcept(
+    tune == vector_tune_e::unchecked || noexcept(detail::emplace_back(*this, std::forward<Args>(args)...))
+  )
     {
     if constexpr(tune == vector_tune_e::checked)
       return detail::emplace_back(*this, std::forward<Args>(args)...);
@@ -275,7 +277,7 @@ struct static_vector
 
 // always relocatable after move
 template<concepts::vector_constraints V, uint64_t N>
-consteval bool adl_decl_relocatable(static_vector<V, N> const *)
+consteval bool adl_decl_trivially_destructible_after_move(static_vector<V, N> const *)
   {
   return true;
   }

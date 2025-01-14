@@ -66,13 +66,14 @@ inline constexpr bool is_nothrow_copy_constr_and_constr_v
 
 ///\brief explicit declared relocation capable
 template<typename T>
-concept explicit_relocatable = requires(T const * value) {
-  { adl_decl_relocatable(value) } -> std::same_as<bool>;
-  requires adl_decl_relocatable(static_cast<T const *>(nullptr));
+concept explicit_trivially_destructible_after_move = requires(T const * value) {
+  { adl_decl_trivially_destructible_after_move(value) } -> std::same_as<bool>;
+  requires adl_decl_trivially_destructible_after_move(static_cast<T const *>(nullptr));
 };
 
 template<typename T>
-concept relocatable = explicit_relocatable<T> || std::is_trivially_destructible_v<T>;
+concept trivially_destructible_after_move
+  = explicit_trivially_destructible_after_move<T> || std::is_trivially_destructible_v<T>;
 
 template<typename T, typename... Args>
 concept same_as_any_of = std::disjunction_v<std::is_same<T, Args>...>;

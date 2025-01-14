@@ -8,12 +8,6 @@
 
 namespace small_vectors::inline v3_2::detail
   {
-// By default, only trivially copyable or trivially movable types are relocatable
-// however, is_relocatable may be specialized to mark complex types as relocatable
-// TODO
-template<typename V>
-inline constexpr bool is_relocatable_v = std::is_trivially_copyable_v<V>;
-
 template<typename iterator_type>
 using iterator_value_type_t = std::iter_value_t<iterator_type>;
 
@@ -90,8 +84,8 @@ struct range_unwinder
   };
 
 template<typename value_type>
-constexpr void uninitialized_default_construct(value_type * store
-) noexcept(std::is_nothrow_default_constructible_v<value_type>)
+constexpr void
+  uninitialized_default_construct(value_type * store) noexcept(std::is_nothrow_default_constructible_v<value_type>)
   {
   if(std::is_constant_evaluated())
     std::construct_at(store);
@@ -100,8 +94,8 @@ constexpr void uninitialized_default_construct(value_type * store
   }
 
 template<typename value_type>
-constexpr void uninitialized_value_construct(value_type * store
-) noexcept(std::is_nothrow_default_constructible_v<value_type>)
+constexpr void
+  uninitialized_value_construct(value_type * store) noexcept(std::is_nothrow_default_constructible_v<value_type>)
   {
   std::construct_at(store);
   }
@@ -201,10 +195,10 @@ inline auto uninitialized_copy_n_impl(InputIterator first, Size count, OutputIte
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
 inline auto uninitialized_copy_n_impl(InputIterator first, Size count, ForwardIterator result)
   {
-  static_assert(
-    !(contiguous_iterator_with_trivialy_copy_constructible<InputIterator>
-      && contiguous_iterator_with_trivialy_copy_constructible<ForwardIterator>)
-  );
+  static_assert(!(
+    contiguous_iterator_with_trivialy_copy_constructible<InputIterator>
+    && contiguous_iterator_with_trivialy_copy_constructible<ForwardIterator>
+  ));
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
@@ -227,10 +221,10 @@ inline auto uninitialized_copy_impl(InputIterator first, InputIterator last, Out
 template<concepts::input_iterator InputIterator, concepts::forward_iterator ForwardIterator>
 inline auto uninitialized_copy_impl(InputIterator first, InputIterator last, ForwardIterator result)
   {
-  static_assert(
-    !(contiguous_iterator_with_trivialy_copy_constructible<InputIterator>
-      && contiguous_iterator_with_trivialy_copy_constructible<ForwardIterator>)
-  );
+  static_assert(!(
+    contiguous_iterator_with_trivialy_copy_constructible<InputIterator>
+    && contiguous_iterator_with_trivialy_copy_constructible<ForwardIterator>
+  ));
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
@@ -291,10 +285,10 @@ inline auto uninitialized_move_impl(InputIterator first, InputIterator last, Out
 template<concepts::input_iterator InputIterator, concepts::forward_iterator ForwardIterator>
 inline auto uninitialized_move_impl(InputIterator first, InputIterator last, ForwardIterator result)
   {
-  static_assert(
-    !(contiguous_iterator_with_trivialy_move_constructible<InputIterator>
-      && contiguous_iterator_with_trivialy_move_constructible<ForwardIterator>)
-  );
+  static_assert(!(
+    contiguous_iterator_with_trivialy_move_constructible<InputIterator>
+    && contiguous_iterator_with_trivialy_move_constructible<ForwardIterator>
+  ));
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
@@ -317,10 +311,10 @@ inline auto uninitialized_move_n_impl(InputIterator first, Size count, OutputIte
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
 auto uninitialized_move_n_impl(InputIterator first, Size count, ForwardIterator result)
   {
-  static_assert(
-    !(contiguous_iterator_with_trivialy_move_constructible<InputIterator>
-      && contiguous_iterator_with_trivialy_move_constructible<ForwardIterator>)
-  );
+  static_assert(!(
+    contiguous_iterator_with_trivialy_move_constructible<InputIterator>
+    && contiguous_iterator_with_trivialy_move_constructible<ForwardIterator>
+  ));
   constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
@@ -402,7 +396,7 @@ inline constexpr void uninitialized_relocate_n(InputIterator first, size_type co
   {
   using value_type = iterator_value_type_t<InputIterator>;
   uninitialized_move_n(first, count, result);
-  if constexpr(!concepts::relocatable<value_type>)
+  if constexpr(!concepts::trivially_destructible_after_move<value_type>)
     destroy_range(first, size_type(0u), count);
   }
 
