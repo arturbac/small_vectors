@@ -4,7 +4,7 @@
 #include <utility>
 #include <array>
 
-namespace small_vectors::inline v3_2::detail
+namespace small_vectors::inline v3_3::detail
   {
 
 template<typename value_type, std::unsigned_integral size_type>
@@ -182,8 +182,8 @@ struct static_vector_storage
     return storage_context_type{data_.data(), buffered_capacity};
     }
 
-  inline constexpr void construct_move(static_vector_storage && rh
-  ) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  inline constexpr void
+    construct_move(static_vector_storage && rh) noexcept(std::is_nothrow_move_constructible_v<value_type>)
     requires std::move_constructible<value_type>
     {
     constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>;
@@ -648,8 +648,8 @@ struct small_vector_storage
 
   inline constexpr small_vector_storage() noexcept : active_{buffered}, size_{} {}
 
-  inline constexpr void construct_move(small_vector_storage && rh
-  ) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  inline constexpr void
+    construct_move(small_vector_storage && rh) noexcept(std::is_nothrow_move_constructible_v<value_type>)
     requires std::move_constructible<value_type>
     {
     constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>;
@@ -1029,5 +1029,5 @@ struct small_vector_storage<V, S, 0u>
   inline constexpr void set_size_priv_(size_type pos_ix) noexcept { size_ = pos_ix; }
   };
 
-  }  // namespace small_vectors::inline v3_2::detail
+  }  // namespace small_vectors::inline v3_3::detail
 

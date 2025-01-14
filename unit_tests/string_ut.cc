@@ -62,7 +62,7 @@ using ut::operator""_test;
 using namespace ut::operators::terse;
 using metatests::test_result;
 
-namespace small_vectors::inline v3_2
+namespace small_vectors::inline v3_3
   {
 
 consteval bool verify_basic_string()
@@ -124,7 +124,7 @@ static constexpr auto test_buffer_view = test_buffer.null_terminated_buffor_view
 static_assert(test_buffer_view == std::string_view{"Test45"});
 
 static_assert(verify_basic_string());
-  }  // namespace small_vectors::inline v3_2
+  }  // namespace small_vectors::inline v3_3
 
 using namespace small_vectors;
 
@@ -1357,8 +1357,8 @@ int main()
       using st = string_type;
       using char_type = typename string_type::char_type;
       auto constexpr text_long{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                                                            " Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-      };
+                                                            " Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      )};
       st vs{text_long};
         {
         constexpr auto what{cast_fixed_string<char_type>("Lorem")};

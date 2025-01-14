@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <algorithm>
 
-namespace small_vectors::inline v3_2::utils
+namespace small_vectors::inline v3_3::utils
   {
 #if defined(__cpp_lib_endian)
 using std::endian;
@@ -24,4 +24,4 @@ enum struct endian
   };
 #endif
 
-  }  // namespace small_vectors::inline v3_2::utils
+  }  // namespace small_vectors::inline v3_3::utils

@@ -3,7 +3,7 @@
 #include <atomic>
 #include <thread>
 
-namespace small_vectors::inline v3_2::ip
+namespace small_vectors::inline v3_3::ip
   {
 /* NOTE
 memory_order_seq_cst - is used intentionaly, as read operations after store within mutex have to observe results by all
@@ -62,4 +62,4 @@ struct atomic_mutex
     state_.compare_exchange_strong(expected, false, std::memory_order_seq_cst);
     }
   };
-  }  // namespace small_vectors::inline v3_2::ip
+  }  // namespace small_vectors::inline v3_3::ip

@@ -8,7 +8,7 @@
 #include <ranges>
 #include <algorithm>
 
-namespace small_vectors::inline v3_2::ip
+namespace small_vectors::inline v3_3::ip
   {
 namespace detail
   {
@@ -116,4 +116,4 @@ namespace detail
       }
     };
   }  // namespace detail
-  }  // namespace small_vectors::inline v3_2::ip
+  }  // namespace small_vectors::inline v3_3::ip

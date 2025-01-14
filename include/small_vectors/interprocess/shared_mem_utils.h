@@ -4,7 +4,7 @@
 #include <concepts>
 #include <cstdint>
 
-namespace small_vectors::inline v3_2::ip
+namespace small_vectors::inline v3_3::ip
   {
 namespace detail
   {
@@ -74,4 +74,4 @@ inline auto ref(detail::concept_mapped_region auto & region) noexcept -> typenam
   return *std::launder(reinterpret_cast<type *>(addr));
   }
 
-  }  // namespace small_vectors::inline v3_2::ip
+  }  // namespace small_vectors::inline v3_3::ip

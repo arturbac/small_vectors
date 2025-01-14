@@ -26,7 +26,7 @@
 #include <small_vectors/detail/vector_func.h>
 #include <small_vectors/detail/adapter_iterator.h>
 
-namespace small_vectors::inline v3_2
+namespace small_vectors::inline v3_3
   {
 using detail::vector_outcome_e;
 using detail::vector_tune_e;
@@ -519,4 +519,4 @@ inline constexpr vector_outcome_e split_by_half(
   else
     return vector_outcome_e::out_of_storage;
   }
-  }  // namespace small_vectors::inline v3_2
+  }  // namespace small_vectors::inline v3_3

@@ -4,7 +4,7 @@
 #include <iterator>
 #include <type_traits>
 
-namespace small_vectors::inline v3_2::concepts
+namespace small_vectors::inline v3_3::concepts
   {
 template<typename iterator_type>
 concept iterator_traits_defined = requires {
@@ -15,4 +15,4 @@ concept iterator_traits_defined = requires {
   typename std::iterator_traits<iterator_type>::iterator_category;
 };
 
-  }  // namespace small_vectors::inline v3_2::concepts
+  }  // namespace small_vectors::inline v3_3::concepts

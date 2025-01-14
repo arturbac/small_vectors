@@ -5,7 +5,7 @@
 #include <iterator>
 
 /// \brief Burrows–Wheeler transform
-namespace small_vectors::inline v3_2::algo::lower_bound
+namespace small_vectors::inline v3_3::algo::lower_bound
   {
 
 // Idea from Andrei Alexandrescu on improved lower bound
@@ -18,8 +18,9 @@ struct bound_leaning_lower_bound_fn
     typename compare_type>
     requires std::
       invocable<compare_type, typename std::iterator_traits<iterator>::value_type const &, value_type const &>
-    constexpr auto operator()(iterator first, sentinel last, value_type const & v, compare_type less) const
-    noexcept(noexcept(less(*first, v))) -> iterator
+    constexpr auto operator()(iterator first, sentinel last, value_type const & v, compare_type less) const noexcept(
+      noexcept(less(*first, v))
+    ) -> iterator
     {
     if(first == last)
       return iterator(last);  // Convert sentinel to iterator if they're different types
@@ -71,4 +72,4 @@ struct bound_leaning_lower_bound_fn
   };
 
 inline constexpr bound_leaning_lower_bound_fn bound_leaning{};
-  }  // namespace small_vectors::inline v3_2::algo::lower_bound
+  }  // namespace small_vectors::inline v3_3::algo::lower_bound

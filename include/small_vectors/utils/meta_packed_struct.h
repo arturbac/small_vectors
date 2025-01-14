@@ -8,7 +8,7 @@
 #include <cassert>
 #include <concepts>
 
-namespace small_vectors::inline v3_2::utils
+namespace small_vectors::inline v3_3::utils
   {
 
 namespace detail
@@ -309,4 +309,4 @@ constexpr decltype(auto) get(meta_packed_struct && s)
   return detail::get<tag_value>(std::forward<meta_packed_struct>(s));
   }
 
-  }  // namespace small_vectors::inline v3_2::utils
+  }  // namespace small_vectors::inline v3_3::utils
