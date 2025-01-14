@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Artur Bać
+// SPDX-License-Identifier: MIT
+// SPDX-PackageHomePage: https://github.com/arturbac/small_vectors
+
 //
 // C++ Interface: safe_typedef
 //
@@ -43,8 +47,11 @@ struct strong_type_default_traits
   static constexpr bool enable_ostream = true;
   };
 
+// https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
+// Attribute trivial_abi has no effect when the class has a non-static data member whose type is non-trivial for the
+// purposes of calls
 template<typename ValueType, typename Tag>
-class strong_type
+class [[clang::trivial_abi]] strong_type
   {
 public:
   using value_type = ValueType;

@@ -28,7 +28,7 @@ set(CMAKE_MODULE_PATH
   )
   
 option(SMALL_VECTORS_ENABLE_CPM_PACKAGING "cmake packaging by cpm" ON)
-set(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION ON)
+set(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION OFF)
 
 if(SMALL_VECTORS_ENABLE_CPM_PACKAGING)
   include(cmake/get_cpm.cmake)
@@ -64,39 +64,29 @@ endif()
 
 message(STATUS "CMake install directory: " ${CMAKE_INSTALL_INCLUDEDIR})
 
+add_library(small_vectors)
+target_sources(small_vectors PRIVATE
+ source/safe_buffers.cc
+)
+
 if(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION)
-  add_library(small_vectors)
-  target_sources(small_vectors PRIVATE
-   source/expected.cc
-   source/safe_buffers.cc
-   )
-  
   target_compile_definitions( small_vectors PUBLIC SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION=1)
-else()
-  add_library(small_vectors INTERFACE)
+   target_sources(small_vectors PRIVATE
+   source/expected.cc
+   )
 endif()
 
 if(NOT DEFINED INCLUDE_INSTALL_DIR)
   set(INCLUDE_INSTALL_DIR include/${PROJECT_NAME})
 endif()
 
-if(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION)
-  target_include_directories(small_vectors 
-    PUBLIC   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
-  )
-else()
-  target_include_directories(small_vectors 
-    INTERFACE   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
-  )
-endif()
+target_include_directories(small_vectors 
+  PUBLIC   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+)
+
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20 )
-  if(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION)
     target_compile_features(small_vectors PUBLIC cxx_std_20)
-  else()
-    target_compile_features(small_vectors INTERFACE cxx_std_20)
-  endif()
 endif()
 
 if( PROJECT_IS_TOP_LEVEL )

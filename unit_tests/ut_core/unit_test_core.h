@@ -312,7 +312,7 @@ void dump(auto const & result)
   std::cout << std::endl;
   }
 
-struct non_trivial
+struct [[clang::trivial_abi]] non_trivial
   {
   int value_;
 
@@ -357,7 +357,7 @@ inline std::ostream & operator<<(std::ostream & stream, non_trivial const & v)
   return stream;
   }
 
-struct non_trivial_ptr
+struct [[clang::trivial_abi]] non_trivial_ptr
   {
   int * value_;
 
