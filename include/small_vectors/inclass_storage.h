@@ -10,6 +10,7 @@
 #include <memory>
 #include <concepts>
 #include <type_traits>
+#include <cstring>
 
 namespace small_vectors::inline v3_2
   {
@@ -56,24 +57,26 @@ namespace inclass_storage
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
              && std::default_initializable<typename storage_type::value_type>
-  constexpr auto
-    default_construct() noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>)
-      -> storage_type
+  constexpr auto default_construct() noexcept(std::is_nothrow_default_constructible_v<typename storage_type::value_type>
+  ) -> storage_type
 
     {
-    storage_type storage{};
     if constexpr(!std::is_trivially_default_constructible_v<typename storage_type::value_type>)
+      {
+      storage_type storage;
       std::construct_at(ptr(storage));
-
-    return storage;
+      return storage;
+      }
+    else
+      return storage_type{};
     }
 
   template<concepts::same_as_inclass_storage storage_type>
     requires std::destructible<typename storage_type::value_type>
-  constexpr void destroy(storage_type & storage
-  ) noexcept(std::is_nothrow_destructible_v<typename storage_type::value_type>)
+  constexpr void
+    destroy(storage_type & storage) noexcept(std::is_nothrow_destructible_v<typename storage_type::value_type>)
     {
-    if constexpr(!std::is_trivially_constructible_v<typename storage_type::value_type>)
+    if constexpr(!std::is_trivially_destructible_v<typename storage_type::value_type>)
       std::destroy_at(ptr(storage));
     }
 
@@ -82,40 +85,38 @@ namespace inclass_storage
              && std::constructible_from<typename storage_type::value_type, Args &&...>
   constexpr auto construct_from(Args &&... args) -> storage_type
     {
-    storage_type storage{};
+    storage_type storage;
     std::construct_at(ptr(storage), std::forward<Args>(args)...);
     return storage;
     }
 
   template<concepts::same_as_inclass_storage storage_type>
     requires std::copy_constructible<typename storage_type::value_type>
-  constexpr auto copy_construct(storage_type const & other
+  constexpr auto copy_construct(
+    storage_type const & other
   ) noexcept(std::is_nothrow_copy_constructible_v<typename storage_type::value_type>) -> storage_type
     {
+    storage_type storage;
     if constexpr(std::is_trivially_copy_constructible_v<typename storage_type::value_type>)
-      return storage_type{other};
+      std::memcpy(&storage, &other, sizeof(typename storage_type::value_type));
     else
-      {
-      storage_type storage{};
       std::construct_at(ptr(storage), *ptr(other));
-      return storage;
-      }
+    return storage;
     }
 
   template<concepts::same_as_inclass_storage storage_type>
     requires concepts::complete_type<typename storage_type::value_type>
              && std::move_constructible<typename storage_type::value_type>
-  constexpr auto move_construct(storage_type && other
+  constexpr auto move_construct(
+    storage_type && other
   ) noexcept(std::is_nothrow_move_constructible_v<typename storage_type::value_type>) -> storage_type
     {
+    storage_type storage;
     if constexpr(std::is_trivially_move_constructible_v<typename storage_type::value_type>)
-      return storage_type{other};
+      std::memcpy(&storage, &other, sizeof(typename storage_type::value_type));
     else
-      {
-      storage_type storage{};
       std::construct_at(ptr(storage), std::move(*ptr(other)));
-      return storage;
-      }
+    return storage;
     }
 
   template<concepts::same_as_inclass_storage storage_type>
@@ -128,7 +129,7 @@ namespace inclass_storage
     if(&that != &other)
       {
       if constexpr(std::is_trivially_copy_assignable_v<typename storage_type::value_type>)
-        that = other;
+        std::memcpy(&that, &other, sizeof(typename storage_type::value_type));
       else
         *ptr(that) = *ptr(other);
       }
@@ -144,7 +145,7 @@ namespace inclass_storage
     if(&that != &other)
       {
       if constexpr(std::is_trivially_move_assignable_v<typename storage_type::value_type>)
-        that = other;
+        std::memcpy(&that, &other, sizeof(typename storage_type::value_type));
       else
         *ptr(that) = std::move(*ptr(other));
       }

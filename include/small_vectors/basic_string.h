@@ -619,7 +619,7 @@ struct basic_string_t
   };
 
 template<typename V, uint64_t N, typename T>
-consteval bool adl_decl_relocatable(basic_string_t<V, N, T> const *)
+consteval bool adl_decl_trivially_destructible_after_move(basic_string_t<V, N, T> const *)
   {
   return true;
   }

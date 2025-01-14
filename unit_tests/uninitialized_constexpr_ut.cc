@@ -69,7 +69,7 @@ inline bool operator==(explicit_relocatable_t const & lh, explicit_relocatable_t
   return lh.i_ == rh.i_;
   }
 
-consteval bool adl_decl_relocatable(explicit_relocatable_t const *) { return true; }
+consteval bool adl_decl_trivially_destructible_after_move(explicit_relocatable_t const *) { return true; }
 
 struct implicit_relocatable_t
   {
@@ -155,11 +155,11 @@ static_assert(!std::is_trivially_destructible_v<explicit_relocatable_t>);
 static_assert(!std::is_trivially_destructible_v<non_relocatable_t>);
 static_assert(!std::is_trivially_destructible_v<copy_non_relocatable_t>);
 
-static_assert(small_vectors::concepts::relocatable<explicit_relocatable_t>);
-static_assert(small_vectors::concepts::relocatable<implicit_relocatable_t>);
-static_assert(small_vectors::concepts::relocatable<int>);
-static_assert(!small_vectors::concepts::relocatable<non_relocatable_t>);
-static_assert(!small_vectors::concepts::relocatable<copy_non_relocatable_t>);
+static_assert(small_vectors::concepts::trivially_destructible_after_move<explicit_relocatable_t>);
+static_assert(small_vectors::concepts::trivially_destructible_after_move<implicit_relocatable_t>);
+static_assert(small_vectors::concepts::trivially_destructible_after_move<int>);
+static_assert(!small_vectors::concepts::trivially_destructible_after_move<non_relocatable_t>);
+static_assert(!small_vectors::concepts::trivially_destructible_after_move<copy_non_relocatable_t>);
 
 int main()
   {

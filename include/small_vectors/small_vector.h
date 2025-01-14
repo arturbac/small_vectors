@@ -164,8 +164,9 @@ struct small_vector
 
   ///\warning copy assignment may throw always, for dynamic as there is no other way to signalize allocation error
   template<uint64_t M>
-  constexpr auto assign(small_vector<value_type, size_type, M> const & rh
-  ) noexcept(std::is_nothrow_copy_assignable_v<value_type>) -> small_vector &
+  constexpr auto
+    assign(small_vector<value_type, size_type, M> const & rh) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
+      -> small_vector &
     {
     storage_.assign_copy(rh.storage_);
     return *this;
@@ -361,7 +362,7 @@ struct small_vector
 
 // always relocatable after move
 template<typename V, std::unsigned_integral S, uint64_t N>
-consteval bool adl_decl_relocatable(small_vector<V, S, N> const *)
+consteval bool adl_decl_trivially_destructible_after_move(small_vector<V, S, N> const *)
   {
   return true;
   }

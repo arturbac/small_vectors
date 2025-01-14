@@ -1,6 +1,6 @@
 #pragma once
 
-#define SMALL_VECTORS_VERSION "3.2.1"
+#define SMALL_VECTORS_VERSION "3.3.0"
 
 #ifdef __clang__
 #define small_vectors_clang_do_pragma(x) _Pragma(#x)
