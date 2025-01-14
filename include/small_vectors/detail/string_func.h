@@ -7,7 +7,7 @@
 #include <ranges>
 #include <small_vectors/utils/static_call_operator.h>
 
-namespace small_vectors::inline v3_2::detail::string
+namespace small_vectors::inline v3_3::detail::string
   {
 struct static_string_tag
   {
@@ -794,5 +794,5 @@ struct pop_back_t
 
 inline constexpr pop_back_t pop_back;
 
-  }  // namespace small_vectors::inline v3_2::detail::string
+  }  // namespace small_vectors::inline v3_3::detail::string
 

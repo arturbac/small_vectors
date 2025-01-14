@@ -8,11 +8,12 @@
 #include <algorithm>
 #include <array>
 
-namespace small_vectors::inline v3_2
+namespace small_vectors::inline v3_3
   {
 
 template<concepts::integral_or_byte CharType, std::size_t N>
-struct basic_fixed_string
+struct [[clang::trivial_abi]]
+basic_fixed_string
   {
   using value_type = CharType;
   using char_type = value_type;
@@ -202,4 +203,4 @@ inline consteval auto cast_fixed_string(char_type const (&str)[N]) noexcept -> b
   return basic_fixed_string<decl_chr_type, N - 1>(str);
   }
 
-  }  // namespace small_vectors::inline v3_2
+  }  // namespace small_vectors::inline v3_3

@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <cstring>
 
-namespace small_vectors::inline v3_2
+namespace small_vectors::inline v3_3
   {
 namespace concepts
   {
@@ -264,4 +264,4 @@ public:
   constexpr auto operator->() const noexcept -> value_type const * { return ptr(); }
   };
 
-  }  // namespace small_vectors::inline v3_2
+  }  // namespace small_vectors::inline v3_3

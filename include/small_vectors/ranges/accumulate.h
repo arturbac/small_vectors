@@ -5,7 +5,7 @@
 #include <iterator>
 #include <ranges>
 
-namespace small_vectors::inline v3_2::ranges
+namespace small_vectors::inline v3_3::ranges
   {
 struct accumulate_t
   {
@@ -47,4 +47,4 @@ struct accumulate_t
   };
 
 inline constexpr accumulate_t accumulate;
-  }  // namespace small_vectors::inline v3_2::ranges
+  }  // namespace small_vectors::inline v3_3::ranges

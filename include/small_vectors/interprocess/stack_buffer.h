@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <bit>
 
-namespace small_vectors::inline v3_2::ip
+namespace small_vectors::inline v3_3::ip
   {
 enum struct push_status : uint8_t
   {
@@ -89,8 +89,8 @@ struct capacity_t
   {
   template<std::size_t buffer_size, typename index_type>
   [[nodiscard]]
-  small_vector_static_call_operator constexpr auto
-    operator()(stack_buffer_t<buffer_size, index_type> const &) small_vector_static_call_operator_const noexcept
+  small_vector_static_call_operator constexpr auto operator()(stack_buffer_t<buffer_size, index_type> const &
+  ) small_vector_static_call_operator_const noexcept
     {
     return buffer_size;
     }
@@ -220,4 +220,4 @@ struct pop_t
   };
 
 inline constexpr pop_t pop;
-  }  // namespace small_vectors::inline v3_2::ip
+  }  // namespace small_vectors::inline v3_3::ip

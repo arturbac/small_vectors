@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <cassert>
 
-namespace small_vectors::inline v3_2::detail
+namespace small_vectors::inline v3_3::detail
   {
 
 enum struct vector_outcome_e : uint8_t
@@ -88,7 +88,8 @@ constexpr size_type growth(size_type old_size, size_type new_elements) noexcept
   {
   using calc_size_type = growth_size_type_select_t<size_type>;
   constexpr calc_size_type max_size = static_cast<calc_size_type>(std::numeric_limits<size_type>::max());
-  calc_size_type minimal_size{nic_sum(static_cast<calc_size_type>(old_size), static_cast<calc_size_type>(new_elements))
+  calc_size_type minimal_size{
+    nic_sum(static_cast<calc_size_type>(old_size), static_cast<calc_size_type>(new_elements))
   };
   if(minimal_size <= max_size)
     {
@@ -918,9 +919,11 @@ concept vector_with_move_and_default_constructible_value_type = requires {
 };
 
 template<vector_with_move_and_default_constructible_value_type vector_type>
-inline constexpr vector_outcome_e default_append(
-  vector_type & vec, internal_data_context_t<vector_type> const & my, typename vector_type::size_type count
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type> && std::is_nothrow_default_constructible_v<typename vector_type::value_type>)
+inline constexpr vector_outcome_e
+  default_append(vector_type & vec, internal_data_context_t<vector_type> const & my, typename vector_type::size_type count) noexcept(
+    std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+    && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+  )
   {
   using value_type = typename vector_type::value_type;
   using size_type = typename vector_type::size_type;
@@ -974,9 +977,10 @@ inline constexpr vector_outcome_e default_append(
   }
 
 template<vector_with_move_and_default_constructible_value_type vector_type>
-inline constexpr vector_outcome_e default_append(
-  vector_type & vec, typename vector_type::size_type count
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type> && std::is_nothrow_default_constructible_v<typename vector_type::value_type>)
+inline constexpr vector_outcome_e default_append(vector_type & vec, typename vector_type::size_type count) noexcept(
+  std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+  && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+)
   {
   internal_data_context_t my{vec};
   return default_append(vec, my, count);
@@ -984,9 +988,10 @@ inline constexpr vector_outcome_e default_append(
 
 //-------------------------------------------------------------------------------------------------------------------
 template<vector_with_move_and_default_constructible_value_type vector_type>
-constexpr vector_outcome_e resize(
-  vector_type & vec, typename vector_type::size_type new_size
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type> && std::is_nothrow_default_constructible_v<typename vector_type::value_type>)
+constexpr vector_outcome_e resize(vector_type & vec, typename vector_type::size_type new_size) noexcept(
+  std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+  && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+)
   {
   internal_data_context_t const my{vec};
 
@@ -1012,8 +1017,8 @@ constexpr vector_outcome_e resize(
 //-------------------------------------------------------------------------------------------------------------------
 template<typename vector_type>
   requires reserve_constraints<vector_type>
-constexpr vector_outcome_e shrink_to_fit(vector_type & vec
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+constexpr vector_outcome_e
+  shrink_to_fit(vector_type & vec) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
   {
   internal_data_context_t const my{vec};
   if constexpr(vector_type::buffered_capacity() != 0)
@@ -1033,5 +1038,5 @@ constexpr vector_outcome_e shrink_to_fit(vector_type & vec
     }
   return vector_outcome_e::no_error;
   }
-  }  // namespace small_vectors::inline v3_2::detail
+  }  // namespace small_vectors::inline v3_3::detail
 

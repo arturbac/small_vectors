@@ -31,7 +31,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace small_vectors::inline v3_2::utils
+namespace small_vectors::inline v3_3::utils
   {
 
 struct strong_type_default_traits
@@ -103,7 +103,7 @@ namespace concepts
     requires tag::enable_hash_specialization == true;
   };
   }  // namespace concepts
-  }  // namespace small_vectors::inline v3_2::utils
+  }  // namespace small_vectors::inline v3_3::utils
 
 template<small_vectors::concepts::hashable value_type, small_vectors::utils::concepts::tag_hash_specialization tag>
 struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
@@ -122,16 +122,16 @@ struct std::hash<small_vectors::utils::strong_type<value_type, tag>>
     }
   };
 
-namespace small_vectors::inline v3_2::concepts
+namespace small_vectors::inline v3_3::concepts
   {
 template<typename tag>
 concept tag_ostream = requires {
   tag::enable_ostream;
   requires tag::enable_ostream == true;
 };
-  }  // namespace small_vectors::inline v3_2::concepts
+  }  // namespace small_vectors::inline v3_3::concepts
 
-namespace small_vectors::inline v3_2::utils
+namespace small_vectors::inline v3_3::utils
   {
 template<small_vectors::concepts::stream_insertable value_type, small_vectors::concepts::tag_ostream tag>
 inline auto operator<<(std::ostream & out, strong_type<value_type, tag> const & value) -> std::ostream &
@@ -480,6 +480,6 @@ constexpr auto operator|=(strong_type<value_type, tag> & v, strong_type<value_ty
   v.ref_value() |= rhs.value();
   return v;
   }
-  }  // namespace small_vectors::inline v3_2::utils
+  }  // namespace small_vectors::inline v3_3::utils
 
 //

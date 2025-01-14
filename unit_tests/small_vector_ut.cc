@@ -7,7 +7,7 @@
 #endif
 
 #include <unit_test_core.h>
-
+#include <small_vectors/detail/gdb_pretty_printer.h>
 #include <iostream>
 
 namespace small_vectors
