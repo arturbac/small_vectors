@@ -261,7 +261,6 @@ int main()
     {
       using T = copy_non_relocatable_t;
       c = {};
-      std::allocator<T> alloc;
       std::array<T, 4> source{T{1}, T{2}, T{3}, T{4}};
       try
         {
