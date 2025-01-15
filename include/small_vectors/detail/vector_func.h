@@ -465,16 +465,25 @@ inline constexpr void emplace_back_unchecked(
 ///\brief Appends a new element to the end of the container
 ///       meets strong exception guarantee
 template<typename vector_type, typename... Args>
-  requires requires(vector_type & vec) {
-    requires vector_with_size_and_value<vector_type>;
+  requires
+  // clang-format off
+    requires(vector_type & vec) 
+      {
+      requires vector_with_size_and_value<vector_type>;
       { vector_type::support_reallocation() } -> std::same_as<bool>;
       requires std::constructible_from<typename vector_type::value_type, Args...>;
-  }
-inline constexpr vector_outcome_e emplace_back(
-  vector_type & vec, Args &&... args
-) noexcept(concepts::is_nothrow_move_constr_and_constr_v<typename vector_type::value_type, Args...>)
+      }
+// clang-format on
+inline constexpr auto emplace_back(vector_type & vec, Args &&... args)
+  // clang-format off
+  noexcept
+    (
+    std::is_nothrow_constructible_v<typename vector_type::value_type, Args...>
+    and ( concepts::is_trivially_relocatable<typename vector_type::value_type> 
+       or std::is_nothrow_move_constructible_v<typename vector_type::value_type> )
+    ) -> vector_outcome_e
+  // clang-format on
   {
-  constexpr bool use_nothrow = concepts::is_nothrow_move_constr_and_constr_v<typename vector_type::value_type, Args...>;
   internal_data_context_t const my{vec};
 
   if(my.size() < my.capacity())
@@ -491,12 +500,19 @@ inline constexpr vector_outcome_e emplace_back(
       if(new_capacity != 0u)
         {
         using value_type = typename vector_type::value_type;
+
+        static constexpr bool nothrow_constr = std::is_nothrow_constructible_v<value_type, Args...>;
+        static constexpr bool nothrow_relocate
+          = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
+
         // alocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
-        typename noexcept_if<use_nothrow>::cond_except_holder new_space{sv_allocate<value_type>(new_capacity)};
+        typename noexcept_if<nothrow_constr and nothrow_relocate>::cond_except_holder new_space{
+          sv_allocate<value_type>(new_capacity)
+        };
         if(new_space)
           {
           // relocate elements
-          if constexpr(use_nothrow)
+          if constexpr(nothrow_constr and nothrow_relocate)
             // remains only for purprose of better data access order
             {
             detail::uninitialized_relocate_n(my.data(), my.size(), new_space.data());
@@ -506,16 +522,16 @@ inline constexpr vector_outcome_e emplace_back(
           else
             {
             // construct new element, if the second part can be noexcept relocated then this doesn't need raii unwind
-            typename noexcept_if<std::is_nothrow_move_constructible_v<value_type>>::cond_destroy_at el{
+            typename noexcept_if<nothrow_relocate>::cond_destroy_at el{
               std::construct_at(unext(new_space.data(), my.size()), std::forward<Args>(args)...)
             };
-            // if only constructor throw use relocate for elements
-            if constexpr(std::is_nothrow_move_constructible_v<value_type>)
+            // if only constructor not throws use relocate for elements
+            if constexpr(nothrow_relocate)
               detail::uninitialized_relocate_n(my.data(), my.size(), new_space.data());
             else
               detail::uninitialized_relocate_with_copy_n(my.data(), my.size(), new_space.data());
             // dont destroy if no exception is thrown with uninitialized_relocate_with_copy_n
-            // for std::is_nothrow_move_constructible_v<value_type> is no op
+            // for nothrow_relocate is no op
             el.release();
             }
           // deallocate old space

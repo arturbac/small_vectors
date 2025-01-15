@@ -75,6 +75,21 @@ template<typename T>
 concept trivially_destructible_after_move
   = explicit_trivially_destructible_after_move<T> || std::is_trivially_destructible_v<T>;
 
+template<typename T>
+concept is_trivially_relocatable =
+  // !std::is_volatile_v<std::remove_all_extents_t<T>> // && (relocatable_tag<std::remove_all_extents_t<T>>::value(0) ||
+  (std::is_trivially_move_constructible_v<std::remove_all_extents_t<T>>
+   && std::is_trivially_move_assignable_v<std::remove_all_extents_t<T>>
+   && std::is_trivially_destructible_v<std::remove_all_extents_t<T>>)
+#if __has_builtin(__is_trivially_relocatable)
+  || __is_trivially_relocatable(std::remove_all_extents_t<T>)
+#endif
+  ;
+template<class T, class... Args>
+concept nothrow_relocatable_or_move_constr_and_constr_v
+  = (is_trivially_relocatable<T> or std::is_nothrow_move_constructible_v<T>)
+    and std::is_nothrow_constructible_v<T, Args...>;
+
 template<typename T, typename... Args>
 concept same_as_any_of = std::disjunction_v<std::is_same<T, Args>...>;
 
