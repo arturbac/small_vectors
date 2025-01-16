@@ -4,6 +4,7 @@
 #include <small_vectors/concepts/concepts.h>
 #include <memory>
 #include <cstring>
+#include <cassert>
 #include <algorithm>
 
 namespace small_vectors::inline v3_3::detail
@@ -64,20 +65,20 @@ template<bool use_nothrow, typename InputIt>
 struct range_unwinder
   {
   using value_type = typename std::iterator_traits<InputIt>::value_type;
-
+  static constexpr bool skip_unwind = use_nothrow or std::is_trivially_destructible_v<value_type>;
   InputIt first_res_, last_;
 
   constexpr range_unwinder(InputIt first_res) noexcept : first_res_{first_res}, last_{first_res} {}
 
-  constexpr void release()
+  constexpr void release() noexcept
     {
-    if constexpr(use_nothrow || !std::is_trivially_destructible_v<value_type>)
+    if constexpr(not skip_unwind)
       first_res_ = last_;
     }
 
-  constexpr ~range_unwinder()
+  constexpr ~range_unwinder() noexcept
     {
-    if constexpr(use_nothrow || !std::is_trivially_destructible_v<value_type>)
+    if constexpr(not skip_unwind)
       if(first_res_ != last_)
         std::destroy(first_res_, last_);
     }
@@ -177,6 +178,37 @@ template<typename Iter>
 concept contiguous_iterator_with_trivialy_copy_constructible
   = std::contiguous_iterator<Iter> && std::is_trivially_copy_constructible_v<std::iter_value_t<Iter>>;
 
+template<concepts::iterator InputIterator, std::integral size_type, concepts::forward_iterator ForwardIterator>
+inline auto uninitialized_trivial_memcpy(InputIterator first, size_type count, ForwardIterator result)
+  -> ForwardIterator
+  {
+  static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
+  if constexpr(std::contiguous_iterator<InputIterator> and std::contiguous_iterator<ForwardIterator>)
+    {
+    if(count > 0)
+      {
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        assert(std::addressof(*first) != nullptr);
+      assert(std::addressof(*result) != nullptr);
+      std::memcpy(
+        static_cast<void *>(std::addressof(*result)),
+        static_cast<void const *>(std::addressof(*first)),
+        elem_size * std::size_t(count)
+      );
+      small_vectors_clang_unsafe_buffer_usage_end  //
+      }
+    return std::next(result, ptrdiff_t(count));
+    }
+  else
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      for(; count > 0; --count, (void)++first, ++result)
+        std::memcpy(std::addressof(*result), std::addressof(*first), elem_size);
+    small_vectors_clang_unsafe_buffer_usage_end  //
+      return result;
+    }
+  }
+
 // -------------------------------
 // -- uninitialized_copy --
 
@@ -184,12 +216,22 @@ template<
   contiguous_iterator_with_trivialy_copy_constructible InputIterator,
   std::integral Size,
   contiguous_iterator_with_trivialy_copy_constructible OutputIterator>
-inline auto uninitialized_copy_n_impl(InputIterator first, Size count, OutputIterator out)
+inline auto uninitialized_copy_n_impl(InputIterator first, Size count, OutputIterator out) -> OutputIterator
   {
-  // static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
-  return std::uninitialized_copy_n(first, count, out);
-  // std::memcpy(std::addressof(*out), std::addressof(*first), elem_size * std::size_t(count));
-  // return std::next(out, std::ptrdiff_t(count));
+  static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
+  if(count > 0)
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      assert(std::addressof(*first) != nullptr);
+    assert(std::addressof(*out) != nullptr);
+    std::memmove(
+      static_cast<void *>(std::addressof(*out)),
+      static_cast<void const *>(std::addressof(*first)),
+      elem_size * std::size_t(count)
+    );
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
+  return std::next(out, ptrdiff_t(count));
   }
 
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
@@ -315,7 +357,7 @@ auto uninitialized_move_n_impl(InputIterator first, Size count, ForwardIterator 
     contiguous_iterator_with_trivialy_move_constructible<InputIterator>
     && contiguous_iterator_with_trivialy_move_constructible<ForwardIterator>
   ));
-  constexpr bool use_nothrow = std::is_nothrow_constructible_v<iterator_value_type_t<InputIterator>>;
+  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
   using unwind = range_unwinder<use_nothrow, ForwardIterator>;
   unwind cur{result};
   small_vectors_clang_unsafe_buffer_usage_begin  //
@@ -391,13 +433,30 @@ inline constexpr void uninitialized_move_if_noexcept_n(
 // -- uninitialized_relocate --
 
 template<concepts::iterator InputIterator, std::integral size_type, concepts::forward_iterator ForwardIterator>
-  requires(true == std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>)
+  requires(
+    concepts::is_trivially_relocatable<iterator_value_type_t<InputIterator>>
+    or std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>
+  )
 inline constexpr void uninitialized_relocate_n(InputIterator first, size_type count, ForwardIterator result) noexcept
   {
   using value_type = iterator_value_type_t<InputIterator>;
-  uninitialized_move_n(first, count, result);
-  if constexpr(!concepts::trivially_destructible_after_move<value_type>)
-    destroy_range(first, size_type(0u), count);
+  if(std::is_constant_evaluated())
+    {
+    uninitialized_move_n(first, count, result);
+    if constexpr(not concepts::trivially_destructible_after_move<value_type>)
+      destroy_range(first, size_type(0u), count);
+    }
+  else
+    {
+    if constexpr(concepts::is_trivially_relocatable<value_type>)
+      uninitialized_trivial_memcpy(first, count, result);
+    else
+      {
+      uninitialized_move_n(first, count, result);
+      if constexpr(not concepts::trivially_destructible_after_move<value_type>)
+        destroy_range(first, size_type(0u), count);
+      }
+    }
   }
 
 template<concepts::iterator InputIterator, std::integral size_type, concepts::forward_iterator ForwardIterator>
@@ -407,7 +466,8 @@ inline constexpr void uninitialized_relocate_if_noexcept_n(
   {
   using value_type = iterator_value_type_t<InputIterator>;
 
-  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<iterator_value_type_t<InputIterator>>;
+  constexpr bool use_nothrow
+    = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
   if constexpr(use_nothrow)
     uninitialized_relocate_n(first, count, result);
   else

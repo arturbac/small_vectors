@@ -27,7 +27,7 @@ using std::unexpect;
 using std::unexpect_t;
 using std::unexpected;
   }  // namespace cxx23
-  
+
 #else
 
 #include <utility>
@@ -187,7 +187,7 @@ public:
     {
     }
 
-  constexpr auto error() const & noexcept -> error_type const &  { return error_; }
+  constexpr auto error() const & noexcept -> error_type const & { return error_; }
 
   constexpr auto error() & noexcept -> error_type & { return error_; }
 
@@ -575,8 +575,8 @@ private:
     }
 
   template<typename other_value_type>
-  inline constexpr void assign_value(other_value_type && v)
-    noexcept(std::is_nothrow_constructible_v<value_type, other_value_type>)
+  inline constexpr void
+    assign_value(other_value_type && v) noexcept(std::is_nothrow_constructible_v<value_type, other_value_type>)
     {
     if(has_value_)
       value_ = std::forward<other_value_type>(v);
@@ -588,8 +588,8 @@ private:
     }
 
   template<typename other_error_type>
-  inline constexpr void assign_unexpected(other_error_type && v)
-    noexcept(std::is_nothrow_constructible_v<error_type, other_error_type>)
+  inline constexpr void
+    assign_unexpected(other_error_type && v) noexcept(std::is_nothrow_constructible_v<error_type, other_error_type>)
     {
     if(has_value_)
       {
@@ -1010,7 +1010,7 @@ public:
 
 template<typename T, typename E>
   requires std::same_as<void, T>
-class expected<T, E>
+class [[nodiscard, clang::trivial_abi]] expected<T, E>
   {
 public:
   using value_type = void;

@@ -186,7 +186,8 @@ struct static_vector_storage
     construct_move(static_vector_storage && rh) noexcept(std::is_nothrow_move_constructible_v<value_type>)
     requires std::move_constructible<value_type>
     {
-    constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>;
+    constexpr bool use_nothrow
+      = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
     if constexpr(use_nothrow)
       uninitialized_relocate_n(rh.data(), rh.size_, data());
     else
@@ -198,7 +199,8 @@ struct static_vector_storage
   inline constexpr void assign_move(static_vector_storage && rh) noexcept(std::is_nothrow_move_assignable_v<value_type>)
     requires std::movable<value_type>
     {
-    constexpr bool use_nothrow = std::is_nothrow_move_assignable_v<value_type>;
+    constexpr bool use_nothrow
+      = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_assignable_v<value_type>;
 
     if constexpr(not std::is_trivially_destructible_v<value_type>)
       {
@@ -652,7 +654,8 @@ struct small_vector_storage
     construct_move(small_vector_storage && rh) noexcept(std::is_nothrow_move_constructible_v<value_type>)
     requires std::move_constructible<value_type>
     {
-    constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<value_type>;
+    constexpr bool use_nothrow
+      = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
 
     if(rh.active_ == buffered)
       if constexpr(use_nothrow)
@@ -671,7 +674,8 @@ struct small_vector_storage
   constexpr void assign_move(small_vector_storage && rh) noexcept(std::is_nothrow_move_assignable_v<value_type>)
     requires std::movable<value_type>
     {
-    constexpr bool use_nothrow = std::is_nothrow_move_assignable_v<value_type>;
+    constexpr bool use_nothrow
+      = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_assignable_v<value_type>;
 
     if constexpr(not std::is_trivially_destructible_v<value_type>)
       {
