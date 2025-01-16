@@ -15,7 +15,7 @@
     "name": "cfg-ninja",
     "hidden": true,
     "generator": "Ninja",
-        "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
     {
     "name": "cfg-c++20",
@@ -40,6 +40,17 @@
         "CMAKE_CXX_FLAGS" : "-stdlib=libc++",
         "SMALL_VECTORS_ENABLE_LLD_LINKER" : "ON"
       }
+    },
+    {
+      "name": "clang-debug",
+      "generator": "Ninja",
+      "inherits": [ "cfg-ninja", "cfg-c++26" ],
+      "cacheVariables": { "CMAKE_CXX_COMPILER" : "clang++", "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "clang-20-release",
+      "inherits": [ "cfg-common", "cfg-ninja", "cfg-c++26" ],
+      "cacheVariables": { "CMAKE_CXX_COMPILER" : "clang++-20" }
     },
     {
       "name": "clang-19-release",
