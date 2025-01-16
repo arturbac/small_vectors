@@ -187,13 +187,13 @@ public:
     {
     }
 
-  constexpr error_type const & error() const & noexcept { return error_; }
+  constexpr auto error() const & noexcept -> error_type const &  { return error_; }
 
-  constexpr error_type & error() & noexcept { return error_; }
+  constexpr auto error() & noexcept -> error_type & { return error_; }
 
-  constexpr error_type const && error() const && noexcept { return std::move(error_); }
+  constexpr auto error() const && noexcept -> error_type const && { return std::move(error_); }
 
-  constexpr error_type && error() && noexcept { return std::move(error_); }
+  constexpr auto error() && noexcept -> error_type && { return std::move(error_); }
 
   constexpr void swap(unexpected & other) noexcept(std::is_nothrow_swappable_v<error_type>)
     requires std::swappable<error_type>
@@ -256,25 +256,25 @@ public:
   explicit bad_expected_access(E e) : error_{std::move(e)} {}
 
   [[nodiscard]]
-  error_type const & error() const & noexcept
+  auto error() const & noexcept -> error_type const &
     {
     return error_;
     }
 
   [[nodiscard]]
-  error_type & error() & noexcept
+  auto error() & noexcept -> error_type &
     {
     return error_;
     }
 
   [[nodiscard]]
-  error_type const && error() const && noexcept
+  auto error() const && noexcept -> error_type const &&
     {
     return std::move(error_);
     }
 
   [[nodiscard]]
-  error_type && error() && noexcept
+  auto error() && noexcept -> error_type &&
     {
     return std::move(error_);
     }
@@ -537,18 +537,6 @@ public:
   constexpr ~expected()
     requires(!std::is_trivially_destructible_v<value_type> || !std::is_trivially_destructible_v<error_type>)
     {
-    destroy();
-    }
-
-private:
-  constexpr void destroy()
-    requires std::is_trivially_destructible_v<value_type> && std::is_trivially_destructible_v<error_type>
-    {
-    }
-
-  constexpr void destroy()
-    requires(!std::is_trivially_destructible_v<value_type> || !std::is_trivially_destructible_v<error_type>)
-    {
     if(has_value_) [[likely]]
       {
       if constexpr(!std::is_trivially_destructible_v<value_type>)
@@ -588,6 +576,7 @@ private:
 
   template<typename other_value_type>
   inline constexpr void assign_value(other_value_type && v)
+    noexcept(std::is_nothrow_constructible_v<value_type, other_value_type>)
     {
     if(has_value_)
       value_ = std::forward<other_value_type>(v);
@@ -600,6 +589,7 @@ private:
 
   template<typename other_error_type>
   inline constexpr void assign_unexpected(other_error_type && v)
+    noexcept(std::is_nothrow_constructible_v<error_type, other_error_type>)
     {
     if(has_value_)
       {
