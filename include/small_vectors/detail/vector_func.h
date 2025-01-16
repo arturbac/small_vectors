@@ -853,22 +853,30 @@ inline constexpr vector_outcome_e emplace(
 
 //-------------------------------------------------------------------------------------------------------------------
 template<typename vector_type>
-concept reserve_constraints = requires {
+concept reserve_constraints = requires
+// clang-format off
+  {
   requires vector_with_size_and_value<vector_type>;
-  requires(true == std::is_move_constructible_v<typename vector_type::value_type>);
-    { vector_type::support_reallocation() } -> std::same_as<bool>;
-    requires(true == vector_type::support_reallocation());
-};
+  requires concepts::is_trivially_relocatable<typename vector_type::value_type> 
+        or std::is_move_constructible_v<typename vector_type::value_type>;
+  { vector_type::support_reallocation() } -> std::same_as<bool>;
+  requires vector_type::support_reallocation();
+  };
+// clang-format on
 
 //-------------------------------------------------------------------------------------------------------------------
 template<typename vector_type>
   requires reserve_constraints<vector_type>
-constexpr vector_outcome_e relocate_elements_dyn(
-  vector_type & vec, internal_data_context_t<vector_type> const & my, typename vector_type::size_type new_capacity
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+constexpr auto
+  relocate_elements_dyn(vector_type & vec, internal_data_context_t<vector_type> const & my, typename vector_type::size_type new_capacity) noexcept(
+    concepts::is_trivially_relocatable<typename vector_type::value_type>
+    or std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+  ) -> vector_outcome_e
   {
-  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<typename vector_type::value_type>;
   using value_type = typename vector_type::value_type;
+  constexpr bool use_nothrow
+    = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
+
   // allocate new space with growth factor, reclaim space in case of throwing at !use_nothrow
   typename noexcept_if<use_nothrow>::cond_except_holder new_space{sv_allocate<value_type>(new_capacity)};
   if(new_space)
@@ -889,11 +897,14 @@ constexpr vector_outcome_e relocate_elements_dyn(
 //-------------------------------------------------------------------------------------------------------------------
 template<typename vector_type>
   requires reserve_constraints<vector_type>
-constexpr vector_outcome_e relocate_elements_static(
-  vector_type & vec, internal_data_context_t<vector_type> const & my
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+constexpr auto relocate_elements_static(vector_type & vec, internal_data_context_t<vector_type> const & my) noexcept(
+  concepts::is_trivially_relocatable<typename vector_type::value_type>
+  or std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+) -> vector_outcome_e
   {
-  constexpr bool use_nothrow = std::is_nothrow_move_constructible_v<typename vector_type::value_type>;
+  using value_type = typename vector_type::value_type;
+  constexpr bool use_nothrow
+    = concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>;
   typename noexcept_if<use_nothrow>::cond_except_holder_revert old_storage{vec, my.size(), vec.switch_static_priv_()};
   if constexpr(use_nothrow)
     detail::uninitialized_relocate_n(my.begin(), my.size(), vec.begin());
@@ -910,9 +921,10 @@ constexpr vector_outcome_e relocate_elements_static(
 ///       nothing.
 template<typename vector_type>
   requires reserve_constraints<vector_type>
-constexpr vector_outcome_e reserve(
-  vector_type & vec, typename vector_type::size_type new_capacity
-) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+constexpr vector_outcome_e reserve(vector_type & vec, typename vector_type::size_type new_capacity) noexcept(
+  concepts::is_trivially_relocatable<typename vector_type::value_type>
+  or std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+)
   {
   if(new_capacity < max_size(vec))
     {
@@ -929,23 +941,25 @@ constexpr vector_outcome_e reserve(
 template<typename vector_type>
 concept vector_with_move_and_default_constructible_value_type = requires {
   requires vector_with_size_and_value<vector_type>;
-  requires(true == std::is_move_constructible_v<typename vector_type::value_type>);
-  requires(true == std::is_default_constructible_v<typename vector_type::value_type>);
+  requires concepts::is_trivially_relocatable<typename vector_type::value_type>
+             or std::is_move_constructible_v<typename vector_type::value_type>;
+  requires std::is_default_constructible_v<typename vector_type::value_type>;
     { vector_type::support_reallocation() } -> std::same_as<bool>;
 };
 
 template<vector_with_move_and_default_constructible_value_type vector_type>
-inline constexpr vector_outcome_e
+inline constexpr auto
   default_append(vector_type & vec, internal_data_context_t<vector_type> const & my, typename vector_type::size_type count) noexcept(
     std::is_nothrow_move_constructible_v<typename vector_type::value_type>
-    && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
-  )
+    and std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+  ) -> vector_outcome_e
   {
   using value_type = typename vector_type::value_type;
   using size_type = typename vector_type::size_type;
 
   constexpr bool use_nothrow
-    = std::is_nothrow_move_constructible_v<value_type> && std::is_nothrow_default_constructible_v<value_type>;
+    = (concepts::is_trivially_relocatable<value_type> or std::is_nothrow_move_constructible_v<value_type>)
+      and std::is_nothrow_default_constructible_v<value_type>;
 
   if(count <= my.free_space())
     {
@@ -993,10 +1007,11 @@ inline constexpr vector_outcome_e
   }
 
 template<vector_with_move_and_default_constructible_value_type vector_type>
-inline constexpr vector_outcome_e default_append(vector_type & vec, typename vector_type::size_type count) noexcept(
-  std::is_nothrow_move_constructible_v<typename vector_type::value_type>
-  && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
-)
+inline constexpr auto default_append(vector_type & vec, typename vector_type::size_type count) noexcept(
+  (concepts::is_trivially_relocatable<typename vector_type::value_type>
+   or std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+  and std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+) -> vector_outcome_e
   {
   internal_data_context_t my{vec};
   return default_append(vec, my, count);
@@ -1005,8 +1020,9 @@ inline constexpr vector_outcome_e default_append(vector_type & vec, typename vec
 //-------------------------------------------------------------------------------------------------------------------
 template<vector_with_move_and_default_constructible_value_type vector_type>
 constexpr vector_outcome_e resize(vector_type & vec, typename vector_type::size_type new_size) noexcept(
-  std::is_nothrow_move_constructible_v<typename vector_type::value_type>
-  && std::is_nothrow_default_constructible_v<typename vector_type::value_type>
+  (concepts::is_trivially_relocatable<typename vector_type::value_type>
+   or std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+  and std::is_nothrow_default_constructible_v<typename vector_type::value_type>
 )
   {
   internal_data_context_t const my{vec};
@@ -1033,8 +1049,10 @@ constexpr vector_outcome_e resize(vector_type & vec, typename vector_type::size_
 //-------------------------------------------------------------------------------------------------------------------
 template<typename vector_type>
   requires reserve_constraints<vector_type>
-constexpr vector_outcome_e
-  shrink_to_fit(vector_type & vec) noexcept(std::is_nothrow_move_constructible_v<typename vector_type::value_type>)
+constexpr vector_outcome_e shrink_to_fit(vector_type & vec) noexcept(
+  concepts::is_trivially_relocatable<typename vector_type::value_type>
+  or std::is_nothrow_move_constructible_v<typename vector_type::value_type>
+)
   {
   internal_data_context_t const my{vec};
   if constexpr(vector_type::buffered_capacity() != 0)

@@ -186,13 +186,15 @@ inline auto uninitialized_trivial_memcpy(InputIterator first, size_type count, F
     {
     if(count > 0)
       {
-      assert(std::addressof(*first) != nullptr);
+      small_vectors_clang_unsafe_buffer_usage_begin  //
+        assert(std::addressof(*first) != nullptr);
       assert(std::addressof(*result) != nullptr);
       std::memcpy(
         static_cast<void *>(std::addressof(*result)),
         static_cast<void *>(std::addressof(*first)),
         elem_size * std::size_t(count)
       );
+      small_vectors_clang_unsafe_buffer_usage_end  //
       }
     }
   else
