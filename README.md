@@ -1,10 +1,11 @@
 # small_vectors 
 ![MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![CMake](https://github.com/arturbac/fixed_math/workflows/CMake/badge.svg)
-![language](https://img.shields.io/badge/language-C%2B%2B20-blue.svg)![language](https://img.shields.io/badge/language-C%2B%2B23-red.svg) 
+![language](https://img.shields.io/badge/language-C%2B%2B23-red.svg) 
 
-C++20,23 utilities library
+C++23 utilities library
 
 ## Features
+- **implements 2 relocation optimizations** - clang triviall relocatation (from trait __is_trivially_relocatable) and trivially_destructible_after_move by annotating non trivial classes with adl function
 - **Static Vector**: Trivially copyable for types that are trivially copyable, enabling compiler optimizations such as `memcpy` for copying operations (since v3.0.3-devel).
 - **Address Independence**: static vectors and static string offer in-class storage, making them address-independent and suitable for interprocess data exchange.
 - **Dynamic and Custom Sized Storage**: Small vectors support dynamic memory allocation with customizable size types. Static vectors adjust the minimal size type based on the number of elements.
