@@ -261,6 +261,91 @@ static void do_test(test_result & result)
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
     result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
+  "expected_assignment"_test = [&]
+    {
+    auto fn_tmpl
+      = []<typename value_type, typename error_type>(value_type const *, error_type const *) -> metatests::test_result
+    {
+      using unexpected_type = unexpected<error_type>;
+      using expected_type = expected<value_type, error_type>;
+        {
+        expected_type const sr{value_type{2}};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{});
+        ex = sr;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        }
+        {
+        expected_type sr{value_type{2}};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{});
+        ex = std::move(sr);
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        }
+        {
+        unexpected_type const ue{error_type{4}};
+        expected_type ex{value_type{2}};
+        ex = ue;
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        unexpected_type ue{error_type{4}};
+        expected_type ex{in_place, value_type{2}};
+        ex = std::move(ue);
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        unexpected_type ue{error_type{4}};
+        expected_type ex{unexpect, error_type{2}};
+        ex = std::move(ue);
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        expected_type ue{unexpect, error_type{4}};
+        expected_type ex{unexpect, error_type{2}};
+        ex = std::move(ue);
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        expected<int, error_type> const sr{2};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{});
+        ex = sr;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        expected_type ue{unexpect, error_type{4}};
+        ex = ue;
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        expected<int, error_type> sr{2};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{});
+        ex = std::move(sr);
+        constexpr_test(ex.has_value());
+        constexpr_test(ex.value() == value_type{2});
+        expected_type ue{unexpect, error_type{4}};
+        ex = ue;
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+      return {};
+    };
+
+    result |= run_consteval_test_dual<value_type_non_void_noexcept_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_noexcept_list, error_type_list>(fn_tmpl);
+    };
 
   "expected_constr_convert"_test = [&]
   {
@@ -358,7 +443,79 @@ static void do_test(test_result & result)
     result |= run_consteval_test<error_type_list>(fn_tmpl);
     result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
-
+  "expected_assignment_void"_test = [&]
+  {
+    auto fn_tmpl = []<typename error_type>(error_type const *) -> metatests::test_result
+    {
+      using unexpected_type = unexpected<error_type>;
+      using expected_type = expected<void, error_type>;
+        {
+        expected_type const sr{in_place};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        ex = sr;
+        constexpr_test(ex.has_value());
+        }
+        {
+        expected_type sr{in_place};
+        expected_type ex;
+        ex = std::move(sr);
+        constexpr_test(ex.has_value());
+        }
+        {
+        expected_type const sr{in_place};
+        expected_type ex{unexpect, error_type{4}};
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        ex = sr;
+        constexpr_test(ex.has_value());
+        }
+        {
+        expected_type sr{in_place};
+        expected_type ex{unexpect, error_type{4}};
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        ex = std::move(sr);
+        constexpr_test(ex.has_value());
+        }
+        {
+        unexpected_type const ue{error_type{4}};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        ex = ue;
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        unexpected_type ue{error_type{4}};
+        expected_type ex;
+        constexpr_test(ex.has_value());
+        ex = std::move(ue);
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        unexpected_type ue{error_type{4}};
+        expected_type ex{unexpect, error_type{2}};
+        constexpr_test(!ex.has_value());
+        ex = std::move(ue);
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+        {
+        expected_type ex{in_place};
+        unexpected_type ue{error_type{4}};
+        constexpr_test(ex.has_value());
+        ex = ue;
+        constexpr_test(!ex.has_value());
+        constexpr_test(ex.error() == error_type{4});
+        }
+      return {};
+    };
+    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
+  };
+  
   "expected_operator->"_test = [&]
   {
     auto fn_tmpl = []() -> metatests::test_result
@@ -567,7 +724,7 @@ static void do_test(test_result & result)
     return {};
     };
     result |= run_consteval_test_dual<value_type_non_void_noexcept_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_noexcept_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_noexcept_list, error_type_list>(fn_tmpl);
   };
 
   "expected_emplace() void"_test = [&]
@@ -592,7 +749,7 @@ static void do_test(test_result & result)
     return {};
     };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
-    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
 
   "expected_swap()"_test = [&]
@@ -601,7 +758,8 @@ static void do_test(test_result & result)
       = []<typename value_type, typename error_type>(value_type const *, error_type const *) -> metatests::test_result
     {
       // exclude <non_trivial_ptr_except,non_trivial_ptr_except>
-      if constexpr(!std::same_as<value_type, non_trivial_ptr_except> || !std::same_as<error_type, non_trivial_ptr_except>)
+      if constexpr(!std::same_as<value_type, non_trivial_ptr_except>
+                   || !std::same_as<error_type, non_trivial_ptr_except>)
         {
         using expected_type = expected<value_type, error_type>;
           {
@@ -660,7 +818,7 @@ static void do_test(test_result & result)
       return {};
     };
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
 
   "expected_swap() void"_test = [&]
@@ -715,7 +873,7 @@ static void do_test(test_result & result)
       return {};
     };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
-    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
   "expected_operator=="_test = [&]
   {
@@ -741,7 +899,7 @@ static void do_test(test_result & result)
       return {};
     };
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
 
   "expected_operator== void"_test = [&]
@@ -765,7 +923,7 @@ static void do_test(test_result & result)
       return {};
     };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
-    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
 
   "expected and_then"_test = [&]
@@ -807,7 +965,7 @@ static void do_test(test_result & result)
     };
 
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
 
   "expected and_then void"_test = [&]
@@ -835,7 +993,7 @@ static void do_test(test_result & result)
       return {};
     };
     result |= run_consteval_test<error_type_list>(fn_tmpl);
-    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
 
   "expected or_else"_test = [&]
@@ -859,7 +1017,7 @@ static void do_test(test_result & result)
     };
 
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
 
   "expected transform"_test = [&]
@@ -899,7 +1057,7 @@ static void do_test(test_result & result)
     };
 
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
   };
 
   "expected transform void"_test = [&]
@@ -934,7 +1092,7 @@ static void do_test(test_result & result)
     };
 
     result |= run_consteval_test<error_type_list>(fn_tmpl);
-    result |= run_consteval_test<error_type_list>(fn_tmpl);
+    result |= run_constexpr_test<error_type_list>(fn_tmpl);
   };
     // If the original std::expected<T, E> object does not have a value (i.e., it holds an error), invoking
     // transform_error on it will apply the provided transformation function to the error. This transformation function
@@ -987,7 +1145,7 @@ static void do_test(test_result & result)
     };
 
     result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
-    result |= run_consteval_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
+    result |= run_constexpr_test_dual<value_type_non_void_list, error_type_list>(fn_tmpl);
     }
   // ;
   }
