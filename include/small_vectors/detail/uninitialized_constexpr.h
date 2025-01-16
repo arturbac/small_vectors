@@ -180,6 +180,7 @@ concept contiguous_iterator_with_trivialy_copy_constructible
 
 template<concepts::iterator InputIterator, std::integral size_type, concepts::forward_iterator ForwardIterator>
 inline auto uninitialized_trivial_memcpy(InputIterator first, size_type count, ForwardIterator result)
+  -> ForwardIterator
   {
   static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
   if constexpr(std::contiguous_iterator<InputIterator> and std::contiguous_iterator<ForwardIterator>)
@@ -191,11 +192,12 @@ inline auto uninitialized_trivial_memcpy(InputIterator first, size_type count, F
       assert(std::addressof(*result) != nullptr);
       std::memcpy(
         static_cast<void *>(std::addressof(*result)),
-        static_cast<void *>(std::addressof(*first)),
+        static_cast<void const *>(std::addressof(*first)),
         elem_size * std::size_t(count)
       );
       small_vectors_clang_unsafe_buffer_usage_end  //
       }
+    return std::next(result, ptrdiff_t(count));
     }
   else
     {
@@ -203,6 +205,7 @@ inline auto uninitialized_trivial_memcpy(InputIterator first, size_type count, F
       for(; count > 0; --count, (void)++first, ++result)
         std::memcpy(std::addressof(*result), std::addressof(*first), elem_size);
     small_vectors_clang_unsafe_buffer_usage_end  //
+      return result;
     }
   }
 
@@ -213,12 +216,22 @@ template<
   contiguous_iterator_with_trivialy_copy_constructible InputIterator,
   std::integral Size,
   contiguous_iterator_with_trivialy_copy_constructible OutputIterator>
-inline auto uninitialized_copy_n_impl(InputIterator first, Size count, OutputIterator out)
+inline auto uninitialized_copy_n_impl(InputIterator first, Size count, OutputIterator out) -> OutputIterator
   {
-  // static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
-  return std::uninitialized_copy_n(first, count, out);
-  // std::memcpy(std::addressof(*out), std::addressof(*first), elem_size * std::size_t(count));
-  // return std::next(out, std::ptrdiff_t(count));
+  static constexpr auto elem_size{sizeof(std::iter_value_t<InputIterator>)};
+  if(count > 0)
+    {
+    small_vectors_clang_unsafe_buffer_usage_begin  //
+      assert(std::addressof(*first) != nullptr);
+    assert(std::addressof(*out) != nullptr);
+    std::memmove(
+      static_cast<void *>(std::addressof(*out)),
+      static_cast<void const *>(std::addressof(*first)),
+      elem_size * std::size_t(count)
+    );
+    small_vectors_clang_unsafe_buffer_usage_end  //
+    }
+  return std::next(out, ptrdiff_t(count));
   }
 
 template<concepts::input_iterator InputIterator, std::integral Size, concepts::forward_iterator ForwardIterator>
