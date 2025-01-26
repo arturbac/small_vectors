@@ -13,7 +13,7 @@ BraceWrapping:
   AfterEnum: true
   AfterFunction: true
   AfterNamespace: true
-  AfterObjCDeclaration: false
+  AfterObjCDeclaration: true
   AfterStruct: true
   AfterExternBlock: true
   AfterUnion: true
@@ -23,7 +23,7 @@ BraceWrapping:
   BeforeWhile: true
   IndentBraces: true
   SplitEmptyFunction: false
-  SplitEmptyRecord: false
+  SplitEmptyRecord: true
 BitFieldColonSpacing: Both
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Whitesmiths
@@ -66,7 +66,7 @@ PointerAlignment: Middle
 QualifierAlignment: Right
 ReferenceAlignment: Middle
 ReflowComments: true
-RemoveBracesLLVM: false
+RemoveBracesLLVM: true
 RemoveParentheses: MultipleParentheses
 RemoveSemicolon: true
 RequiresClausePosition: OwnLine
@@ -132,7 +132,11 @@ BinPackArguments: false
 BinPackParameters: false
 AlignAfterOpenBracket: BlockIndent
 WhitespaceSensitiveMacros:
-  - small_vectors_clang_unsafe_buffer_usage
-  - small_vectors_clang_unsafe_buffer_usage_begin
-  - small_vectors_clang_unsafe_buffer_usage_end
-
+  - PRAGMA_CLANG_WARNING_OFF
+  - PRAGMA_CLANG_WARNING_PUSH_OFF
+  - PRAGMA_GCC_WARNING_PUSH_OFF
+  - PRAGMA_GCC_WARNING_OFF
+  - throw_if_fail
+  - throw_on_fail
+  - BOOST_TEST
+  - BOOST_AUTO_TEST_CASE_TEMPLATE
