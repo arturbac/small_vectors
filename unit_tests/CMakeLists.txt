@@ -1,4 +1,56 @@
 include(${PROJECT_SOURCE_DIR}/cmake/get_cpm.cmake)
+if(CMAKE_CXX_COMPILER_ID
+   STREQUAL
+   "Clang")
+  option(
+    SMALL_VECTORS_ENABLE_LLD_LINKER
+    "enable lld linker for linking unit tests"
+    ON)
+  add_feature_info(
+    "SMALL_VECTORS_ENABLE_LLD_LINKER"
+    SMALL_VECTORS_ENABLE_LLD_LINKER
+    "enable lld linker for linking unit tests")
+
+  set(SMALL_VECTORS_COMPILE_OPTIONS
+      -Weverything
+      -Werror
+      -Wno-c++98-compat
+      -Wno-c++98-compat-pedantic
+      -Wno-pre-c++14-compat
+      -Wno-pre-c++17-compat
+      -Wno-pre-c++20-compat-pedantic
+      -Wno-c++20-compat
+      -Wno-unused-parameter
+      -Wno-padded
+      -Wno-unused-command-line-argument)
+  check_cxx_compiler_flag(-Wunsafe-buffer-usage WUNSAFE_BUFFER_USAGE)
+  if(WUNSAFE_BUFFER_USAGE)
+    list(
+      APPEND
+      SMALL_VECTORS_COMPILE_OPTIONS
+      -Wunsafe-buffer-usage)
+  endif()
+  check_cxx_compiler_flag(-Wswitch-default WNO_SWITCH_DEFAULT)
+  if(WNO_SWITCH_DEFAULT)
+    list(
+      APPEND
+      SMALL_VECTORS_COMPILE_OPTIONS
+      -Wno-switch-default)
+  endif()
+
+  if(SMALL_VECTORS_ENABLE_LLD_LINKER)
+    add_link_options(-fuse-ld=lld)
+  endif()
+endif()
+if(CMAKE_CXX_COMPILER_ID
+   STREQUAL
+   "GNU")
+  set(SMALL_VECTORS_COMPILE_OPTIONS
+      -Wall
+      -Wextra
+      -Werror)
+endif()
+
 # ----------------------------------------------------------------
 # boost-ext/ut
 # ----------------------------------------------------------------

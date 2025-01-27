@@ -53,7 +53,6 @@ else()
   set(SMALL_VECTORS_ENABLE_UNIT_TESTS OFF)
 endif()
 
-message(STATUS "CMake install directory: " ${CMAKE_INSTALL_INCLUDEDIR})
 if(NOT
    DEFINED
    CMAKE_CXX_STANDARD
@@ -79,89 +78,29 @@ target_sources(
          HEADERS
          BASE_DIRS
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>)
+         $<INSTALL_INTERFACE:include>)
 
 if(SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION)
   target_compile_definitions(small_vectors PUBLIC SMALL_VECTORS_EXPECTED_VTABLE_INSTANTATION=1)
   target_sources(small_vectors PRIVATE source/expected.cc)
 endif()
 
-if(NOT
-   DEFINED
-   INCLUDE_INSTALL_DIR)
-  set(INCLUDE_INSTALL_DIR include/${PROJECT_NAME})
-endif()
-
-if(PROJECT_IS_TOP_LEVEL)
-  if(CMAKE_CXX_COMPILER_ID
-     STREQUAL
-     "Clang")
-    option(
-      SMALL_VECTORS_ENABLE_LLD_LINKER
-      "enable lld linker for linking unit tests"
-      ON)
-    add_feature_info(
-      "SMALL_VECTORS_ENABLE_LLD_LINKER"
-      SMALL_VECTORS_ENABLE_LLD_LINKER
-      "enable lld linker for linking unit tests")
-
-    set(SMALL_VECTORS_COMPILE_OPTIONS
-        -Weverything
-        -Werror
-        -Wno-c++98-compat
-        -Wno-c++98-compat-pedantic
-        -Wno-pre-c++14-compat
-        -Wno-pre-c++17-compat
-        -Wno-pre-c++20-compat-pedantic
-        -Wno-c++20-compat
-        -Wno-unused-parameter
-        -Wno-padded
-        -Wno-unused-command-line-argument)
-    check_cxx_compiler_flag(-Wunsafe-buffer-usage WUNSAFE_BUFFER_USAGE)
-    if(WUNSAFE_BUFFER_USAGE)
-      list(
-        APPEND
-        SMALL_VECTORS_COMPILE_OPTIONS
-        -Wunsafe-buffer-usage)
-    endif()
-    check_cxx_compiler_flag(-Wswitch-default WNO_SWITCH_DEFAULT)
-    if(WNO_SWITCH_DEFAULT)
-      list(
-        APPEND
-        SMALL_VECTORS_COMPILE_OPTIONS
-        -Wno-switch-default)
-    endif()
-
-    if(SMALL_VECTORS_ENABLE_LLD_LINKER)
-      add_link_options(-fuse-ld=lld)
-    endif()
-  endif()
-  if(CMAKE_CXX_COMPILER_ID
-     STREQUAL
-     "GNU")
-    set(SMALL_VECTORS_COMPILE_OPTIONS
-        -Wall
-        -Wextra
-        -Werror)
-  endif()
-endif()
-
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
 install(
   TARGETS small_vectors
   EXPORT small_vectors_targets
   INCLUDES
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  DESTINATION include
   FILE_SET HEADERS)
 
-configure_package_config_file(cmake/small_vectorsConfig.camke.in ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfig.camke
+configure_package_config_file(cmake/small_vectorsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfig.cmake
                               INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/small_vectors)
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfigVersion.cmake
   VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion ARCH_INDEPENDENT)
+  COMPATIBILITY SameMajorVersion)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfig.camke
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfig.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/small_vectorsConfigVersion.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/small_vectors)
 
