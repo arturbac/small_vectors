@@ -431,6 +431,18 @@ int main()
     result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_size);
     result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_0);
   };
+  static_assert(
+    concepts::is_trivially_relocatable<small_vector<int64_t, uint32_t, 10u>>
+    == __has_builtin(__is_trivially_relocatable)
+  );
+  static_assert(
+    concepts::is_trivially_relocatable<small_vector<non_trivial, uint32_t, 10u>>
+    == __has_builtin(__is_trivially_relocatable)
+  );
+
+  static_assert(concepts::is_trivially_relocatable<trivially_relocatable>);
+  static_assert(not concepts::is_trivially_relocatable<not_trivially_relocatable>);
+  static_assert(not concepts::is_trivially_relocatable<small_vector<not_trivially_relocatable, uint32_t, 64u>>);
 
   "test_small_vector_relocation_of_small_vector"_test = [&result]
   {
