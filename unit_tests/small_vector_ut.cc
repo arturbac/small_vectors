@@ -12,6 +12,9 @@
 
 namespace small_vectors
   {
+static_assert(concepts::is_trivially_relocatable<trivially_relocatable>);
+static_assert(not concepts::is_trivially_relocatable<not_trivially_relocatable>);
+
 using detail::small_vector_storage_type;
 using enum detail::small_vector_storage_type;
 using enum detail::vector_outcome_e;
@@ -115,7 +118,13 @@ using constexpr_test_type_list = metatests::type_list<
   struct_5_byte,
   non_trivial,
   non_trivial_ptr,
-  non_trivial_ptr_except_copy>;
+  non_trivial_ptr_except_copy,
+  small_vector<uint64_t, uint32_t, 0>,
+  small_vector<uint64_t, uint32_t, 4>,
+  small_vector<non_trivial, uint32_t, 0>,
+  small_vector<non_trivial, uint32_t, 4>,
+  small_vector<non_trivial_ptr, uint32_t, 0>,
+  small_vector<non_trivial_ptr, uint32_t, 4>>;
   }  // namespace small_vectors
 
 using namespace small_vectors;
@@ -419,6 +428,73 @@ int main()
 
     result |= run_consteval_test_dual<consteval_test_type_list_1, constexpr_size_type_traits_list>(fn_size);
     result |= run_consteval_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_0);
+    result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_size);
+    result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_0);
+  };
+
+  "test_small_vector_relocation_of_small_vector"_test = [&result]
+  {
+    auto fn_tmpl = []<typename value_type, typename size_type, typename szreq_ic>(
+                     value_type const *, size_type const *, szreq_ic
+                   ) -> metatests::test_result
+    {
+      constexpr size_type capacity_req = szreq_ic::value;
+      std::array<value_type, 127> test_values{};
+      std::iota(begin(test_values), end(test_values), value_type(1));
+      using sst = small_vector<value_type, size_type, capacity_req>;
+      using st = small_vector<sst, size_type, 1>;
+
+      std::span sv0{test_values.begin(), std::next(test_values.begin(), 1)};
+      std::span sv1{test_values.begin(), std::next(test_values.begin(), 5)};
+      std::span sv2{test_values.begin() + 5, std::next(test_values.begin(), 25)};
+      std::span sv3{test_values.begin() + 15, std::next(test_values.begin(), 45)};
+
+      sst v0{sv0.begin(), sv0.end()};
+      sst v1{sv1.begin(), sv1.end()};
+      sst v2{sv2.begin(), sv2.end()};
+      sst v3{sv3.begin(), sv3.end()};
+      st v;
+      v.emplace_back(std::move(v0));
+      v.emplace_back(std::move(v1));
+      v.emplace_back(std::move(v2));
+      v.emplace_back(std::move(v3));
+      v.reserve(120);
+      v.resize(5);
+      constexpr_test(v.size() == 5u);
+      constexpr_test(std::ranges::equal(v[0u], sv0));
+      constexpr_test(std::ranges::equal(v[1u], sv1));
+      constexpr_test(std::ranges::equal(v[2u], sv2));
+      constexpr_test(std::ranges::equal(v[3u], sv3));
+      constexpr_test(v[4u].empty());
+      return metatests::test_result{};
+    };
+
+    auto fn_size = [fn_tmpl]<typename value_type, typename size_type>(
+                     value_type const * t, size_type const * u
+                   ) -> metatests::test_result
+    {
+      using size_req = std::integral_constant<size_type, small_vectors::at_least<value_type>(size_type(4))>;
+      return fn_tmpl(t, u, size_req{});
+    };
+    // size_type capacity_req = small_vectors::at_least<value_type>(size_type(4))
+    auto fn_0 = [fn_tmpl]<typename value_type, typename size_type>(
+                  value_type const * t, size_type const * u
+                ) -> metatests::test_result
+    {
+      using size_req = std::integral_constant<size_type, 0u>;
+      return fn_tmpl(t, u, size_req{});
+    };
+
+    using consteval_test_type_list_2 = metatests::type_list<
+      uint8_t,
+      uint16_t,
+      uint32_t,
+      uint64_t,
+      non_trivial,
+      non_trivial_ptr,
+      non_trivial_ptr_except,
+      non_trivial_ptr_except_copy>;
+
     result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_size);
     result |= run_constexpr_test_dual<consteval_test_type_list_2, constexpr_size_type_traits_list>(fn_0);
   };
