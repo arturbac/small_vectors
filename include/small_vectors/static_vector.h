@@ -117,6 +117,13 @@ static_vector : public conditional_trivial_reloc_base<V>
     storage_.construct_copy(rh.storage_);
     }
 
+  template<std::input_iterator InputIt>
+  constexpr static_vector(InputIt first, InputIt last)
+    {
+    auto res{detail::insert(*this, end(), first, last)};
+    detail::handle_error(res);
+    }
+
   // static_vector is address independant which means it is trivialy copyable for trivially_copyable<value_type>
   constexpr static_vector & operator=(static_vector && rh) noexcept
     requires concepts::trivially_copyable<value_type>
