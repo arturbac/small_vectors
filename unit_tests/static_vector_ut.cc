@@ -1,4 +1,5 @@
 #include <small_vectors/static_vector.h>
+#include <small_vectors/small_vector.h>
 // same gcc can fail building consteval complicated code, ex on ubuntu it reports nonsense while on gentoo there is no
 // problem at all
 #if defined(__GNUC__) && !defined(__clang__)
@@ -696,6 +697,53 @@ int main()
 
     result |= run_constexpr_test<traits_list>(fn_tmpl);
     result |= run_consteval_test<constexpr_traits_list>(fn_tmpl);
+  };
+
+  "test_static_vector_relocation_of_small_vector"_test = [&result]
+  {
+    auto fn_tmpl = []<typename value_type>(value_type const *) -> metatests::test_result
+    {
+      auto constexpr elements = 10;
+      std::array<value_type, 127> test_values{};
+      std::iota(begin(test_values), end(test_values), value_type(1));
+      using sst = static_vector<value_type, elements>;
+      using st = small_vector<sst, uint32_t, 0u>;  // using small vector to trigger relocation of elements
+
+      std::span sv0{test_values.begin(), std::next(test_values.begin(), 1)};
+      std::span sv1{test_values.begin(), std::next(test_values.begin(), 5)};
+      std::span sv2{test_values.begin() + 5, std::next(test_values.begin(), 8)};
+      std::span sv3{test_values.begin() + 45, std::next(test_values.begin(), 49)};
+
+      sst v0{sv0.begin(), sv0.end()};
+      sst v1{sv1.begin(), sv1.end()};
+      sst v2{sv2.begin(), sv2.end()};
+      sst v3{sv3.begin(), sv3.end()};
+      st v;
+      v.emplace_back(std::move(v0));
+      v.emplace_back(std::move(v1));
+      v.emplace_back(std::move(v2));
+      v.emplace_back(std::move(v3));
+      v.reserve(120);
+      v.resize(5);
+      constexpr_test(v.size() == 5u);
+      constexpr_test(std::ranges::equal(v[0u], sv0));
+      constexpr_test(std::ranges::equal(v[1u], sv1));
+      constexpr_test(std::ranges::equal(v[2u], sv2));
+      constexpr_test(std::ranges::equal(v[3u], sv3));
+      constexpr_test(v[4u].empty());
+      return metatests::test_result{};
+    };
+
+    using consteval_test_type_list_2 = metatests::type_list<
+      uint8_t,
+      uint16_t,
+      uint32_t,
+      uint64_t,
+      non_trivial,
+      non_trivial_ptr,
+      non_trivial_ptr_except,
+      non_trivial_ptr_except_copy>;
+    result |= run_constexpr_test<consteval_test_type_list_2>(fn_tmpl);
   };
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
   }

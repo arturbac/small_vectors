@@ -23,6 +23,7 @@
 #include <small_vectors/detail/vector_storage.h>
 #include <small_vectors/detail/vector_func.h>
 #include <small_vectors/detail/adapter_iterator.h>
+#include <small_vectors/detail/conditional_trivial_reloc_base.h>
 
 #include <span>
 #include <cassert>
@@ -41,7 +42,8 @@ using detail::union_min_number_of_elements;
 using detail::vector_tune_e;
 
 template<typename V, std::unsigned_integral S, uint64_t N = union_min_number_of_elements<V, S>()>
-struct small_vector
+struct [[clang::trivial_abi]]
+small_vector : public conditional_trivial_reloc_base<V>
   {
   using value_type = V;
   using reference = value_type &;
@@ -113,7 +115,7 @@ struct small_vector
     detail::resize(*this, count);
     }
 
-  template<class InputIt>
+  template<std::input_iterator InputIt>
   constexpr small_vector(InputIt first, InputIt last)
     {
     auto res{detail::insert(*this, end(), first, last)};

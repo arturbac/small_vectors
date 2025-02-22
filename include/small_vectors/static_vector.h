@@ -25,6 +25,7 @@
 #include <small_vectors/detail/vector_storage.h>
 #include <small_vectors/detail/vector_func.h>
 #include <small_vectors/detail/adapter_iterator.h>
+#include <small_vectors/detail/conditional_trivial_reloc_base.h>
 
 namespace small_vectors::inline v3_3
   {
@@ -35,7 +36,8 @@ using detail::vector_tune_e;
 ///       for trivialy constructible elements it can be used in consteval expresions with clang, with gcc is possibility
 ///       to use with any objects types
 template<concepts::vector_constraints V, uint64_t N>
-struct static_vector
+struct [[clang::trivial_abi]]
+static_vector : public conditional_trivial_reloc_base<V>
   {
   using value_type = V;
   using reference = value_type &;
@@ -113,6 +115,13 @@ struct static_vector
   ) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
     {
     storage_.construct_copy(rh.storage_);
+    }
+
+  template<std::input_iterator InputIt>
+  constexpr static_vector(InputIt first, InputIt last)
+    {
+    auto res{detail::insert(*this, end(), first, last)};
+    detail::handle_error(res);
     }
 
   // static_vector is address independant which means it is trivialy copyable for trivially_copyable<value_type>
