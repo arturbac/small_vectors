@@ -1573,6 +1573,84 @@ int main()
     result |= run_constexpr_test<string_type_list>(fn_tmpl);
   };
 
+  "basic_string_find_first_not_of"_test = [&]
+  {
+    auto fn_tmpl = []<typename string_type>(string_type const *) -> metatests::test_result
+    {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      constexpr auto text{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet,")};
+      st str{text};
+        {
+        constexpr auto what{cast_fixed_string<char_type>("Lore")};
+        constexpr_test(str.find_first_not_of(what) == 4u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("Lorem ")};
+        constexpr_test(str.find_first_not_of(what, 5u) == 6u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("Lorem ipsudlta,")};
+        constexpr_test(str.find_first_not_of(what) == st::npos);
+        }
+      return {};
+    };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+  };
+
+  "basic_string_find_last_of"_test = [&]
+  {
+    auto fn_tmpl = []<typename string_type>(string_type const *) -> metatests::test_result
+    {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      constexpr auto text{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet,")};
+      st str{text};
+        {
+        constexpr auto what{cast_fixed_string<char_type>("L")};
+        constexpr_test(str.find_last_of(what) == 28u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("oL")};
+        constexpr_test(str.find_last_of(what, 20u) == 15u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("xyz")};
+        constexpr_test(str.find_last_of(what) == st::npos);
+        }
+      return {};
+    };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+  };
+
+  "basic_string_find_last_not_of"_test = [&]
+  {
+    auto fn_tmpl = []<typename string_type>(string_type const *) -> metatests::test_result
+    {
+      using st = string_type;
+      using char_type = typename string_type::char_type;
+      constexpr auto text{cast_fixed_string<char_type>("Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet,")};
+      st str{text};
+        {
+        constexpr auto what{cast_fixed_string<char_type>(",")};
+        constexpr_test(str.find_last_not_of(what) == 53u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("t, e")};
+        constexpr_test(str.find_last_not_of(what, 26u) == 23u);
+        }
+        {
+        constexpr auto what{cast_fixed_string<char_type>("Lorem ipsudlta,")};
+        constexpr_test(str.find_last_not_of(what) == st::npos);
+        }
+      return {};
+    };
+    result |= run_consteval_test<string_type_list>(fn_tmpl);
+    result |= run_constexpr_test<string_type_list>(fn_tmpl);
+  };
+
   "basic_string_rbegin_rend"_test = [&]
   {
     auto fn_tmpl = []<typename string_type>(string_type const *) -> metatests::test_result
