@@ -554,6 +554,24 @@ basic_string_t
     return static_cast<size_type>(view().find_first_of(static_cast<view_type>(v), pos));
     }
 
+  inline constexpr auto find_first_not_of(std::convertible_to<view_type> auto const & v, size_type pos = 0u) const noexcept
+    -> size_type
+    {
+    return static_cast<size_type>(view().find_first_not_of(static_cast<view_type>(v), pos));
+    }
+
+  inline constexpr auto find_last_of(std::convertible_to<view_type> auto const & v, size_type pos = npos) const noexcept
+    -> size_type
+    {
+    return static_cast<size_type>(view().find_last_of(static_cast<view_type>(v), pos));
+    }
+
+  inline constexpr auto find_last_not_of(std::convertible_to<view_type> auto const & v, size_type pos = npos) const noexcept
+    -> size_type
+    {
+    return static_cast<size_type>(view().find_last_not_of(static_cast<view_type>(v), pos));
+    }
+
   constexpr auto replace(size_type pos, size_type count, std::convertible_to<view_type> auto const & v)
     -> basic_string_t &
     {
