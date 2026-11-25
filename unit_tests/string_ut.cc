@@ -330,6 +330,17 @@ int main()
       vl.assign(text_short.begin(), text_short.end());
       constexpr_test(vl == text_short.view());
       constexpr_test(is_null_termianted(vl));
+
+      // pointer and count, short and long, count shorter than the null terminated text, count 0
+      vl.assign(text_short.data(), size_type(3));
+      constexpr_test(vl == text_short.view().substr(0u, 3u));
+      constexpr_test(is_null_termianted(vl));
+      vl.assign(text_long.data(), size_type(text_long.size()));
+      constexpr_test(vl == text_long.view());
+      constexpr_test(is_null_termianted(vl));
+      vl.assign(text_long.data(), size_type(0));
+      constexpr_test(size(vl) == 0u);
+      constexpr_test(is_null_termianted(vl));
       return {};
     };
     result |= run_consteval_test<string_type_list>(fn_tmpl);

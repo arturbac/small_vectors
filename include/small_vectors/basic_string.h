@@ -257,6 +257,12 @@ basic_string_t
     return *this;
     }
 
+  ///\brief Replaces the contents with count characters starting at s (as std::basic_string::assign)
+  constexpr auto assign(char_type const * s, size_type count) -> basic_string_t &
+    {
+    return assign(view_type{s, count});
+    }
+
   template<std::input_iterator input_iterator>
   constexpr auto assign(input_iterator first, input_iterator last) -> basic_string_t &
     requires std::convertible_to<std::iter_value_t<input_iterator>, char_type>
